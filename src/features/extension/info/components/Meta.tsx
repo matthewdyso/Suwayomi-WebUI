@@ -17,11 +17,20 @@ export const Meta = ({ versionName, lang, contentWarning }: TExtension) => {
     const { t } = useLingui();
 
     return (
-        <Stack sx={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Stack sx={{ flexDirection: 'row', justifyContent: 'space-evenly', alignItems: 'center', px: 2, py: 1 }}>
             <ExtensionMetadata title={t`Version`} value={versionName} />
-            <ExtensionMetadata title={t`Language`} value={languageCodeToName(lang)} />
+            <ExtensionMetadata
+                title={t`Language`}
+                value={languageCodeToName(lang)}
+                addDivider={isNsfw(contentWarning)}
+            />
             {isNsfw(contentWarning) && (
-                <ExtensionMetadata title={t`Age rating`} value="18+" valueProps={{ color: 'error' }} />
+                <ExtensionMetadata
+                    title={t`Age rating`}
+                    value="18+"
+                    valueProps={{ color: 'error' }}
+                    addDivider={false}
+                />
             )}
         </Stack>
     );

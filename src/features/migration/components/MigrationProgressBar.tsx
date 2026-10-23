@@ -32,13 +32,13 @@ export const MigrationProgressBar = ({
                 gap: 2,
                 px: 2,
                 py: 1,
-                backgroundColor: 'background.default',
+                backgroundColor: 'm3.surface',
             }}
         >
             <Box sx={{ flexGrow: 1 }}>
                 <LinearProgress variant="determinate" value={progress} />
             </Box>
-            <Typography variant="body2" color="text.secondary" sx={{ minWidth: 'fit-content' }}>
+            <Typography variant="bodySmall" sx={{ minWidth: 'fit-content', color: 'm3.onSurfaceVariant' }}>
                 {label}
             </Typography>
         </Box>

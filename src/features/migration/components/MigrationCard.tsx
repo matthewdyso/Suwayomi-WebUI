@@ -6,23 +6,21 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import Card from '@mui/material/Card';
-import Box from '@mui/material/Box';
-import CardActionArea from '@mui/material/CardActionArea';
-import Chip from '@mui/material/Chip';
-import Typography from '@mui/material/Typography';
 import { useLingui } from '@lingui/react/macro';
-import { requestManager } from '@/lib/requests/RequestManager.ts';
+import { memo } from 'react';
 import { translateExtensionLanguage } from '@/features/extension/Extensions.utils.ts';
 import { MigrationManager } from '@/features/migration/MigrationManager.ts';
-import { ListCardAvatar } from '@/base/components/lists/cards/ListCardAvatar.tsx';
-import { ListCardContent } from '@/base/components/lists/cards/ListCardContent.tsx';
 import { Sources } from '@/features/source/services/Sources';
 import type { TMigratableSource } from '@/features/migration/Migration.types.ts';
 import { ReactRouter } from '@/lib/react-router/ReactRouter.ts';
 import { AppRoutes } from '@/base/AppRoute.constants.ts';
-import { memo } from 'react';
+import { ListRow } from '@/base/components/lists/ListRow.tsx';
+import { Pill } from '@/base/components/badges/Pill.tsx';
+import { SourceIcon } from '@/features/source/components/SourceIcon.tsx';
 
+/**
+ * Mihon's "MigrateSourceItem": icon, name and language, and the number of library entries from that source.
+ */
 export const MigrationCard = memo((source: TMigratableSource) => {
     const { id, name, lang, iconUrl, mangaCount } = source;
     const { t } = useLingui();
@@ -30,41 +28,19 @@ export const MigrationCard = memo((source: TMigratableSource) => {
     const sourceName = Sources.isLocalSource(source) ? t`Local source` : name;
 
     return (
-        <Card>
-            <CardActionArea
-                onClick={() => {
-                    MigrationManager.selectSources([id]);
-                    ReactRouter.navigate(AppRoutes.migrate.path);
-                }}
-            >
-                <ListCardContent sx={{ justifyContent: 'space-between' }}>
-                    <Box sx={{ display: 'flex', gap: 1 }}>
-                        <ListCardAvatar
-                            iconUrl={requestManager.getValidImgUrlFor(iconUrl)}
-                            alt={sourceName}
-                            slots={{
-                                spinnerImageProps: {
-                                    ignoreQueue: true,
-                                },
-                            }}
-                        />
-                        <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                            <Typography variant="h6" component="h3">
-                                {sourceName}
-                            </Typography>
-                            <Typography
-                                variant="caption"
-                                sx={{
-                                    display: 'block',
-                                }}
-                            >
-                                {translateExtensionLanguage(lang)}
-                            </Typography>
-                        </Box>
-                    </Box>
-                    <Chip sx={{ borderRadius: 1 }} size="small" label={mangaCount} />
-                </ListCardContent>
-            </CardActionArea>
-        </Card>
+        <ListRow
+            minHeight={64}
+            leading={<SourceIcon iconUrl={iconUrl} alt={sourceName} />}
+            headline={sourceName}
+            headlineVariant="bodyMedium"
+            supporting={translateExtensionLanguage(lang)}
+            supportingVariant="bodySmall"
+            supportingMaxLines={1}
+            onClick={() => {
+                MigrationManager.selectSources([id]);
+                ReactRouter.navigate(AppRoutes.migrate.path);
+            }}
+            trailing={<Pill sx={{ typography: 'bodySmall' }}>{mangaCount}</Pill>}
+        />
     );
 });

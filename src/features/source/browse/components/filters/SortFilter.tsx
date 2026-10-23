@@ -6,15 +6,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import ExpandLess from '@mui/icons-material/ExpandLess';
-import ExpandMore from '@mui/icons-material/ExpandMore';
-import Collapse from '@mui/material/Collapse';
-import ListItemButton from '@mui/material/ListItemButton';
-import ListItemText from '@mui/material/ListItemText';
-import Stack from '@mui/material/Stack';
-import Box from '@mui/material/Box';
 import React from 'react';
-import { SortRadioInput } from '@/base/components/inputs/SortRadioInput.tsx';
+import { SortItem } from '@/base/components/settings/SheetRows.tsx';
+import { CollapsibleFilter } from '@/features/source/browse/components/filters/CollapsibleFilter.tsx';
 import type { SortSelectionInput } from '@/lib/graphql/generated/graphql-base.types.ts';
 import type { IPos } from '@/features/source/Source.types.ts';
 import isEqual from 'lodash/fp/isEqual';
@@ -32,12 +26,6 @@ export const SortFilter: React.FC<Props> = (props: Props) => {
     const { values, name, state, positions, updateFilterValue, update } = props;
     const [val, setval] = React.useState(state);
 
-    const [open, setOpen] = React.useState(false);
-
-    const handleClick = () => {
-        setOpen(!open);
-    };
-
     if (values) {
         const handleChange = (index: number) => {
             const tmp = val;
@@ -53,25 +41,17 @@ export const SortFilter: React.FC<Props> = (props: Props) => {
         };
 
         return (
-            <Box sx={{ mx: -2 }}>
-                <ListItemButton onClick={handleClick}>
-                    <ListItemText primary={name} />
-                    {open ? <ExpandLess /> : <ExpandMore />}
-                </ListItemButton>
-                <Collapse in={open}>
-                    <Stack sx={{ mx: 4 }}>
-                        {values.map((value: string, index: number) => (
-                            <SortRadioInput
-                                key={`${name} ${value}`}
-                                label={value}
-                                checked={val.index === index}
-                                sortDescending={!val.ascending}
-                                onClick={() => handleChange(index)}
-                            />
-                        ))}
-                    </Stack>
-                </Collapse>
-            </Box>
+            <CollapsibleFilter name={name}>
+                {values.map((value: string, index: number) => (
+                    <SortItem
+                        key={`${name} ${value}`}
+                        label={value}
+                        checked={val.index === index}
+                        sortDescending={!val.ascending}
+                        onClick={() => handleChange(index)}
+                    />
+                ))}
+            </CollapsibleFilter>
         );
     }
     return null;

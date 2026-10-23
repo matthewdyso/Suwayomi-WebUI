@@ -7,7 +7,7 @@
  */
 
 import React from 'react';
-import { CheckboxInput } from '@/base/components/inputs/CheckboxInput.tsx';
+import { CheckboxItem } from '@/base/components/settings/SheetRows.tsx';
 import type { IPos } from '@/features/source/Source.types.ts';
 import isEqual from 'lodash/fp/isEqual';
 
@@ -30,7 +30,7 @@ export const CheckBoxFilter: React.FC<Props> = (props: Props) => {
     };
 
     if (state !== undefined) {
-        return <CheckboxInput label={name} checked={val} onChange={handleChange} />;
+        return <CheckboxItem label={name} checked={val} onChange={handleChange} />;
     }
     return null;
 };

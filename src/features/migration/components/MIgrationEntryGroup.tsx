@@ -7,18 +7,15 @@
  */
 
 import type { MigrationEntryStatus, TMigrationEntry } from '@/features/migration/Migration.types.ts';
-import type { ButtonProps } from '@mui/material/Button';
-import Button from '@mui/material/Button';
 import Collapse from '@mui/material/Collapse';
 import Stack from '@mui/material/Stack';
 import type { ReactNode } from 'react';
 import { memo } from 'react';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { MigrationEntry } from '@/features/migration/components/migration-entry/MigrationEntry.tsx';
 import { MigrationManager } from '@/features/migration/MigrationManager.ts';
 import { OffsetComponentWithContainer } from '@/base/OffsetComponent.tsx';
 import { Virtuoso } from 'react-virtuoso';
+import { CollapsibleHeader } from '@/base/components/lists/CollapsibleHeader.tsx';
 
 const VirtuosoListWrapper = memo(({ children, ...props }: { children?: ReactNode }) => (
     <Stack {...props} sx={{ gap: 1 }}>
@@ -38,7 +35,7 @@ export const MigrationEntryGroup = memo(
         status: MigrationEntryStatus;
         title: string;
         entries: TMigrationEntry[];
-        color: ButtonProps['color'];
+        color: 'info' | 'error' | 'warning' | 'success';
         isMigrating?: boolean;
         isAborted?: boolean;
     }) => {
@@ -49,29 +46,19 @@ export const MigrationEntryGroup = memo(
         }
 
         return (
-            <Stack sx={{ width: '100%', gap: 2 }}>
+            <Stack sx={{ width: '100%', gap: 1 }}>
                 <OffsetComponentWithContainer
                     wrapperComponent={Stack}
-                    sx={{ pt: 2, backgroundColor: 'background.default' }}
+                    sx={{ backgroundColor: 'm3.surface' }}
                     component={
-                        <Button
-                            onClick={() => MigrationManager.setGroupExpandState(status, !isExpanded)}
-                            color={color}
-                            variant="outlined"
-                            startIcon={isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                            size="large"
-                            sx={{
-                                py: 2,
-                                justifyContent: 'center',
-                                '& .MuiButton-startIcon': {
-                                    position: 'absolute',
-                                    left: (theme) => theme.spacing(4),
-                                    margin: 0,
-                                },
-                            }}
-                        >
-                            {title}
-                        </Button>
+                        // in the color of the group's status
+                        <CollapsibleHeader
+                            title={title}
+                            titleComponent="h2"
+                            expanded={isExpanded}
+                            onToggle={() => MigrationManager.setGroupExpandState(status, !isExpanded)}
+                            sx={{ mx: -2, color: `${color}.main`, bgcolor: 'm3.surface' }}
+                        />
                     }
                 >
                     <Collapse in={isExpanded}>

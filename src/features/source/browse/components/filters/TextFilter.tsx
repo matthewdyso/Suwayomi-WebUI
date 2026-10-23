@@ -8,9 +8,10 @@
 
 import SearchIcon from '@mui/icons-material/Search';
 import FormControl from '@mui/material/FormControl';
-import Input from '@mui/material/Input';
+import OutlinedInput from '@mui/material/OutlinedInput';
 import InputAdornment from '@mui/material/InputAdornment';
 import InputLabel from '@mui/material/InputLabel';
+import Box from '@mui/material/Box';
 import React, { useEffect } from 'react';
 import { useDebounce } from '@/base/hooks/useDebounce.ts';
 import type { IPos } from '@/features/source/Source.types.ts';
@@ -36,19 +37,22 @@ export const TextFilter: React.FC<Props> = (props) => {
 
     if (state !== undefined) {
         return (
-            <FormControl sx={{ my: 1 }} variant="standard">
-                <InputLabel>{name}</InputLabel>
-                <Input
-                    name={name}
-                    value={Search}
-                    onChange={({ target: { value } }) => setsearch(value)}
-                    endAdornment={
-                        <InputAdornment position="end">
-                            <SearchIcon />
-                        </InputAdornment>
-                    }
-                />
-            </FormControl>
+            <Box sx={{ px: 3, py: 0.5 }}>
+                <FormControl fullWidth>
+                    <InputLabel>{name}</InputLabel>
+                    <OutlinedInput
+                        label={name}
+                        name={name}
+                        value={Search}
+                        onChange={({ target: { value } }) => setsearch(value)}
+                        endAdornment={
+                            <InputAdornment position="end">
+                                <SearchIcon />
+                            </InputAdornment>
+                        }
+                    />
+                </FormControl>
+            </Box>
         );
     }
     return null;

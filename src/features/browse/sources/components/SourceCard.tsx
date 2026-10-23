@@ -6,24 +6,17 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import CardActionArea from '@mui/material/CardActionArea';
 import Button from '@mui/material/Button';
-import Card from '@mui/material/Card';
-import Typography from '@mui/material/Typography';
 import React from 'react';
 import { Link } from 'react-router-dom';
-import Stack from '@mui/material/Stack';
+import Box from '@mui/material/Box';
 import PushPinIcon from '@mui/icons-material/PushPin';
 import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
 import IconButton from '@mui/material/IconButton';
 import { useLingui } from '@lingui/react/macro';
-import { requestManager } from '@/lib/requests/RequestManager.ts';
 import type { GetSourcesListQuery } from '@/lib/graphql/generated/graphql.ts';
 import { AppRoutes } from '@/base/AppRoute.constants.ts';
-import { MUIUtil } from '@/lib/mui/MUI.util.ts';
 import { Sources } from '@/features/source/services/Sources.ts';
-import { ListCardAvatar } from '@/base/components/lists/cards/ListCardAvatar.tsx';
-import { ListCardContent } from '@/base/components/lists/cards/ListCardContent.tsx';
 import { CustomTooltip } from '@/base/components/CustomTooltip.tsx';
 import { createUpdateSourceMetadata, useGetSourceMetadata } from '@/features/source/services/SourceMetadata.ts';
 import { makeToast } from '@/base/utils/Toast.ts';
@@ -31,6 +24,9 @@ import { getErrorMessage } from '@/lib/HelperFunctions.ts';
 import { languageCodeToName } from '@/base/utils/Languages.ts';
 import { SourceContentType } from '@/features/source/Source.types.ts';
 import { isNsfw } from '@/features/extension/Extensions.utils.ts';
+import { ListRow } from '@/base/components/lists/ListRow.tsx';
+import { SourceIcon } from '@/features/source/components/SourceIcon.tsx';
+import { SECONDARY_ALPHA } from '@/features/theme/m3/M3Color.constants.ts';
 
 interface IProps {
     source: GetSourcesListQuery['sources']['nodes'][number];
@@ -38,6 +34,9 @@ interface IProps {
     showLanguage: boolean;
 }
 
+/**
+ * Mihon's "SourceItem": icon, name and language, "Latest" and the pin button.
+ */
 export const SourceCard: React.FC<IProps> = (props: IProps) => {
     const { t } = useLingui();
 
@@ -55,60 +54,49 @@ export const SourceCard: React.FC<IProps> = (props: IProps) => {
     const { isPinned } = useGetSourceMetadata(source);
 
     const sourceName = Sources.isLocalSource(source) ? t`Local source` : name;
+    const showStore = showSourceRepo && !!extensionStore;
+    const showNsfw = isNsfw(contentWarning);
+    const facts = [showLanguage && languageCodeToName(lang), showStore && extensionStore.name].filter(Boolean);
+
+    const browsePath = AppRoutes.sources.children.browse.path(id);
 
     const updateSetting = createUpdateSourceMetadata(source, (e) =>
         makeToast(t`Failed to save changes`, 'error', getErrorMessage(e)),
     );
 
     return (
-        <Card>
-            <CardActionArea
-                component={Link}
-                to={AppRoutes.sources.children.browse.path(id)}
-                state={AppRoutes.sources.children.browse.state({
-                    contentType: SourceContentType.POPULAR,
-                    clearCache: true,
-                })}
-            >
-                <ListCardContent>
-                    <ListCardAvatar
-                        iconUrl={requestManager.getValidImgUrlFor(iconUrl)}
-                        alt={sourceName}
-                        slots={{
-                            spinnerImageProps: {
-                                ignoreQueue: true,
-                            },
-                        }}
-                    />
-                    <Stack
-                        sx={{
-                            justifyContent: 'center',
-                            flexGrow: 1,
-                            flexShrink: 1,
-                            wordBreak: 'break-word',
-                        }}
-                    >
-                        <Typography variant="h6" component="h3">
-                            {sourceName}
-                        </Typography>
-                        <Typography variant="caption">
-                            {showLanguage && languageCodeToName(lang)}
-                            {isNsfw(contentWarning) && (
-                                <Typography variant="caption" color="error">
-                                    {' 18+'}
-                                </Typography>
-                            )}
-                        </Typography>
-                        {showSourceRepo && extensionStore && (
-                            <Typography variant="caption">{extensionStore.name}</Typography>
+        <ListRow
+            minHeight={64}
+            leading={<SourceIcon iconUrl={iconUrl} alt={sourceName} />}
+            headline={sourceName}
+            headlineVariant="bodyMedium"
+            supportingVariant="bodySmall"
+            supportingMaxLines={1}
+            supporting={
+                (!!facts.length || showNsfw) && (
+                    <>
+                        {facts.join(' • ')}
+                        {showNsfw && (
+                            <Box component="span" sx={{ color: 'm3.error' }}>
+                                {' 18+'}
+                            </Box>
                         )}
-                    </Stack>
+                    </>
+                )
+            }
+            to={browsePath}
+            state={AppRoutes.sources.children.browse.state({
+                contentType: SourceContentType.POPULAR,
+                clearCache: true,
+            })}
+            trailing={
+                <>
                     {supportsLatest && (
+                        // large: Mihon's text buttons keep a 48 px touch target
                         <Button
-                            {...MUIUtil.preventRippleProp()}
-                            variant="outlined"
+                            size="large"
                             component={Link}
-                            to={AppRoutes.sources.children.browse.path(id)}
+                            to={browsePath}
                             state={AppRoutes.sources.children.browse.state({
                                 contentType: SourceContentType.LATEST,
                                 clearCache: true,
@@ -119,18 +107,14 @@ export const SourceCard: React.FC<IProps> = (props: IProps) => {
                     )}
                     <CustomTooltip title={isPinned ? t`Unpin source` : t`Pin source`}>
                         <IconButton
-                            {...MUIUtil.preventRippleProp()}
-                            onClick={(e) => {
-                                e.preventDefault();
-                                updateSetting('isPinned', !isPinned);
-                            }}
-                            color={isPinned ? 'primary' : 'inherit'}
+                            onClick={() => updateSetting('isPinned', !isPinned)}
+                            sx={{ color: isPinned ? 'm3.primary' : 'm3.onBackground' }}
                         >
-                            {isPinned ? <PushPinIcon /> : <PushPinOutlinedIcon />}
+                            {isPinned ? <PushPinIcon /> : <PushPinOutlinedIcon sx={{ opacity: SECONDARY_ALPHA }} />}
                         </IconButton>
                     </CustomTooltip>
-                </ListCardContent>
-            </CardActionArea>
-        </Card>
+                </>
+            }
+        />
     );
 };

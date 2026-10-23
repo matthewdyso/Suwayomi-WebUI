@@ -6,16 +6,13 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
-import Card from '@mui/material/Card';
-import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
+import { Link } from 'react-router-dom';
+import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
-import SettingsIcon from '@mui/icons-material/Settings';
-import Stack from '@mui/material/Stack';
+import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
+import DownloadRoundedIcon from '@mui/icons-material/DownloadRounded';
 import { useLingui } from '@lingui/react/macro';
-import { requestManager } from '@/lib/requests/RequestManager.ts';
 import { defaultPromiseErrorHandler } from '@/lib/DefaultPromiseErrorHandler.ts';
 import type { InstalledStates, TExtension } from '@/features/extension/Extensions.types.ts';
 import { ExtensionAction, ExtensionState } from '@/features/extension/Extensions.types.ts';
@@ -26,35 +23,24 @@ import {
 } from '@/features/extension/Extensions.constants.ts';
 import { getInstalledState, isNsfw, updateExtension } from '@/features/extension/Extensions.utils.ts';
 import { CustomTooltip } from '@/base/components/CustomTooltip.tsx';
-import { ListCardAvatar } from '@/base/components/lists/cards/ListCardAvatar.tsx';
-import { ListCardContent } from '@/base/components/lists/cards/ListCardContent.tsx';
 import { AppRoutes } from '@/base/AppRoute.constants.ts';
-import { MUIUtil } from '@/lib/mui/MUI.util.ts';
-import { OptionalCardActionAreaLink } from '@/base/components/lists/cards/OptionalCardActionAreaLink.tsx';
 import { languageCodeToName } from '@/base/utils/Languages.ts';
-import CardActionArea from '@mui/material/CardActionArea';
+import { ListRow } from '@/base/components/lists/ListRow.tsx';
+import { WavyCircularProgress } from '@/base/components/feedback/WavyProgress.tsx';
+import { SourceIcon } from '@/features/source/components/SourceIcon.tsx';
+import { ExtensionPill } from '@/features/extension/components/ExtensionPill.tsx';
 
-const CardAction = ({
-    isInstalled,
-    pkgName,
-    children,
-    performExtensionAction,
-}: {
-    isInstalled: boolean;
-    pkgName: string;
-    children?: ReactNode;
-    performExtensionAction: () => void;
-}) => {
-    if (isInstalled) {
-        return (
-            <OptionalCardActionAreaLink to={AppRoutes.extension.children.info.path(pkgName)}>
-                {children}
-            </OptionalCardActionAreaLink>
-        );
-    }
+const ICON_SIZE = 40;
+/**
+ * Mihon shrinks the icon into the progress ring while an extension is being installed, updated or uninstalled.
+ */
+const BUSY_ICON_SIZE = 24;
 
-    return <CardActionArea onClick={performExtensionAction}>{children}</CardActionArea>;
-};
+const BUSY_STATES: InstalledStates[] = [
+    ExtensionState.INSTALLING,
+    ExtensionState.UPDATING,
+    ExtensionState.UNINSTALLING,
+];
 
 interface IProps {
     extension: TExtension;
@@ -63,6 +49,9 @@ interface IProps {
     forcedState?: ExtensionState;
 }
 
+/**
+ * Mihon's "ExtensionItem": icon, name, "language • version" with pills for what's notable, and the action icons.
+ */
 export function ExtensionCard(props: IProps) {
     const { t } = useLingui();
 
@@ -87,6 +76,7 @@ export function ExtensionCard(props: IProps) {
         getInstalledState(isInstalled, isObsolete, hasUpdate),
     );
     const installedState = forcedState ?? localInstalledState;
+    const isBusy = BUSY_STATES.includes(installedState);
 
     useEffect(() => {
         setInstalledState(getInstalledState(isInstalled, isObsolete, hasUpdate));
@@ -109,105 +99,83 @@ export function ExtensionCard(props: IProps) {
         }
     };
 
-    function handleButtonClick() {
-        switch (installedState) {
-            case ExtensionAction.INSTALL:
-            case ExtensionAction.UPDATE:
-            case ExtensionAction.UNINSTALL:
-                requestExtensionAction(installedState).catch(
-                    defaultPromiseErrorHandler(`ExtensionCard:handleButtonClick(${installedState})`),
-                );
-                break;
-            case ExtensionState.OBSOLETE:
-                requestExtensionAction(ExtensionAction.UNINSTALL).catch(
-                    defaultPromiseErrorHandler(`ExtensionCard:handleButtonClick(${installedState})`),
-                );
-                break;
-            default:
-                break;
+    // Mihon's list only installs and updates; uninstalling is on the extension's details screen
+    const downloadAction =
+        installedState === ExtensionAction.INSTALL || installedState === ExtensionAction.UPDATE ? installedState : null;
+    const handleDownload = () => {
+        if (!downloadAction) {
+            return;
         }
-    }
+
+        requestExtensionAction(downloadAction).catch(
+            defaultPromiseErrorHandler(`ExtensionCard:handleDownload(${downloadAction})`),
+        );
+    };
+
+    const facts = [
+        showSourceStore && extensionStore?.name,
+        isInstalled && languageCodeToName(lang),
+        versionName,
+    ].filter(Boolean);
 
     return (
-        <Card>
-            <CardAction isInstalled={isInstalled} pkgName={pkgName} performExtensionAction={handleButtonClick}>
-                <ListCardContent>
-                    <ListCardAvatar
-                        iconUrl={requestManager.getValidImgUrlFor(iconUrl)}
-                        alt={name}
-                        slots={{
-                            spinnerImageProps: {
-                                ignoreQueue: true,
-                            },
-                        }}
-                    />
-                    <Stack
-                        sx={{
-                            justifyContent: 'center',
-                            flexGrow: 1,
-                            flexShrink: 1,
-                            wordBreak: 'break-word',
-                        }}
-                    >
-                        <Typography variant="h6" component="h3">
-                            {name}
-                        </Typography>
-                        {showSourceStore && !!extensionStore && (
-                            <Typography variant="caption">{extensionStore.name}</Typography>
-                        )}
-                        <Typography variant="caption">
-                            {isInstalled ? `${languageCodeToName(lang)}` : ''}
-                            {isInstalled ? (
-                                <Typography variant="caption" sx={{ px: 0.5 }}>
-                                    —
-                                </Typography>
-                            ) : (
-                                ''
-                            )}
-                            {versionName}
-                            {isObsolete && (
-                                <>
-                                    <Typography variant="caption" sx={{ px: 0.5 }}>
-                                        —
-                                    </Typography>
-                                    <Typography variant="caption" color="warning" sx={{ textTransform: 'uppercase' }}>
-                                        {t`Obsolete`}
-                                    </Typography>
-                                </>
-                            )}
-                            {isNsfw(contentWarning) && (
-                                <>
-                                    <Typography variant="caption" sx={{ px: 0.5 }}>
-                                        —
-                                    </Typography>
-                                    <Typography variant="caption" color="error">
-                                        18+
-                                    </Typography>
-                                </>
-                            )}
-                        </Typography>
-                    </Stack>
-                    {isInstalled && (
-                        <CustomTooltip title={t`Settings`}>
-                            <IconButton color="inherit" {...MUIUtil.preventRippleProp()}>
-                                <SettingsIcon />
-                            </IconButton>
-                        </CustomTooltip>
+        <ListRow
+            minHeight={64}
+            leading={
+                <Box
+                    sx={{
+                        position: 'relative',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: ICON_SIZE,
+                        height: ICON_SIZE,
+                    }}
+                >
+                    {isBusy && <WavyCircularProgress size={ICON_SIZE} sx={{ position: 'absolute', inset: 0 }} />}
+                    <SourceIcon iconUrl={iconUrl} alt={name} size={isBusy ? BUSY_ICON_SIZE : ICON_SIZE} />
+                </Box>
+            }
+            headline={name}
+            headlineVariant="bodyMedium"
+            supportingVariant="bodySmall"
+            supporting={
+                <Box component="span" sx={{ display: 'inline-flex', flexWrap: 'wrap', alignItems: 'center', gap: 0.5 }}>
+                    {!!facts.length && <span>{facts.join(' • ')}</span>}
+                    {isBusy && (
+                        <ExtensionPill color="primary">
+                            {t(INSTALLED_STATE_TO_TRANSLATION_MAP[installedState])}
+                        </ExtensionPill>
                     )}
-                    <Button
-                        variant="outlined"
-                        sx={{ flexShrink: 0 }}
-                        {...MUIUtil.preventRippleProp()}
-                        onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleButtonClick();
-                        }}
-                    >
-                        {t(INSTALLED_STATE_TO_TRANSLATION_MAP[installedState])}
-                    </Button>
-                </ListCardContent>
-            </CardAction>
-        </Card>
+                    {isObsolete && <ExtensionPill color="error">{t`Obsolete`}</ExtensionPill>}
+                    {isNsfw(contentWarning) && <ExtensionPill color="error">18+</ExtensionPill>}
+                </Box>
+            }
+            to={isInstalled ? AppRoutes.extension.children.info.path(pkgName) : undefined}
+            onClick={isInstalled || isBusy ? undefined : handleDownload}
+            trailing={
+                !isBusy && (
+                    <>
+                        {isInstalled && (
+                            <CustomTooltip title={t`Settings`}>
+                                <IconButton component={Link} to={AppRoutes.extension.children.info.path(pkgName)}>
+                                    <SettingsRoundedIcon />
+                                </IconButton>
+                            </CustomTooltip>
+                        )}
+                        {downloadAction && (
+                            <CustomTooltip title={t(INSTALLED_STATE_TO_TRANSLATION_MAP[downloadAction])}>
+                                <IconButton
+                                    aria-label={t(INSTALLED_STATE_TO_TRANSLATION_MAP[downloadAction])}
+                                    onClick={handleDownload}
+                                >
+                                    <DownloadRoundedIcon />
+                                </IconButton>
+                            </CustomTooltip>
+                        )}
+                    </>
+                )
+            }
+        />
     );
 }

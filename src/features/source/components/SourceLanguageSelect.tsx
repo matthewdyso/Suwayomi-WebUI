@@ -14,14 +14,14 @@ import DialogActions from '@mui/material/DialogActions';
 import Dialog from '@mui/material/Dialog';
 import Switch from '@mui/material/Switch';
 import IconButton from '@mui/material/IconButton';
-import FilterListIcon from '@mui/icons-material/FilterList';
+import FilterListRoundedIcon from '@mui/icons-material/FilterListRounded';
 import ListItemText from '@mui/material/ListItemText';
 import ListItem from '@mui/material/ListItem';
 import { GroupedVirtuoso } from 'react-virtuoso';
 import ListItemAvatar from '@mui/material/ListItemAvatar';
 import { useLingui } from '@lingui/react/macro';
 import Checkbox from '@mui/material/Checkbox';
-import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
 import { CustomTooltip } from '@/base/components/CustomTooltip.tsx';
 import { translateExtensionLanguage } from '@/features/extension/Extensions.utils.ts';
 import { languageSortComparator, toUniqueLanguageCodes } from '@/base/utils/Languages.ts';
@@ -35,13 +35,14 @@ import type {
 } from '@/features/source/Source.types.ts';
 import { Sources } from '@/features/source/services/Sources';
 import { batchUpdateSourceMetadata } from '@/features/source/services/SourceMetadata.ts';
-import { requestManager } from '@/lib/requests/RequestManager.ts';
-import { ListCardAvatar } from '@/base/components/lists/cards/ListCardAvatar.tsx';
+import { SourceIcon } from '@/features/source/components/SourceIcon.tsx';
 import { makeToast } from '@/base/utils/Toast.ts';
 import { getErrorMessage } from '@/lib/HelperFunctions.ts';
 import { VirtuosoUtil } from '@/lib/virtuoso/Virtuoso.util.tsx';
 import { AwaitableComponent, type AwaitableComponentProps } from 'awaitable-component';
 import { getISOLanguage } from '@/lib/ISOLanguageUtil.ts';
+
+const SOURCE_ICON_SIZE = 32;
 
 const SourceLanguageSelectDialog = ({
     isVisible,
@@ -148,7 +149,11 @@ const SourceLanguageSelectDialog = ({
         <Dialog fullWidth maxWidth="xs" open={isVisible} onClose={onDismiss} onTransitionExited={onExitComplete}>
             <DialogTitle>{t`Enabled languages and sources`}</DialogTitle>
             <DialogContent dividers sx={{ padding: 0 }}>
-                {!languages.length && <Box sx={{ p: 1 }}>{t`No sources installed`}</Box>}
+                {!languages.length && (
+                    <Typography variant="bodyMedium" component="p" sx={{ px: 3, py: 2 }}>
+                        {t`No sources installed`}
+                    </Typography>
+                )}
                 <GroupedVirtuoso
                     style={{
                         height: languagesSortedBySelectState.length * 54,
@@ -163,12 +168,8 @@ const SourceLanguageSelectDialog = ({
                         const isEnabled = tmpSelectedLanguages.includes(language);
 
                         return (
-                            <ListItem
-                                sx={{
-                                    backgroundColor: 'background.paper',
-                                    backgroundImage: 'var(--Paper-overlay)',
-                                }}
-                            >
+                            // sticky group header, opaque in the dialog's surface color
+                            <ListItem sx={{ bgcolor: 'm3.surfaceContainerHigh' }}>
                                 <ListItemText
                                     primary={translateExtensionLanguage(language)}
                                     secondary={getISOLanguage(language)?.name}
@@ -185,22 +186,8 @@ const SourceLanguageSelectDialog = ({
 
                         return (
                             <ListItem sx={{ pl: 3 }}>
-                                <ListItemAvatar sx={{ minWidth: 32, mr: 1 }}>
-                                    <ListCardAvatar
-                                        iconUrl={requestManager.getValidImgUrlFor(source.iconUrl)}
-                                        alt={source.name}
-                                        slots={{
-                                            avatarProps: {
-                                                sx: {
-                                                    width: 32,
-                                                    height: 32,
-                                                },
-                                            },
-                                            spinnerImageProps: {
-                                                ignoreQueue: true,
-                                            },
-                                        }}
-                                    />
+                                <ListItemAvatar sx={{ minWidth: 0, mr: 2 }}>
+                                    <SourceIcon iconUrl={source.iconUrl} alt={source.name} size={SOURCE_ICON_SIZE} />
                                 </ListItemAvatar>
                                 <ListItemText primary={source.name} />
                                 <Checkbox
@@ -268,7 +255,7 @@ export const SourceLanguageSelect = ({
                 edge="end"
                 color="inherit"
             >
-                <FilterListIcon />
+                <FilterListRoundedIcon />
             </IconButton>
         </CustomTooltip>
     );

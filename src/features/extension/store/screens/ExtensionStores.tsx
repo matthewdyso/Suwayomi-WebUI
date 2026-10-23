@@ -16,14 +16,13 @@ import { STABLE_EMPTY_ARRAY } from '@/base/Base.constants.ts';
 import type { ExtensionStoreFieldsFragment } from '@/lib/graphql/generated/graphql.ts';
 import { VirtuosoPersisted } from '@/lib/virtuoso/Component/VirtuosoPersisted.tsx';
 import Card from '@mui/material/Card';
-import { ListCardContent } from '@/base/components/lists/cards/ListCardContent.tsx';
 import { TypographyMaxLines } from '@/base/components/texts/TypographyMaxLines.tsx';
 import Stack from '@mui/material/Stack';
 import { CustomTooltip } from '@/base/components/CustomTooltip.tsx';
 import IconButton from '@mui/material/IconButton';
 import { plural } from '@lingui/core/macro';
-import DeleteIcon from '@mui/icons-material/Delete';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
+import ContentCopyRoundedIcon from '@mui/icons-material/ContentCopyRounded';
 import { IconBrowser } from '@/assets/icons/IconBrowser.tsx';
 import { makeToast } from '@/base/utils/Toast.ts';
 import { DiscordIcon } from '@/assets/icons/svg/DiscordIcon.tsx';
@@ -31,7 +30,8 @@ import { Confirmation } from '@/base/AppAwaitableComponent.ts';
 import Box from '@mui/material/Box';
 import { ContentWarning } from '@/lib/graphql/generated/graphql-base.types.ts';
 import { DEFAULT_FULL_FAB_HEIGHT, StyledFab } from '@/base/components/buttons/StyledFab.tsx';
-import AddIcon from '@mui/icons-material/Add';
+import AddRoundedIcon from '@mui/icons-material/AddRounded';
+import LabelRoundedIcon from '@mui/icons-material/LabelRounded';
 import { AwaitableComponent, type AwaitableComponentProps } from 'awaitable-component';
 import { TextSettingDialog } from '@/base/components/settings/text/TextSettingDialog.tsx';
 import { useMemo } from 'react';
@@ -64,21 +64,21 @@ const ExtensionStoreCard = ({
     const installedExtensionCount = installedExtensionsData.data?.extensions.totalCount;
 
     return (
-        <Box sx={{ p: 1, pb: 0 }}>
+        <Box sx={{ px: 2, pt: 1 }}>
             <Card>
-                <ListCardContent sx={{ flexWrap: 'wrap', justifyContent: 'space-between' }}>
-                    <Stack>
-                        <TypographyMaxLines variant="h6" component="h3">
+                <Stack sx={{ flexDirection: 'row', alignItems: 'center', gap: 2, px: 2, pt: 2 }}>
+                    <LabelRoundedIcon sx={{ color: 'm3.onSurfaceVariant' }} />
+                    <Stack sx={{ minWidth: 0 }}>
+                        <TypographyMaxLines variant="titleMedium" component="h3">
                             {name}
                         </TypographyMaxLines>
-                        <TypographyMaxLines variant="caption" color="textSecondary">
+                        <TypographyMaxLines variant="bodySmall" sx={{ color: 'text.secondary' }}>
                             {isNSfw ? (
                                 <>
-                                    <TypographyMaxLines sx={{ display: 'inline' }} variant="caption" color="error">
-                                        {' '}
+                                    <Box component="span" sx={{ color: 'm3.error' }}>
                                         +18
-                                    </TypographyMaxLines>
-                                    {extensionCount && ' — '}
+                                    </Box>
+                                    {extensionCount && ' • '}
                                 </>
                             ) : null}
                             {!!extensionCount &&
@@ -87,94 +87,86 @@ const ExtensionStoreCard = ({
                                     other: '# extensions',
                                 })}
                             {installedExtensionCount
-                                ? ` — ${plural(installedExtensionCount, {
+                                ? ` • ${plural(installedExtensionCount, {
                                       one: '# installed',
                                       other: '# installed',
                                   })}`
                                 : null}
                         </TypographyMaxLines>
                     </Stack>
-                    <Stack
-                        sx={{
-                            flexDirection: 'row',
-                            justifyContent: 'end',
-                            flexGrow: 1,
-                        }}
-                    >
-                        {contactWebsite && (
-                            <CustomTooltip title={t`Open website`} disabled={!contactWebsite}>
-                                <IconButton
-                                    disabled={!contactWebsite}
-                                    href={contactWebsite ?? undefined}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    color="inherit"
-                                >
-                                    <IconBrowser />
-                                </IconButton>
-                            </CustomTooltip>
-                        )}
-                        {contactDiscord && (
-                            <CustomTooltip title={t`Open discord`} disabled={!contactDiscord}>
-                                <IconButton
-                                    href={contactDiscord ?? undefined}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    color="inherit"
-                                >
-                                    <DiscordIcon />
-                                </IconButton>
-                            </CustomTooltip>
-                        )}
-                        <ClipBoardGuard>
-                            <CustomTooltip title={t`Copy index url`}>
-                                <IconButton
-                                    onClick={() => {
-                                        copyToClipboard(indexUrl);
-                                    }}
-                                    color="inherit"
-                                >
-                                    <ContentCopyIcon />
-                                </IconButton>
-                            </CustomTooltip>
-                        </ClipBoardGuard>
-                        <CustomTooltip disabled={loading} title={t`Delete`}>
+                </Stack>
+                <Stack sx={{ flexDirection: 'row', justifyContent: 'end' }}>
+                    {contactWebsite && (
+                        <CustomTooltip title={t`Open website`} disabled={!contactWebsite}>
                             <IconButton
-                                disabled={loading}
-                                onClick={async () => {
-                                    try {
-                                        await Confirmation.show({
-                                            title: t`Are you sure?`,
-                                            message: t`You are about to remove "${name}" from the extension stores`,
-                                        });
-
-                                        try {
-                                            await removeExtensionStore({ variables: { input: { indexUrl } } });
-
-                                            requestManager.clearExtensionCache();
-                                            fetchExtensions().catch(
-                                                defaultPromiseErrorHandler(
-                                                    'ExtensionStoreCard::remove::fetchExtensions',
-                                                ),
-                                            );
-                                        } catch (e) {
-                                            makeToast(
-                                                t`Could not remove extension store "${name}"`,
-                                                'error',
-                                                getErrorMessage(e),
-                                            );
-                                        }
-                                    } catch (e) {
-                                        // ignore
-                                    }
+                                disabled={!contactWebsite}
+                                href={contactWebsite ?? undefined}
+                                target="_blank"
+                                rel="noreferrer"
+                                color="inherit"
+                            >
+                                <IconBrowser />
+                            </IconButton>
+                        </CustomTooltip>
+                    )}
+                    {contactDiscord && (
+                        <CustomTooltip title={t`Open discord`} disabled={!contactDiscord}>
+                            <IconButton
+                                href={contactDiscord ?? undefined}
+                                target="_blank"
+                                rel="noreferrer"
+                                color="inherit"
+                            >
+                                <DiscordIcon />
+                            </IconButton>
+                        </CustomTooltip>
+                    )}
+                    <ClipBoardGuard>
+                        <CustomTooltip title={t`Copy index url`}>
+                            <IconButton
+                                onClick={() => {
+                                    copyToClipboard(indexUrl);
                                 }}
                                 color="inherit"
                             >
-                                <DeleteIcon />
+                                <ContentCopyRoundedIcon />
                             </IconButton>
                         </CustomTooltip>
-                    </Stack>
-                </ListCardContent>
+                    </ClipBoardGuard>
+                    <CustomTooltip disabled={loading} title={t`Delete`}>
+                        <IconButton
+                            disabled={loading}
+                            onClick={async () => {
+                                try {
+                                    await Confirmation.show({
+                                        title: t`Are you sure?`,
+                                        message: t`You are about to remove "${name}" from the extension stores`,
+                                    });
+
+                                    try {
+                                        await removeExtensionStore({ variables: { input: { indexUrl } } });
+
+                                        requestManager.clearExtensionCache();
+                                        fetchExtensions().catch(
+                                            defaultPromiseErrorHandler('ExtensionStoreCard::remove::fetchExtensions'),
+                                        );
+                                    } catch (e) {
+                                        makeToast(
+                                            t`Could not remove extension store "${name}"`,
+                                            'error',
+                                            getErrorMessage(e),
+                                        );
+                                    }
+                                } catch (e) {
+                                    // ignore
+                                }
+                            }}
+                            color="inherit"
+                        >
+                            <DeleteRoundedIcon />
+                        </IconButton>
+                    </CustomTooltip>
+                </Stack>
             </Card>
         </Box>
     );
@@ -280,7 +272,7 @@ export const ExtensionStores = () => {
                     });
                 }}
             >
-                <AddIcon />
+                <AddRoundedIcon />
                 {t`Add`}
             </StyledFab>
         </Box>

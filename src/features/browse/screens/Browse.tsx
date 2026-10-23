@@ -15,18 +15,23 @@ import { TabPanel } from '@/base/components/tabs/TabPanel.tsx';
 import { TabsWrapper } from '@/base/components/tabs/TabsWrapper.tsx';
 import { TabsMenu } from '@/base/components/tabs/TabsMenu.tsx';
 import { useAppTitle } from '@/features/navigation-bar/hooks/useAppTitle.ts';
+import { useFlatAppBar } from '@/features/navigation-bar/hooks/useFlatAppBar.ts';
 import { BrowseTab } from '@/features/browse/Browse.types.ts';
 import { GROUPED_VIRTUOSO_Z_INDEX } from '@/lib/virtuoso/Virtuoso.constants.ts';
 import { SearchParam } from '@/base/Base.types.ts';
 import { Migration } from '@/features/migration/screens/Migration.tsx';
 import { OffsetComponentWithContainer } from '@/base/OffsetComponent.tsx';
 import { useElementSize } from '@mantine/hooks';
+import { Pill, PILL_FONT_SIZE } from '@/base/components/badges/Pill.tsx';
+import { useExtensionUpdateCount } from '@/features/extension/hooks/useExtensionUpdateCount.ts';
 
 export function Browse() {
     const { t } = useLingui();
     useAppTitle(t`Browse`);
+    useFlatAppBar();
 
     const { ref: tabsMenuRef, height: tabsMenuHeight } = useElementSize();
+    const extensionUpdateCount = useExtensionUpdateCount();
 
     const [tabSearchParam, setTabSearchParam] = useQueryParam(SearchParam.TAB, StringParam, {});
     const tabName = (tabSearchParam as BrowseTab) ?? BrowseTab.SOURCES;
@@ -47,9 +52,21 @@ export function Browse() {
                         value={tabName}
                         onChange={(_, newTab) => setTabSearchParam(newTab, 'replaceIn')}
                     >
-                        <Tab value={BrowseTab.SOURCES} sx={{ textTransform: 'none' }} label={t`Source`} />
-                        <Tab value={BrowseTab.EXTENSIONS} sx={{ textTransform: 'none' }} label={t`Extension`} />
-                        <Tab value={BrowseTab.MIGRATE} sx={{ textTransform: 'none' }} label={t`Migrate`} />
+                        <Tab value={BrowseTab.SOURCES} label={t`Sources`} />
+                        <Tab
+                            value={BrowseTab.EXTENSIONS}
+                            label={
+                                <span>
+                                    {t`Extensions`}
+                                    {!!extensionUpdateCount && (
+                                        <Pill variant="onSurface" fontSize={PILL_FONT_SIZE.tab}>
+                                            {extensionUpdateCount}
+                                        </Pill>
+                                    )}
+                                </span>
+                            }
+                        />
+                        <Tab value={BrowseTab.MIGRATE} label={t`Migrate`} />
                     </TabsMenu>
                 }
             >

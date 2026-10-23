@@ -6,7 +6,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import { useLingui } from '@lingui/react/macro';
 import { INSTALLED_STATE_TO_TRANSLATION_MAP } from '@/features/extension/Extensions.constants.ts';
@@ -16,35 +15,36 @@ import { useBackButton } from '@/base/hooks/useBackButton.ts';
 import type { TExtension } from '@/features/extension/Extensions.types.ts';
 import { ExtensionAction, InstalledState } from '@/features/extension/Extensions.types.ts';
 
+/**
+ * Mihon's extension details buttons: uninstall as an outlined button, update as the tonal main action.
+ */
 export const ActionButton = ({ pkgName, isInstalled, isObsolete, hasUpdate }: TExtension) => {
     const handleBack = useBackButton();
     const { t } = useLingui();
 
     const installedState = getInstalledState(isInstalled, isObsolete, hasUpdate);
+    const action = hasUpdate && !isObsolete ? ExtensionAction.UPDATE : ExtensionAction.UNINSTALL;
 
     return (
-        <Box sx={{ px: 1, flexGrow: 1, flexBasis: 0 }}>
-            <Button
-                sx={{ width: '100%' }}
-                color={installedState === InstalledState.OBSOLETE ? 'error' : undefined}
-                variant="outlined"
-                size="large"
-                onClick={async () => {
-                    const action = hasUpdate && !isObsolete ? ExtensionAction.UPDATE : ExtensionAction.UNINSTALL;
+        // large: a 48 px touch target, like the extension list's buttons
+        <Button
+            size="large"
+            sx={{ flexGrow: 1, flexBasis: 0 }}
+            color={installedState === InstalledState.OBSOLETE ? 'error' : undefined}
+            variant={action === ExtensionAction.UPDATE ? 'tonal' : 'outlined'}
+            onClick={async () => {
+                try {
+                    await updateExtension(pkgName, isObsolete, action);
 
-                    try {
-                        await updateExtension(pkgName, isObsolete, action);
-
-                        if (action === ExtensionAction.UNINSTALL) {
-                            handleBack();
-                        }
-                    } catch (e) {
-                        defaultPromiseErrorHandler('ExtensionInfo::ActionButton::onClick');
+                    if (action === ExtensionAction.UNINSTALL) {
+                        handleBack();
                     }
-                }}
-            >
-                {t(INSTALLED_STATE_TO_TRANSLATION_MAP[installedState])}
-            </Button>
-        </Box>
+                } catch (e) {
+                    defaultPromiseErrorHandler('ExtensionInfo::ActionButton::onClick');
+                }
+            }}
+        >
+            {t(INSTALLED_STATE_TO_TRANSLATION_MAP[installedState])}
+        </Button>
     );
 };

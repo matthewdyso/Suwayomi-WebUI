@@ -6,21 +6,16 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import Typography from '@mui/material/Typography';
 import { Link } from 'react-router-dom';
-import Card from '@mui/material/Card';
 import IconButton from '@mui/material/IconButton';
-import SettingsIcon from '@mui/icons-material/Settings';
+import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
 import Switch from '@mui/material/Switch';
-import CardActionArea from '@mui/material/CardActionArea';
 import { useLingui } from '@lingui/react/macro';
-import { MUIUtil } from '@/lib/mui/MUI.util.ts';
+import { useMemo } from 'react';
 import { AppRoutes } from '@/base/AppRoute.constants.ts';
 import { CustomTooltip } from '@/base/components/CustomTooltip.tsx';
 import { Sources } from '@/features/source/services/Sources.ts';
 import { translateExtensionLanguage } from '@/features/extension/Extensions.utils.ts';
-import { ListCardContent } from '@/base/components/lists/cards/ListCardContent.tsx';
-import { StyledGroupItemWrapper } from '@/base/components/virtuoso/StyledGroupItemWrapper.tsx';
 import { getErrorMessage } from '@/lib/HelperFunctions.ts';
 import { makeToast } from '@/base/utils/Toast.ts';
 import { createUpdateSourceMetadata, useGetSourceMetadata } from '@/features/source/services/SourceMetadata.ts';
@@ -30,10 +25,12 @@ import type {
     SourceLanguageInfo,
     SourceMetaInfo,
 } from '@/features/source/Source.types.ts';
-import { useMemo } from 'react';
 import { getISOLanguage } from '@/lib/ISOLanguageUtil.ts';
-import Stack from '@mui/material/Stack';
+import { ListRow } from '@/base/components/lists/ListRow.tsx';
 
+/**
+ * Mihon's "SourceSwitchPreference": a source of the extension with its settings and whether it is enabled.
+ */
 export const SourceCard = (source: SourceIdInfo & SourceMetaInfo & SourceLanguageInfo & SourceConfigurableInfo) => {
     const { id, isConfigurable } = source;
 
@@ -48,50 +45,48 @@ export const SourceCard = (source: SourceIdInfo & SourceMetaInfo & SourceLanguag
         makeToast(t`Failed to save changes`, 'error', getErrorMessage(e)),
     );
 
+    const toggleEnabled = () => {
+        if (!isLanguageEnabled) {
+            setLanguages([...languages, source.lang]);
+
+            if (!isEnabled) {
+                updateSetting('isEnabled', !isEnabled);
+            }
+
+            return;
+        }
+
+        updateSetting('isEnabled', !isEnabled);
+    };
+
+    const isoLanguageName = getISOLanguage(Sources.getLanguage(source))?.name;
+
     return (
-        <StyledGroupItemWrapper key={id} sx={{ px: 0 }}>
-            <Card>
-                <CardActionArea
-                    onClick={() => {
-                        if (!isLanguageEnabled) {
-                            setLanguages([...languages, source.lang]);
-
-                            if (!isEnabled) {
-                                updateSetting('isEnabled', !isEnabled);
-                            }
-
-                            return;
-                        }
-
-                        updateSetting('isEnabled', !isEnabled);
-                    }}
-                >
-                    <ListCardContent>
-                        <Stack sx={{ flexGrow: 1 }}>
-                            <Typography variant="h6" component="h3">
-                                {translateExtensionLanguage(Sources.getLanguage(source))}
-                            </Typography>
-                            <Typography variant="body1" color="textSecondary">
-                                {getISOLanguage(Sources.getLanguage(source))?.name}
-                            </Typography>
-                        </Stack>
-                        {isConfigurable && (
-                            <CustomTooltip title={t`Settings`}>
-                                <IconButton
-                                    component={Link}
-                                    to={AppRoutes.sources.children.configure.path(id)}
-                                    color="inherit"
-                                    onClick={(e) => e.stopPropagation()}
-                                    {...MUIUtil.preventRippleProp()}
-                                >
-                                    <SettingsIcon />
-                                </IconButton>
-                            </CustomTooltip>
-                        )}
-                        <Switch checked={finalIsEnabled} />
-                    </ListCardContent>
-                </CardActionArea>
-            </Card>
-        </StyledGroupItemWrapper>
+        <ListRow
+            minHeight={isoLanguageName ? 72 : 56}
+            headline={translateExtensionLanguage(Sources.getLanguage(source))}
+            supporting={isoLanguageName}
+            onClick={toggleEnabled}
+            trailing={
+                <>
+                    {isConfigurable && (
+                        <CustomTooltip title={t`Settings`}>
+                            <IconButton
+                                component={Link}
+                                to={AppRoutes.sources.children.configure.path(id)}
+                                sx={{ color: 'm3.onSurface' }}
+                            >
+                                <SettingsRoundedIcon />
+                            </IconButton>
+                        </CustomTooltip>
+                    )}
+                    <Switch
+                        checked={finalIsEnabled}
+                        onChange={toggleEnabled}
+                        slotProps={{ input: { 'aria-label': translateExtensionLanguage(Sources.getLanguage(source)) } }}
+                    />
+                </>
+            }
+        />
     );
 };

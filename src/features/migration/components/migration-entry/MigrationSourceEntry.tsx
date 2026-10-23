@@ -12,8 +12,8 @@ import { TypographyMaxLines } from '@/base/components/texts/TypographyMaxLines.t
 import { MigrationEntryMetadataText } from '@/features/migration/components/migration-entry/MigrationEntryMetadataText.tsx';
 import { MigrationEntryStatusIndicator } from '@/features/migration/components/migration-entry/MigrationEntryStatusIndicator.tsx';
 import { AppRoutes } from '@/base/AppRoute.constants.ts';
-import { ListCardAvatar } from '@/base/components/lists/cards/ListCardAvatar.tsx';
 import { Mangas } from '@/features/manga/services/Mangas.ts';
+import { MigrationEntryThumbnail } from '@/features/migration/components/migration-entry/MigrationEntryThumbnail.tsx';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import { useLingui } from '@lingui/react/macro';
@@ -44,8 +44,10 @@ export const MigrationSourceEntry = memo((entry: TMigrationEntry) => {
         return (
             <Stack sx={{ flexDirection: 'row', gap: 1, alignItems: 'flex-start', justifyContent: 'space-between' }}>
                 <Stack>
-                    <Typography variant="overline" color="textSecondary">{t`Source entry — ${sourceTitle}`}</Typography>
-                    <TypographyMaxLines variant="h6" component="h3" title={mangaTitle}>
+                    <Typography variant="labelMedium" sx={{ color: 'm3.onSurfaceVariant' }}>
+                        {t`Source entry — ${sourceTitle}`}
+                    </Typography>
+                    <TypographyMaxLines variant="titleMedium" component="h3" title={mangaTitle}>
                         {mangaTitle}
                     </TypographyMaxLines>
                     <MigrationEntryMetadataText
@@ -70,29 +72,22 @@ export const MigrationSourceEntry = memo((entry: TMigrationEntry) => {
                 gap: 2,
             }}
         >
-            <Link component={RouterLink} to={AppRoutes.manga.path(mangaId)}>
-                <ListCardAvatar
-                    iconUrl={Mangas.getThumbnailUrl({ ...entry, thumbnailUrl: mangaThumbnailUrl })}
-                    alt={mangaTitle}
-                    slots={{
-                        avatarProps: {
-                            sx: {
-                                width: 'unset',
-                                height: 112,
-                                aspectRatio: '3 / 4',
-                            },
-                        },
-                    }}
-                />
-            </Link>
+            <MigrationEntryThumbnail
+                id={mangaId}
+                title={mangaTitle}
+                thumbnailUrl={Mangas.getThumbnailUrl({ ...entry, thumbnailUrl: mangaThumbnailUrl })}
+                height={112}
+            />
             <Stack sx={{ minWidth: 0, flex: 1 }}>
-                <Typography variant="overline" color="textSecondary">{t`Source entry — ${sourceTitle}`}</Typography>
+                <Typography variant="labelMedium" sx={{ color: 'm3.onSurfaceVariant' }}>
+                    {t`Source entry — ${sourceTitle}`}
+                </Typography>
                 <Link
                     component={RouterLink}
                     to={AppRoutes.manga.path(mangaId)}
                     sx={{ textDecoration: 'none', color: 'inherit' }}
                 >
-                    <TypographyMaxLines variant="h6" component="h3" title={mangaTitle}>
+                    <TypographyMaxLines variant="titleMedium" component="h3" title={mangaTitle}>
                         {mangaTitle}
                     </TypographyMaxLines>
                 </Link>

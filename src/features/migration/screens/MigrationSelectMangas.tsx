@@ -99,17 +99,19 @@ export const MigrationSelectMangas = () => {
     const mangas = migratableSourceMangasData?.mangas.nodes ?? STABLE_EMPTY_ARRAY;
     const mangaIds = useMemo(() => Mangas.getIds(mangas), [mangas]);
 
-    const { selectedItemIds, handleSelection, handleSelectAll, areAllItemsSelected, areNoItemsSelected } =
-        useSelectableCollection<number, string>(mangas.length, {
-            itemIds: mangaIds,
-            currentKey: 'default',
-            initialState: useMemo(
-                () => ({
-                    default: Object.keys(selectedMangas).map(Number),
-                }),
-                [selectedMangas],
-            ),
-        });
+    const { selectedItemIds, handleSelection, handleSelectAll, areAllItemsSelected } = useSelectableCollection<
+        number,
+        string
+    >(mangas.length, {
+        itemIds: mangaIds,
+        currentKey: 'default',
+        initialState: useMemo(
+            () => ({
+                default: Object.keys(selectedMangas).map(Number),
+            }),
+            [selectedMangas],
+        ),
+    });
 
     const sourceName = migratableSourceData?.source?.displayName ?? sourceIds ?? t`Migrate`;
     useAppTitleAndAction(
@@ -126,7 +128,7 @@ export const MigrationSelectMangas = () => {
                 }}
             />
         </>,
-        [gridLayout, setGridLayout, areAllItemsSelected, areNoItemsSelected, handleSelectAll, mangaIds],
+        [gridLayout, setGridLayout, areAllItemsSelected, handleSelectAll, mangaIds],
     );
 
     const handleContinue = () => {

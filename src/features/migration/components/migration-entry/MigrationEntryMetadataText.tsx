@@ -7,6 +7,7 @@
  */
 
 import type { MigrationMatch } from '@/features/migration/Migration.types.ts';
+import { Fragment } from 'react';
 import Typography from '@mui/material/Typography';
 import { useLingui } from '@lingui/react/macro';
 import { CustomTooltip } from '@/base/components/CustomTooltip.tsx';
@@ -18,7 +19,7 @@ const ArtistAuthorNode = ({ value }: { value: string }) => {
 
     return (
         <CustomTooltip title={value}>
-            <Typography sx={{ display: 'inline-flex' }} key="author" variant="inherit">
+            <Typography sx={{ display: 'inline-flex' }} key="author" variant="inherit" component="span">
                 {finalValue}
             </Typography>
         </CustomTooltip>
@@ -36,25 +37,31 @@ export const MigrationEntryMetadataText = (
     const nodes = [
         entry.author ? <ArtistAuthorNode key="auhtor" value={entry.author} /> : null,
         !isSameArtistAuthor && entry.artist ? <ArtistAuthorNode key="artist" value={entry.artist} /> : null,
-        <Typography sx={{ display: 'inline-flex' }} key="latest-chapter-number" variant="inherit">
+        <Typography sx={{ display: 'inline-flex' }} key="latest-chapter-number" variant="inherit" component="span">
             {t`Latest: ${latestChapterNumber}`}
         </Typography>,
         entry.missingChapters ? (
-            <Typography sx={{ display: 'inline-flex' }} key="missing-chapters" variant="inherit" color="warning">
+            <Typography
+                sx={{ display: 'inline-flex' }}
+                key="missing-chapters"
+                variant="inherit"
+                component="span"
+                color="warning"
+            >
                 {t`Missing: ${entry.missingChapters}`}
             </Typography>
         ) : null,
     ]
         .filter((node) => node !== null)
         .map((node, index, array) => (
-            <>
+            <Fragment key={node.key}>
                 {node}
-                {index < array.length - 1 && ' — '}
-            </>
+                {index < array.length - 1 && ' • '}
+            </Fragment>
         ));
 
     return (
-        <Typography variant="body2" color="textSecondary">
+        <Typography variant="bodySmall" component="p" sx={{ color: 'text.secondary' }}>
             {nodes}
         </Typography>
     );

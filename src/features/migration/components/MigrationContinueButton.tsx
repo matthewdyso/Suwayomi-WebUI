@@ -7,7 +7,7 @@
  */
 
 import { useLingui } from '@lingui/react/macro';
-import Fab from '@mui/material/Fab';
+import { StyledFab } from '@/base/components/buttons/StyledFab.tsx';
 
 export const MigrationContinueButton = ({
     onClick,
@@ -21,18 +21,8 @@ export const MigrationContinueButton = ({
     const { t } = useLingui();
 
     return (
-        <Fab
-            variant="extended"
-            color="primary"
-            sx={{
-                position: 'fixed',
-                bottom: (theme) => theme.spacing(2),
-                right: (theme) => theme.spacing(2),
-            }}
-            disabled={isDisabled}
-            onClick={onClick}
-        >
+        <StyledFab variant="extended" color="primary" disabled={isDisabled} onClick={onClick}>
             {title ?? t`Continue`}
-        </Fab>
+        </StyledFab>
     );
 };

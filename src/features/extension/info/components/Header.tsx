@@ -8,23 +8,28 @@
 
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import { requestManager } from '@/lib/requests/RequestManager.ts';
-import { SpinnerImage } from '@/base/components/SpinnerImage.tsx';
 import type { TExtension } from '@/features/extension/Extensions.types.ts';
+import { SourceIcon } from '@/features/source/components/SourceIcon.tsx';
+import { M3_SHAPE } from '@/features/theme/m3/M3Shape.constants.ts';
 
+const ICON_SIZE = 112;
+
+/**
+ * Mihon's "DetailsHeader": the large icon, the name, the package and the store.
+ */
 export const Header = ({ name, pkgName, iconUrl, extensionStore }: TExtension) => (
-    <Stack sx={{ alignItems: 'center' }}>
-        <SpinnerImage alt={name} src={requestManager.getValidImgUrlFor(iconUrl)} ignoreQueue />
-        <Typography variant="h5" component="h2">
+    <Stack sx={{ alignItems: 'center', textAlign: 'center', px: 2, pt: 2, pb: 1 }}>
+        <SourceIcon iconUrl={iconUrl} alt={name} size={ICON_SIZE} borderRadius={M3_SHAPE.large} />
+        <Typography variant="headlineSmall" component="h2">
             {name}
         </Typography>
+        <Typography variant="bodySmall" sx={{ color: 'text.secondary', wordBreak: 'break-word' }}>
+            {pkgName.replace('eu.kanade.tachiyomi.extension.', '')}
+        </Typography>
         {extensionStore && (
-            <Typography variant="body1" color="textSecondary">
+            <Typography variant="labelLarge" sx={{ color: 'm3.primary', py: 0.25 }}>
                 {extensionStore.name}
             </Typography>
         )}
-        <Typography variant="body2" color="textSecondary">
-            {pkgName.replace('eu.kanade.tachiyomi.extension.', '')}
-        </Typography>
     </Stack>
 );

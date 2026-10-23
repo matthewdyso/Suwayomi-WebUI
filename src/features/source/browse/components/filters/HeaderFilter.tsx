@@ -6,15 +6,11 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import Typography from '@mui/material/Typography';
 import React from 'react';
+import { HeadingItem } from '@/base/components/settings/SheetRows.tsx';
 
 interface Props {
     name: string;
 }
 
-export const HeaderFilter: React.FC<Props> = ({ name }) => (
-    <Typography key={name} sx={{ mt: 2 }} variant="subtitle2">
-        {name}
-    </Typography>
-);
+export const HeaderFilter: React.FC<Props> = ({ name }) => <HeadingItem>{name}</HeadingItem>;

@@ -9,7 +9,6 @@
 import type { MigrationMatch, TMigrationEntry } from '@/features/migration/Migration.types.ts';
 import { MigrationEntryStatus } from '@/features/migration/Migration.types.ts';
 import { MigrationManager } from '@/features/migration/MigrationManager.ts';
-import Paper from '@mui/material/Paper';
 import { memo, useLayoutEffect, useMemo, useState } from 'react';
 import { MediaQuery } from '@/base/utils/MediaQuery.tsx';
 import { applyStyles } from '@/base/utils/ApplyStyles.ts';
@@ -27,6 +26,7 @@ import Divider from '@mui/material/Divider';
 import { MigrationEntryStatusIndicator } from '@/features/migration/components/migration-entry/MigrationEntryStatusIndicator.tsx';
 import Box from '@mui/material/Box';
 import { MigrationEntries } from '@/features/migration/MigrationEntries.ts';
+import { M3_SHAPE } from '@/features/theme/m3/M3Shape.constants.ts';
 
 const MigrationEntryMobile = memo(
     ({
@@ -67,7 +67,7 @@ const MigrationEntryMobile = memo(
                 <Collapse in={isExpanded} unmountOnExit>
                     <Divider sx={{ mb: 1 }} />
                     <Stack sx={{ flexDirection: 'row', gap: 1, alignItems: 'center', justifyContent: 'space-between' }}>
-                        <Typography variant="h6" component="h2">{t`Matches`}</Typography>
+                        <Typography variant="titleMedium" component="h2">{t`Matches`}</Typography>
                         <Button
                             startIcon={<SearchIcon />}
                             variant="text"
@@ -175,7 +175,7 @@ export const MigrationEntryDesktop = memo(
 
                 <Collapse in={isExpanded && !isMigrating} unmountOnExit>
                     <Divider sx={{ my: 4 }} />
-                    <Typography variant="h6" component="h2">{t`Matches`}</Typography>
+                    <Typography variant="titleMedium" component="h2">{t`Matches`}</Typography>
                     <Stack sx={{ pt: 2 }}>
                         {otherSearchMatches.map((searchMatch) => {
                             if (destinationEntry?.id === searchMatch.id) {
@@ -250,8 +250,10 @@ export const MigrationEntry = memo(
         );
 
         return (
-            <Paper
+            <Box
                 sx={{
+                    bgcolor: 'm3.surfaceContainerLow',
+                    borderRadius: M3_SHAPE.large,
                     opacity: !isMigrating && entry.isExcluded ? 0.5 : 1,
                     ...applyStyles(isTabletWidth, {
                         flexDirection: 'column',
@@ -277,7 +279,7 @@ export const MigrationEntry = memo(
                     isMigrating={isMigrating}
                     isAborted={isAborted}
                 />
-            </Paper>
+            </Box>
         );
     },
 );

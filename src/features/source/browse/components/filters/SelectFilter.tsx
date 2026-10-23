@@ -6,6 +6,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+import Box from '@mui/material/Box';
 import React, { useState } from 'react';
 import InputLabel from '@mui/material/InputLabel';
 import FormControl from '@mui/material/FormControl';
@@ -47,12 +48,14 @@ function NoSelect(
             </MenuItem>
         ));
         return (
-            <FormControl sx={{ my: 1 }} variant="standard">
-                <InputLabel>{name}</InputLabel>
-                <Select name={name} value={values[val]} label={name} onChange={handleChange}>
-                    {rett}
-                </Select>
-            </FormControl>
+            <Box sx={{ px: 3, py: 1.25 }}>
+                <FormControl fullWidth>
+                    <InputLabel>{name}</InputLabel>
+                    <Select name={name} value={values[val]} label={name} onChange={handleChange}>
+                        {rett}
+                    </Select>
+                </FormControl>
+            </Box>
         );
     }
     return null;

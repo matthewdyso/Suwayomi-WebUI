@@ -18,7 +18,7 @@ import type { SourceIdInfo } from '@/features/source/Source.types.ts';
 import { useCallback, useMemo } from 'react';
 import { STABLE_EMPTY_ARRAY } from '@/base/Base.constants.ts';
 import { arrayMove } from '@dnd-kit/sortable';
-import Fab from '@mui/material/Fab';
+import { StyledFab } from '@/base/components/buttons/StyledFab.tsx';
 import { useAppTitleAndAction } from '@/features/navigation-bar/hooks/useAppTitleAndAction.ts';
 import PushPinIcon from '@mui/icons-material/PushPin';
 import IconButton from '@mui/material/IconButton';
@@ -64,22 +64,16 @@ export const MigrationSelectDestinationSources = () => {
 
     const hasPinnedSources = !!pinnedSourceIds.length;
 
-    const {
-        selectedItemIds,
-        areAllItemsSelected,
-        areNoItemsSelected,
-        handleSelectAll,
-        setSelectionForKey,
-        handleSelection,
-    } = useSelectableCollection<SourceIdInfo['id']>(sources.length ?? 0, {
-        currentKey: 'default',
-        initialState: useMemo(
-            () => ({
-                default: pinnedSourceIds,
-            }),
-            [pinnedSourceIds],
-        ),
-    });
+    const { selectedItemIds, areAllItemsSelected, handleSelectAll, setSelectionForKey, handleSelection } =
+        useSelectableCollection<SourceIdInfo['id']>(sources.length ?? 0, {
+            currentKey: 'default',
+            initialState: useMemo(
+                () => ({
+                    default: pinnedSourceIds,
+                }),
+                [pinnedSourceIds],
+            ),
+        });
 
     useAppTitleAndAction(
         t`Select destination sources`,
@@ -114,7 +108,6 @@ export const MigrationSelectDestinationSources = () => {
             pinnedSourceIds,
             enabledSourceIds,
             areAllItemsSelected,
-            areNoItemsSelected,
             handleSelectAll,
             sourceIds,
         ],
@@ -162,15 +155,10 @@ export const MigrationSelectDestinationSources = () => {
                 handlePriorityChange={handlePriorityChange}
                 currentSourceIds={currentSourceIds}
             />
-            <Fab
+            <StyledFab
                 variant="extended"
                 color="primary"
                 disabled={!selectedItemIds.length}
-                sx={{
-                    position: 'fixed',
-                    bottom: (theme) => theme.spacing(2),
-                    right: (theme) => theme.spacing(2),
-                }}
                 onClick={async () => {
                     try {
                         const searchOptions = await AwaitableComponent.show(MigrationBulkSearchOptionsDialog);
@@ -182,7 +170,7 @@ export const MigrationSelectDestinationSources = () => {
                 }}
             >
                 {t`Start Search`}
-            </Fab>
+            </StyledFab>
         </>
     );
 };

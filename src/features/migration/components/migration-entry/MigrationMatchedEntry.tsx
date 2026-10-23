@@ -24,6 +24,7 @@ import Link from '@mui/material/Link';
 import { Link as RouterLink } from 'react-router-dom';
 import { memo } from 'react';
 import { MigrationEntryThumbnail } from '@/features/migration/components/migration-entry/MigrationEntryThumbnail.tsx';
+import { Mangas } from '@/features/manga/services/Mangas.ts';
 
 export const MigrationMatchedEntry = memo(
     ({ sourceMangaId, entry }: { sourceMangaId: MangaIdInfo['id']; entry: MigrationMatch }) => {
@@ -35,9 +36,15 @@ export const MigrationMatchedEntry = memo(
                     <MigrationEntryCardContent>
                         {(() => (
                             <>
-                                <MigrationEntryThumbnail entry={entry} height={80} />
+                                <MigrationEntryThumbnail
+                                    id={entry.id}
+                                    title={entry.title}
+                                    thumbnailUrl={Mangas.getThumbnailUrl(entry)}
+                                    inLibrary={entry.inLibrary}
+                                    height={80}
+                                />
                                 <Stack sx={{ minWidth: 0, flex: 1 }}>
-                                    <Typography variant="overline" color="textSecondary">
+                                    <Typography variant="labelMedium" sx={{ color: 'm3.onSurfaceVariant' }}>
                                         {entry.sourceTitle}
                                     </Typography>
                                     <Link
@@ -46,7 +53,7 @@ export const MigrationMatchedEntry = memo(
                                         sx={{ textDecoration: 'none', color: 'inherit', width: 'fit-content' }}
                                         onClick={(e) => e.stopPropagation()}
                                     >
-                                        <TypographyMaxLines variant="h6" component="h3" title={entry.title}>
+                                        <TypographyMaxLines variant="titleMedium" component="h3" title={entry.title}>
                                             {entry.title}
                                         </TypographyMaxLines>
                                     </Link>
@@ -56,7 +63,7 @@ export const MigrationMatchedEntry = memo(
                         ))()}
                         {(() => (
                             <Button
-                                variant="outlined"
+                                variant="tonal"
                                 {...MUIUtil.preventRippleProp({
                                     onClick: () =>
                                         MigrationManager.selectMatch(sourceMangaId, entry.id, entry.sourceId),

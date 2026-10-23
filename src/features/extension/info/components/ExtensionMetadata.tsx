@@ -9,7 +9,11 @@
 import type { ComponentProps } from 'react';
 import Divider from '@mui/material/Divider';
 import { Metadata } from '@/base/components/texts/Metadata.tsx';
+import { MUIUtil } from '@/lib/mui/MUI.util.ts';
 
+/**
+ * Mihon's "InfoText": a value over its label, centered, with a short divider to the next one.
+ */
 export const ExtensionMetadata = ({
     addDivider = true,
     ...props
@@ -19,19 +23,27 @@ export const ExtensionMetadata = ({
             {...props}
             stackProps={{
                 ...props.stackProps,
-                sx: {
-                    ...props.stackProps?.sx,
-                    flexDirection: 'column-reverse',
-                    alignItems: 'center',
-                    flexGrow: 1,
-                    flexBasis: 0,
-                },
+                sx: MUIUtil.mergeSx(
+                    {
+                        flexDirection: 'column-reverse',
+                        alignItems: 'center',
+                        textAlign: 'center',
+                        flexGrow: 1,
+                        flexBasis: 0,
+                    },
+                    props.stackProps?.sx,
+                ),
             }}
             titleProps={{
+                variant: 'bodySmall',
                 ...props.titleProps,
-                variant: 'body2',
+                sx: MUIUtil.mergeSx({ color: 'text.secondary' }, props.titleProps?.sx),
+            }}
+            valueProps={{
+                variant: 'titleMedium',
+                ...props.valueProps,
             }}
         />
-        {addDivider && <Divider orientation="vertical" sx={{ height: '25px' }} />}
+        {addDivider && <Divider orientation="vertical" sx={{ height: 24, mx: 1 }} />}
     </>
 );

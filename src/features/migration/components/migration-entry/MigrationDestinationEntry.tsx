@@ -35,6 +35,7 @@ import { Link as RouterLink } from 'react-router-dom';
 import { useTheme } from '@mui/material/styles';
 import { applyStyles } from '@/base/utils/ApplyStyles.ts';
 import { MigrationEntryThumbnail } from '@/features/migration/components/migration-entry/MigrationEntryThumbnail.tsx';
+import { Mangas } from '@/features/manga/services/Mangas.ts';
 import { makeToast } from '@/base/utils/Toast.ts';
 
 const EntryStatus = ({
@@ -52,7 +53,10 @@ const EntryStatus = ({
 
     return (
         <Stack sx={{ alignItems: 'center', justifyContent: 'center', gap: 2 }}>
-            <Typography color={status === MigrationEntryStatus.SEARCH_NO_MATCH ? 'warning' : undefined}>
+            <Typography
+                variant="bodyMedium"
+                color={status === MigrationEntryStatus.SEARCH_NO_MATCH ? 'warning' : undefined}
+            >
                 {t(ENTRY_STATUS_TRANSLATION[status])}
             </Typography>
             {!isMigrating && status === MigrationEntryStatus.SEARCH_NO_MATCH && (
@@ -97,7 +101,7 @@ const EntryError = ({
     return (
         <Stack sx={{ width: '100%', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
             <Stack sx={{ flexDirection: 'row', alignItems: 'center', gap: 1 }}>
-                <Typography color="error" title={finalError}>
+                <Typography variant="bodyMedium" color="error" title={finalError}>
                     {finalError}
                 </Typography>
                 {(isErrorTooLong || (isGraphqlException && graphqlStackTrace)) && (
@@ -155,18 +159,23 @@ const EntryData = (entry: MigrationMatch) => {
 
     return (
         <>
-            <MigrationEntryThumbnail entry={entry} height={112} />
+            <MigrationEntryThumbnail
+                id={id}
+                title={title}
+                thumbnailUrl={Mangas.getThumbnailUrl(entry)}
+                inLibrary={entry.inLibrary}
+                height={112}
+            />
             <Stack sx={{ minWidth: 0, flex: 1 }}>
-                <Typography
-                    variant="overline"
-                    color="textSecondary"
-                >{t`Destination — ${entry.sourceTitle}`}</Typography>
+                <Typography variant="labelMedium" sx={{ color: 'm3.onSurfaceVariant' }}>
+                    {t`Destination — ${entry.sourceTitle}`}
+                </Typography>
                 <Link
                     component={RouterLink}
                     to={AppRoutes.manga.path(id)}
                     sx={{ textDecoration: 'none', color: 'inherit' }}
                 >
-                    <TypographyMaxLines variant="h6" component="h3" title={title}>
+                    <TypographyMaxLines variant="titleMedium" component="h3" title={title}>
                         {title}
                     </TypographyMaxLines>
                 </Link>
@@ -249,22 +258,10 @@ export const MigrationDestinationEntry = ({
                 })()}
             </MigrationEntryCardContent>
             {!isTabletWidth && !isMigrating && !!otherResultsCount && (
-                <CardActions
-                    sx={{
-                        p: 0,
-                        backgroundColor: 'primary.dark',
-                        '&:hover': {
-                            backgroundColor: theme.alpha(theme.palette.primary.dark, 0.8),
-                        },
-                    }}
-                >
+                <CardActions sx={{ px: 2, pt: 0, pb: 2 }}>
                     <Button
-                        sx={{
-                            width: '100%',
-                            borderRadius: 0,
-                            color: 'primary.contrastText',
-                        }}
-                        variant="text"
+                        fullWidth
+                        variant="tonal"
                         startIcon={isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                         onClick={() => setIsExpanded(!isExpanded)}
                     >

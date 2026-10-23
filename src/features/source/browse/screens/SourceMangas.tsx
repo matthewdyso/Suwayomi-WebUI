@@ -9,24 +9,24 @@
 import type { MessageDescriptor } from '@lingui/core';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import IconButton from '@mui/material/IconButton';
-import SettingsIcon from '@mui/icons-material/Settings';
 import { StringParam, useQueryParam } from 'use-query-params';
 import Link from '@mui/material/Link';
 import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
+import Chip from '@mui/material/Chip';
 import { styled } from '@mui/material/styles';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import NewReleasesIcon from '@mui/icons-material/NewReleases';
-import FilterListIcon from '@mui/icons-material/FilterList';
+import FavoriteRoundedIcon from '@mui/icons-material/FavoriteRounded';
+import FavoriteBorderRoundedIcon from '@mui/icons-material/FavoriteBorderRounded';
+import NewReleasesRoundedIcon from '@mui/icons-material/NewReleasesRounded';
+import NewReleasesOutlinedIcon from '@mui/icons-material/NewReleasesOutlined';
+import FilterListRoundedIcon from '@mui/icons-material/FilterListRounded';
 import { useLingui } from '@lingui/react/macro';
 import { msg } from '@lingui/core/macro';
-import { CustomTooltip } from '@/base/components/CustomTooltip.tsx';
 import type { AbortableApolloUseMutationPaginatedResponse } from '@/lib/requests/RequestManager.ts';
 import { requestManager, SPECIAL_ED_SOURCES } from '@/lib/requests/RequestManager.ts';
 import { SourceGridLayout } from '@/features/source/components/SourceGridLayout.tsx';
 import { AppbarSearch } from '@/base/components/AppbarSearch.tsx';
 import { SourceOptions } from '@/features/source/browse/components/SourceOptions.tsx';
+import { SourceBrowseOverflowMenu } from '@/features/source/browse/components/SourceBrowseOverflowMenu.tsx';
 import { BaseMangaGrid } from '@/features/manga/components/BaseMangaGrid.tsx';
 import type {
     GetSourceBrowseQuery,
@@ -55,24 +55,14 @@ import { getErrorMessage } from '@/lib/HelperFunctions.ts';
 import { Sources } from '@/features/source/services/Sources.ts';
 import { STABLE_EMPTY_ARRAY, STABLE_EMPTY_OBJECT } from '@/base/Base.constants.ts';
 import { useAppTitleAndAction } from '@/features/navigation-bar/hooks/useAppTitleAndAction.ts';
+import { useFlatAppBar } from '@/features/navigation-bar/hooks/useFlatAppBar.ts';
 import { VirtuosoUtil } from '@/lib/virtuoso/Virtuoso.util.tsx';
-import { IconWebView } from '@/assets/icons/IconWebView.tsx';
 import { MigrationManager } from '@/features/migration/MigrationManager.ts';
 import { ReactRouter } from '@/lib/react-router/ReactRouter.ts';
 import type { FilterChangeInput } from '@/lib/graphql/generated/graphql-base.types.ts';
-import { OffsetComponent } from '@/base/OffsetComponent.tsx';
+import { StickyChipBar } from '@/features/source/components/StickyChipBar.tsx';
 
 const DEFAULT_SOURCE: SourceIdInfo = { id: '-1' };
-
-const ContentTypeMenu = styled('div')(({ theme }) => ({
-    display: 'flex',
-    width: '100%',
-    padding: theme.spacing(1),
-    gap: theme.spacing(1),
-    backgroundColor: theme.palette.background.default,
-}));
-
-const ContentTypeButton = styled(Button)(() => ({}));
 
 const StyledGridWrapper = styled(Box)(() => ({
     minHeight: '100%',
@@ -290,6 +280,14 @@ export function SourceMangas() {
         setLocationContentType(newContentType);
     };
 
+    // Mihon switches to the search listing once filters get applied, not when the filter sheet gets opened
+    const applySearchFilters = (filters: IPos[]) => {
+        setFiltersToApply(filters);
+        setContentType(SourceContentType.SEARCH);
+    };
+
+    const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
+
     const gridKey = `${contentType}${JSON.stringify(filtersToApply)}${query}`;
 
     const [
@@ -318,7 +316,7 @@ export function SourceMangas() {
 
             if (savedSearchFilters) {
                 setDialogFiltersToApply(savedSearchFilters);
-                setFiltersToApply(savedSearchFilters);
+                applySearchFilters(savedSearchFilters);
             }
 
             if (savedSearchQuery) {
@@ -423,34 +421,18 @@ export function SourceMangas() {
         requestManager.clearBrowseCacheFor(sourceId);
     }, [clearCache]);
 
+    useFlatAppBar();
+
     useAppTitleAndAction(
         source?.displayName ?? t`Source`,
         <>
             <AppbarSearch searchHistoryKey="source" />
             <SourceGridLayout />
-            <CustomTooltip title={t`Open in WebView`} disabled={!source?.homeUrl}>
-                <IconButton
-                    disabled={!source?.homeUrl}
-                    href={source?.homeUrl ? requestManager.getWebviewUrl(source?.homeUrl) : ''}
-                    rel="noreferrer"
-                    target="_blank"
-                    color="inherit"
-                >
-                    <IconWebView />
-                </IconButton>
-            </CustomTooltip>
-            {source?.isConfigurable && (
-                <CustomTooltip title={t`Settings`}>
-                    <IconButton
-                        onClick={() => navigate(AppRoutes.sources.children.configure.path(sourceId))}
-                        aria-label="display more actions"
-                        edge="end"
-                        color="inherit"
-                    >
-                        <SettingsIcon />
-                    </IconButton>
-                </CustomTooltip>
-            )}
+            <SourceBrowseOverflowMenu
+                sourceId={sourceId}
+                homeUrl={source?.homeUrl}
+                isConfigurable={source?.isConfigurable}
+            />
         </>,
         [source],
     );
@@ -459,34 +441,41 @@ export function SourceMangas() {
 
     return (
         <StyledGridWrapper>
-            <OffsetComponent>
-                <ContentTypeMenu>
-                    <ContentTypeButton
-                        variant={contentType === SourceContentType.POPULAR ? 'contained' : 'outlined'}
-                        startIcon={<FavoriteIcon />}
-                        onClick={() => updateContentType(SourceContentType.POPULAR)}
-                    >
-                        {t`Popular`}
-                    </ContentTypeButton>
-                    {source?.supportsLatest === undefined || source.supportsLatest ? (
-                        <ContentTypeButton
-                            disabled={!source?.supportsLatest}
-                            variant={contentType === SourceContentType.LATEST ? 'contained' : 'outlined'}
-                            startIcon={<NewReleasesIcon />}
-                            onClick={() => updateContentType(SourceContentType.LATEST)}
-                        >
-                            {t`Latest`}
-                        </ContentTypeButton>
-                    ) : null}
-                    <ContentTypeButton
-                        variant={contentType === SourceContentType.SEARCH ? 'contained' : 'outlined'}
-                        startIcon={<FilterListIcon />}
-                        onClick={() => updateContentType(SourceContentType.SEARCH, query)}
-                    >
-                        {t`Filter`}
-                    </ContentTypeButton>
-                </ContentTypeMenu>
-            </OffsetComponent>
+            <StickyChipBar>
+                <Chip
+                    variant={contentType === SourceContentType.POPULAR ? 'filled' : 'outlined'}
+                    icon={
+                        contentType === SourceContentType.POPULAR ? (
+                            <FavoriteRoundedIcon />
+                        ) : (
+                            <FavoriteBorderRoundedIcon />
+                        )
+                    }
+                    label={t`Popular`}
+                    onClick={() => updateContentType(SourceContentType.POPULAR)}
+                />
+                {source?.supportsLatest === undefined || source.supportsLatest ? (
+                    <Chip
+                        disabled={!source?.supportsLatest}
+                        variant={contentType === SourceContentType.LATEST ? 'filled' : 'outlined'}
+                        icon={
+                            contentType === SourceContentType.LATEST ? (
+                                <NewReleasesRoundedIcon />
+                            ) : (
+                                <NewReleasesOutlinedIcon />
+                            )
+                        }
+                        label={t`Latest`}
+                        onClick={() => updateContentType(SourceContentType.LATEST)}
+                    />
+                ) : null}
+                <Chip
+                    variant={contentType === SourceContentType.SEARCH ? 'filled' : 'outlined'}
+                    icon={<FilterListRoundedIcon />}
+                    label={t`Filter`}
+                    onClick={() => setIsFilterSheetOpen(true)}
+                />
+            </StickyChipBar>
             {(isLoading || !error || (!!error && !!mangas.length)) && (
                 <BaseMangaGrid
                     // the key needs to include filters and query to force a re-render of the virtuoso grid to prevent https://github.com/petyosi/react-virtuoso/issues/1242
@@ -522,20 +511,18 @@ export function SourceMangas() {
                     retry={() => loadPage(lastPageNum).catch(defaultPromiseErrorHandler('SourceMangas::refetch'))}
                 />
             )}
-            {contentType === SourceContentType.SEARCH && (
-                <SourceOptions
-                    savedSearches={savedSearches}
-                    selectSavedSearch={selectSavedSearch}
-                    updateSavedSearches={handleSavedSearchesUpdate}
-                    sourceFilter={filters}
-                    updateFilterValue={setDialogFiltersToApply}
-                    setTriggerUpdate={() => {
-                        setFiltersToApply(dialogFiltersToApply);
-                    }}
-                    resetFilterValue={resetFilters}
-                    update={dialogFiltersToApply}
-                />
-            )}
+            <SourceOptions
+                open={isFilterSheetOpen}
+                onClose={() => setIsFilterSheetOpen(false)}
+                savedSearches={savedSearches}
+                selectSavedSearch={selectSavedSearch}
+                updateSavedSearches={handleSavedSearchesUpdate}
+                sourceFilter={filters}
+                updateFilterValue={setDialogFiltersToApply}
+                setTriggerUpdate={() => applySearchFilters(dialogFiltersToApply)}
+                resetFilterValue={resetFilters}
+                update={dialogFiltersToApply}
+            />
         </StyledGridWrapper>
     );
 }

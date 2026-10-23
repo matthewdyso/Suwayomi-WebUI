@@ -6,63 +6,61 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import { AppRoutes } from '@/base/AppRoute.constants.ts';
-import { ListCardAvatar } from '@/base/components/lists/cards/ListCardAvatar.tsx';
-import { Mangas } from '@/features/manga/services/Mangas.ts';
-import Stack from '@mui/material/Stack';
-import Link from '@mui/material/Link';
-import { Link as RouterLink } from 'react-router-dom';
-import type { MigrationMatch } from '@/features/migration/Migration.types.ts';
-import type { Theme } from '@mui/material/styles';
+import CollectionsBookmarkRoundedIcon from '@mui/icons-material/CollectionsBookmarkRounded';
+import Box from '@mui/material/Box';
+import { Link } from 'react-router-dom';
 import { useLingui } from '@lingui/react/macro';
+import { AppRoutes } from '@/base/AppRoute.constants.ts';
+import { CoverImage, getCoverImageWidth } from '@/base/components/images/CoverImage.tsx';
+import { TextBadge } from '@/base/components/badges/TextBadge.tsx';
 import { CustomTooltip } from '@/base/components/CustomTooltip.tsx';
+import type { MangaIdInfo } from '@/features/manga/Manga.types.ts';
+import { M3_SHAPE } from '@/features/theme/m3/M3Shape.constants.ts';
 
+/**
+ * The cover of a migration entry or match, linking to the manga; dimmed with Mihon's in-library badge when the manga
+ * is already in the library.
+ */
 export const MigrationEntryThumbnail = ({
-    entry,
+    id,
+    title,
+    thumbnailUrl,
+    inLibrary = false,
     height,
 }: {
-    entry: MigrationMatch;
-    height: ReturnType<Theme['applyStyles']>['height'];
+    id: MangaIdInfo['id'];
+    title: string;
+    thumbnailUrl: string;
+    inLibrary?: boolean;
+    height: number;
 }) => {
-    const { id, title } = entry;
-
     const { t } = useLingui();
 
     return (
-        <Stack sx={{ position: 'relative' }}>
-            <Link component={RouterLink} to={AppRoutes.manga.path(id)} onClick={(e) => e.stopPropagation()}>
-                <ListCardAvatar
-                    iconUrl={Mangas.getThumbnailUrl(entry)}
-                    alt={title}
-                    slots={{
-                        avatarProps: {
-                            sx: {
-                                width: 'unset',
-                                height,
-                                aspectRatio: '3 / 4',
-                                filter: entry.inLibrary ? 'brightness(0.4)' : undefined,
-                            },
-                        },
-                    }}
-                />
-            </Link>
-            {entry.inLibrary && (
-                <CustomTooltip title={t`In Library`}>
-                    <Stack
-                        sx={{
-                            position: 'absolute',
-                            top: 2.5,
-                            left: 2.5,
-                            p: 0.5,
-                            backgroundColor: 'background.paper',
-                            borderRadius: 1,
-                        }}
-                    >
-                        <FavoriteIcon color="primary" sx={{ fontSize: 15 }} />
-                    </Stack>
-                </CustomTooltip>
-            )}
-        </Stack>
+        <Box
+            component={Link}
+            to={AppRoutes.manga.path(id)}
+            onClick={(e) => e.stopPropagation()}
+            sx={{ display: 'block', flexShrink: 0 }}
+        >
+            <CoverImage
+                src={thumbnailUrl}
+                alt={title}
+                dimmed={inLibrary}
+                small
+                sx={{ width: getCoverImageWidth('book', height), height }}
+            >
+                {inLibrary && (
+                    <CustomTooltip title={t`In Library`}>
+                        <Box component="span" sx={{ position: 'absolute', top: 4, left: 4, display: 'flex' }}>
+                            <TextBadge
+                                icon={CollectionsBookmarkRoundedIcon}
+                                sx={{ borderRadius: M3_SHAPE.extraSmall }}
+                            />
+                        </Box>
+                    </CustomTooltip>
+                )}
+            </CoverImage>
+        </Box>
     );
 };

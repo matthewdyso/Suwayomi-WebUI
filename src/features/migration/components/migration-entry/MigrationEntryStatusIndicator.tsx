@@ -61,12 +61,9 @@ export const MigrationEntryStatusIndicator = ({
     if ([MigrationEntryStatus.SEARCH_FAILED, MigrationEntryStatus.MIGRATION_FAILED].includes(status)) {
         return (
             <StatusIndicatorWrapper
-                backgroundColor={(theme) => theme.palette.error.main}
+                backgroundColor="m3.error"
                 statusIcon={
-                    <PriorityHighIcon
-                        fontSize={isTabletWidth ? undefined : 'large'}
-                        sx={{ color: 'error.contrastText' }}
-                    />
+                    <PriorityHighIcon fontSize={isTabletWidth ? undefined : 'large'} sx={{ color: 'm3.onError' }} />
                 }
             />
         );
@@ -89,9 +86,9 @@ export const MigrationEntryStatusIndicator = ({
     if (status === MigrationEntryStatus.MIGRATION_COMPLETE) {
         return (
             <StatusIndicatorWrapper
-                backgroundColor="primary.dark"
+                backgroundColor="m3.primaryContainer"
                 statusIcon={
-                    <CheckIcon fontSize={isTabletWidth ? undefined : 'large'} sx={{ color: 'primary.contrastText' }} />
+                    <CheckIcon fontSize={isTabletWidth ? undefined : 'large'} sx={{ color: 'm3.onPrimaryContainer' }} />
                 }
             />
         );
@@ -100,9 +97,9 @@ export const MigrationEntryStatusIndicator = ({
     if (hasResults) {
         return (
             <StatusIndicatorWrapper
-                backgroundColor="primary.dark"
+                backgroundColor="m3.primaryContainer"
                 statusIcon={
-                    <ArrowIcon fontSize={isTabletWidth ? undefined : 'large'} sx={{ color: 'primary.contrastText' }} />
+                    <ArrowIcon fontSize={isTabletWidth ? undefined : 'large'} sx={{ color: 'm3.onPrimaryContainer' }} />
                 }
             />
         );

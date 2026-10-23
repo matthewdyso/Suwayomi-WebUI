@@ -133,7 +133,6 @@ export function LanguageSelect({
                     }
                 }}
                 aria-label="display more actions"
-                edge="end"
                 color="inherit"
             >
                 <FilterListIcon />

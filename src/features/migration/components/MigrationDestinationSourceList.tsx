@@ -7,19 +7,15 @@
  */
 
 import { memo, useCallback, useMemo, useState } from 'react';
+import Checkbox from '@mui/material/Checkbox';
 import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import Chip from '@mui/material/Chip';
 import Typography from '@mui/material/Typography';
 import type { DragEndEvent } from '@dnd-kit/core';
 import { closestCenter, DndContext } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useLingui } from '@lingui/react/macro';
-import { requestManager } from '@/lib/requests/RequestManager.ts';
 import { DndSortableItem } from '@/lib/dnd-kit/DndSortableItem.tsx';
 import { DndKitUtil } from '@/lib/dnd-kit/DndKitUtil.ts';
-import { ListCardAvatar } from '@/base/components/lists/cards/ListCardAvatar.tsx';
-import { ListCardContent } from '@/base/components/lists/cards/ListCardContent.tsx';
 import type { MigrationState, SourceItem } from '@/features/migration/Migration.types.ts';
 import type { SourceIdInfo } from '@/features/source/Source.types.ts';
 import type { SelectableCollectionReturnType } from '@/base/collection/hooks/useSelectableCollection.ts';
@@ -29,14 +25,17 @@ import { StyledGroupedVirtuoso } from '@/base/components/virtuoso/StyledGroupedV
 import { StyledGroupHeader } from '@/base/components/virtuoso/StyledGroupHeader.tsx';
 import { DndOverlayItem } from '@/lib/dnd-kit/DndOverlayItem';
 import { noOp } from '@/lib/HelperFunctions';
-import CardActionArea from '@mui/material/CardActionArea';
-import { StyledGroupItemWrapper } from '@/base/components/virtuoso/StyledGroupItemWrapper.tsx';
-import DragHandle from '@mui/icons-material/DragHandle';
+import DragHandleRoundedIcon from '@mui/icons-material/DragHandleRounded';
 import { languageCodeToName } from '@/base/utils/Languages.ts';
 import { DEFAULT_FULL_FAB_HEIGHT } from '@/base/components/buttons/StyledFab.tsx';
-import Stack from '@mui/material/Stack';
 import { EmptyViewAbsoluteCentered } from '@/base/components/feedback/EmptyViewAbsoluteCentered.tsx';
+import { ListRow } from '@/base/components/lists/ListRow.tsx';
+import { SourceIcon } from '@/features/source/components/SourceIcon.tsx';
+import { M3_DRAGGED_ITEM_SX } from '@/features/theme/m3/M3Elevation.constants.ts';
 
+/**
+ * Mihon's migration source item: icon, name and language, whether it's selected and, once selected, its drag handle.
+ */
 const SourceCard = memo(
     ({
         source,
@@ -54,37 +53,40 @@ const SourceCard = memo(
         const { t } = useLingui();
 
         return (
-            <StyledGroupItemWrapper>
-                <Card>
-                    <CardActionArea onClick={() => onToggle(source.id)}>
-                        <ListCardContent sx={{ justifyContent: 'space-between' }}>
-                            <Stack sx={{ flexFlow: 'row', gap: 1, alignItems: 'center' }}>
-                                <ListCardAvatar
-                                    iconUrl={requestManager.getValidImgUrlFor(source.iconUrl)}
-                                    alt={source.name}
-                                    slots={{ spinnerImageProps: { ignoreQueue: true } }}
-                                />
-                                <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                                    <Typography variant="h6" component="h3">
-                                        {source.name}
-                                    </Typography>
-                                    <Typography variant="caption">{languageCodeToName(source.lang)}</Typography>
-                                </Box>
-                            </Stack>
-                            <Stack sx={{ flexDirection: 'row', gap: 4 }}>
-                                {isCurrentSource && (
-                                    <Chip size="small" label={t`Current source`} color="primary" variant="outlined" />
-                                )}
-                                {isSelected && (
-                                    <Box>
-                                        <DragHandle sx={{ mr: 2, cursor: isDragging ? 'grabbing' : 'grab' }} />
-                                    </Box>
-                                )}
-                            </Stack>
-                        </ListCardContent>
-                    </CardActionArea>
-                </Card>
-            </StyledGroupItemWrapper>
+            <ListRow
+                minHeight={64}
+                leading={<SourceIcon iconUrl={source.iconUrl} alt={source.name} />}
+                headline={source.name}
+                headlineVariant="bodyMedium"
+                supporting={
+                    <>
+                        {languageCodeToName(source.lang)}
+                        {isCurrentSource && (
+                            <Box component="span" sx={{ color: 'm3.primary' }}>
+                                {` • ${t`Current source`}`}
+                            </Box>
+                        )}
+                    </>
+                }
+                supportingVariant="bodySmall"
+                supportingMaxLines={1}
+                onClick={() => onToggle(source.id)}
+                sx={isDragging ? M3_DRAGGED_ITEM_SX : undefined}
+                trailing={
+                    <>
+                        <Checkbox
+                            checked={isSelected}
+                            onChange={() => onToggle(source.id)}
+                            slotProps={{ input: { 'aria-label': source.name } }}
+                        />
+                        {isSelected && (
+                            <DragHandleRoundedIcon
+                                sx={{ color: 'm3.onSurfaceVariant', cursor: isDragging ? 'grabbing' : 'grab' }}
+                            />
+                        )}
+                    </>
+                }
+            />
         );
     },
 );
@@ -195,15 +197,14 @@ export const MigrationDestinationSourceList = ({
                                     flexDirection: 'row',
                                     justifyContent: 'space-between',
                                     alignItems: 'center',
-                                    pr: 1,
                                 }}
                             >
-                                <Typography variant="h5" component="h2">
+                                <Typography variant="header" component="h2">
                                     {group ? t`Selected` : t`Available`}
                                 </Typography>
 
                                 {group && (
-                                    <Typography variant="body2" color="text.secondary">
+                                    <Typography variant="bodySmall" sx={{ color: 'text.secondary' }}>
                                         {t`Drag to prioritize`}
                                     </Typography>
                                 )}

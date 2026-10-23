@@ -7,7 +7,6 @@
  */
 
 import { STABLE_EMPTY_OBJECT } from '@/base/Base.constants.ts';
-import FilterListIcon from '@mui/icons-material/FilterList';
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
 import Box from '@mui/material/Box';
@@ -16,7 +15,7 @@ import IconButton from '@mui/material/IconButton';
 import SaveIcon from '@mui/icons-material/Save';
 import Chip from '@mui/material/Chip';
 import DeleteIcon from '@mui/icons-material/Delete';
-import Typography from '@mui/material/Typography';
+import Divider from '@mui/material/Divider';
 import PopupState, { bindDialog, bindTrigger } from 'material-ui-popup-state';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
@@ -36,7 +35,8 @@ import { TriStateFilter } from '@/features/source/browse/components/filters/TriS
 
 import { GroupFilter } from '@/features/source/browse/components/filters/GroupFilter.tsx';
 import { SeparatorFilter } from '@/features/source/browse/components/filters/SeparatorFilter.tsx';
-import { StyledFab } from '@/base/components/buttons/StyledFab.tsx';
+import { ChipRow } from '@/base/components/chips/ChipRow.tsx';
+import { HeadingItem } from '@/base/components/settings/SheetRows.tsx';
 import { defaultPromiseErrorHandler } from '@/lib/DefaultPromiseErrorHandler.ts';
 import type { IPos, ISourceMetadata, SourceFilters } from '@/features/source/Source.types.ts';
 import { Confirmation } from '@/base/AppAwaitableComponent.ts';
@@ -50,6 +50,8 @@ interface IFilters {
 }
 
 interface IFilters1 {
+    open: boolean;
+    onClose: () => void;
     savedSearches: ISourceMetadata['savedSearches'];
     selectSavedSearch: (savedSearch: string) => void;
     updateSavedSearches: (savedSearch: string, updateType: 'create' | 'delete') => void;
@@ -154,7 +156,12 @@ export function Options({ sourceFilter, positions, updateFilterValue, update }: 
     );
 }
 
+/**
+ * Mihon's "SourceFilterDialog": reset, save and apply above the filters, the saved searches and the source's filters.
+ */
 export function SourceOptions({
+    open,
+    onClose,
     savedSearches = STABLE_EMPTY_OBJECT,
     selectSavedSearch,
     updateSavedSearches,
@@ -165,7 +172,6 @@ export function SourceOptions({
     update,
 }: IFilters1) {
     const { t } = useLingui();
-    const [FilterOptions, setFilterOptions] = useState(false);
     const [newSavedSearch, setNewSavedSearch] = useState('');
 
     const savedSearchNames = Object.keys(savedSearches);
@@ -173,24 +179,25 @@ export function SourceOptions({
 
     function handleReset() {
         resetFilterValue(0);
-        setFilterOptions(false);
+        onClose();
     }
 
     function handleSubmit() {
         setTriggerUpdate(0);
-        setFilterOptions(false);
+        onClose();
     }
 
     return (
-        <>
-            <StyledFab onClick={() => setFilterOptions(!FilterOptions)} variant="extended" color="primary">
-                <FilterListIcon />
-                {t`Filter`}
-            </StyledFab>
-            <OptionsPanel open={FilterOptions} onClose={() => setFilterOptions(false)}>
-                <Box sx={{ p: 2, pb: savedSearchesExist ? undefined : 0 }}>
-                    <Box sx={{ display: 'flex', pb: 1 }}>
-                        <Button onClick={handleReset}>{t`Reset`}</Button>
+        <OptionsPanel
+            open={open}
+            onClose={onClose}
+            header={
+                <>
+                    <Stack sx={{ flexDirection: 'row', alignItems: 'center', gap: 1, p: 1 }}>
+                        {/* large: 48 px touch targets, like the sheet's other controls */}
+                        <Button size="large" onClick={handleReset}>
+                            {t`Reset`}
+                        </Button>
                         <PopupState variant="dialog" popupId="source-browse-save-search">
                             {(popupState) => (
                                 <>
@@ -234,62 +241,59 @@ export function SourceOptions({
                                 </>
                             )}
                         </PopupState>
-
-                        <Button variant="contained" onClick={handleSubmit}>
-                            {t`Submit`}
+                        <Button size="large" variant="contained" onClick={handleSubmit}>
+                            {t`Filter`}
                         </Button>
-                    </Box>
-                    {savedSearchesExist && (
-                        <>
-                            <Typography sx={{ pb: 1 }}>Saved searches</Typography>
-                            <Stack sx={{ flexDirection: 'row' }}>
-                                {savedSearchNames.map((savedSearch) => (
-                                    <Chip
-                                        key={savedSearch}
-                                        label={savedSearch}
-                                        onClick={() => {
-                                            setFilterOptions(false);
-                                            selectSavedSearch(savedSearch);
-                                        }}
-                                        onDelete={() => {
-                                            Confirmation.show({
-                                                title: t`Are you sure?`,
-                                                message: t`This will delete the saved search "${savedSearch}"`,
-                                                actions: {
-                                                    confirm: {
-                                                        title: t`Delete`,
-                                                    },
-                                                },
-                                            })
-                                                .then(() => updateSavedSearches(savedSearch, 'delete'))
-                                                .catch(defaultPromiseErrorHandler('SourceOptions::deleteSavedSearch'));
-                                        }}
-                                        deleteIcon={
-                                            <CustomTooltip title={t`Delete search`}>
-                                                <DeleteIcon />
-                                            </CustomTooltip>
-                                        }
-                                        variant="outlined"
-                                    />
-                                ))}
-                            </Stack>
-                        </>
-                    )}
-                </Box>
-                <Box
-                    sx={{
-                        pb: 2,
-                        mx: 2,
-                    }}
-                >
-                    <Options
-                        sourceFilter={sourceFilter}
-                        updateFilterValue={updateFilterValue}
-                        positions={[]}
-                        update={update}
-                    />
-                </Box>
-            </OptionsPanel>
-        </>
+                    </Stack>
+                    <Divider />
+                </>
+            }
+        >
+            {savedSearchesExist && (
+                <>
+                    <HeadingItem>{t`Saved searches`}</HeadingItem>
+                    <ChipRow wrap sx={{ px: 3, pb: 1.25 }}>
+                        {savedSearchNames.map((savedSearch) => (
+                            <Chip
+                                key={savedSearch}
+                                label={savedSearch}
+                                onClick={() => {
+                                    onClose();
+                                    selectSavedSearch(savedSearch);
+                                }}
+                                onDelete={() => {
+                                    Confirmation.show({
+                                        title: t`Are you sure?`,
+                                        message: t`This will delete the saved search "${savedSearch}"`,
+                                        actions: {
+                                            confirm: {
+                                                title: t`Delete`,
+                                            },
+                                        },
+                                    })
+                                        .then(() => updateSavedSearches(savedSearch, 'delete'))
+                                        .catch(defaultPromiseErrorHandler('SourceOptions::deleteSavedSearch'));
+                                }}
+                                deleteIcon={
+                                    <CustomTooltip title={t`Delete search`}>
+                                        <DeleteIcon />
+                                    </CustomTooltip>
+                                }
+                                variant="outlined"
+                            />
+                        ))}
+                    </ChipRow>
+                    <Divider />
+                </>
+            )}
+            <Box sx={{ py: 1 }}>
+                <Options
+                    sourceFilter={sourceFilter}
+                    updateFilterValue={updateFilterValue}
+                    positions={[]}
+                    update={update}
+                />
+            </Box>
+        </OptionsPanel>
     );
 }

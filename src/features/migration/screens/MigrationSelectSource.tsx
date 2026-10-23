@@ -6,8 +6,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import List from '@mui/material/List';
 import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import SortByAlphaIcon from '@mui/icons-material/SortByAlpha';
 import TagIcon from '@mui/icons-material/Tag';
@@ -18,7 +18,6 @@ import { CustomTooltip } from '@/base/components/CustomTooltip.tsx';
 import { LoadingPlaceholder } from '@/base/components/feedback/LoadingPlaceholder.tsx';
 import { EmptyViewAbsoluteCentered } from '@/base/components/feedback/EmptyViewAbsoluteCentered.tsx';
 import { MigrationCard } from '@/features/migration/components/MigrationCard.tsx';
-import { StyledGroupItemWrapper } from '@/base/components/virtuoso/StyledGroupItemWrapper.tsx';
 import { defaultPromiseErrorHandler } from '@/lib/DefaultPromiseErrorHandler.ts';
 import { sortByToTranslation, sortOrderToTranslation } from '@/features/migration/Migration.constants.ts';
 import {
@@ -67,16 +66,16 @@ export const MigrationSelectSource = () => {
                 <Stack
                     sx={{
                         flexDirection: 'row',
-                        justifyContent: 'end',
                         alignItems: 'center',
-                        gap: 1,
-                        p: 1,
-                        backgroundColor: 'background.default',
+                        pl: 2,
+                        backgroundColor: 'm3.surface',
                     }}
                 >
+                    <Typography variant="header" component="h2" sx={{ flexGrow: 1, color: 'm3.onSurfaceVariant' }}>
+                        {t`Select a source to migrate from`}
+                    </Typography>
                     <CustomTooltip title={t(sortByToTranslation[sortBy])}>
                         <IconButton
-                            color="inherit"
                             onClick={() =>
                                 updateMetadataServerSettings('migrateSortSettings', {
                                     sortBy: (sortBy + 1) % 2,
@@ -89,7 +88,6 @@ export const MigrationSelectSource = () => {
                     </CustomTooltip>
                     <CustomTooltip title={t(sortOrderToTranslation[sortOrder])}>
                         <IconButton
-                            color="inherit"
                             onClick={() =>
                                 updateMetadataServerSettings('migrateSortSettings', {
                                     sortBy,
@@ -103,13 +101,11 @@ export const MigrationSelectSource = () => {
                 </Stack>
             </OffsetComponent>
 
-            <List sx={{ p: 0 }}>
+            <Stack>
                 {migratableSources.map((migratableSource) => (
-                    <StyledGroupItemWrapper key={migratableSource.id}>
-                        <MigrationCard {...migratableSource} />
-                    </StyledGroupItemWrapper>
+                    <MigrationCard key={migratableSource.id} {...migratableSource} />
                 ))}
-            </List>
+            </Stack>
         </>
     );
 };

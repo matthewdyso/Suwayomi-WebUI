@@ -28,7 +28,6 @@ import { useAppAction } from '@/features/navigation-bar/hooks/useAppAction.ts';
 import { StyledGroupedVirtuoso } from '@/base/components/virtuoso/StyledGroupedVirtuoso.tsx';
 import { VirtuosoUtil } from '@/lib/virtuoso/Virtuoso.util.tsx';
 import { StyledGroupHeader } from '@/base/components/virtuoso/StyledGroupHeader.tsx';
-import { StyledGroupItemWrapper } from '@/base/components/virtuoso/StyledGroupItemWrapper.tsx';
 import { SourceLanguageSelect } from '@/features/source/components/SourceLanguageSelect.tsx';
 import { STABLE_EMPTY_ARRAY } from '@/base/Base.constants.ts';
 
@@ -151,7 +150,7 @@ export function Sources({ tabsMenuHeight }: { tabsMenuHeight: number }) {
 
                 return (
                     <StyledGroupHeader isFirstItem={!index}>
-                        <Typography variant="h5" component="h2">
+                        <Typography variant="header" component="h2">
                             {translateExtensionLanguage(language)}
                         </Typography>
                     </StyledGroupHeader>
@@ -162,13 +161,11 @@ export function Sources({ tabsMenuHeight }: { tabsMenuHeight: number }) {
                 const source = visibleSources[index];
 
                 return (
-                    <StyledGroupItemWrapper>
-                        <SourceCard
-                            source={source}
-                            showSourceRepo={areSourcesFromDifferentRepos}
-                            showLanguage={isPinnedOrLastUsedSource(language)}
-                        />
-                    </StyledGroupItemWrapper>
+                    <SourceCard
+                        source={source}
+                        showSourceRepo={areSourcesFromDifferentRepos}
+                        showLanguage={isPinnedOrLastUsedSource(language)}
+                    />
                 );
             }}
         />

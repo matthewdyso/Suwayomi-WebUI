@@ -6,17 +6,10 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import ExpandLess from '@mui/icons-material/ExpandLess';
-import ExpandMore from '@mui/icons-material/ExpandMore';
-import Collapse from '@mui/material/Collapse';
-import ListItemButton from '@mui/material/ListItemButton';
-import ListItemText from '@mui/material/ListItemText';
-import Stack from '@mui/material/Stack';
-import Box from '@mui/material/Box';
 import React from 'react';
-
 import { Options } from '@/features/source/browse/components/SourceOptions.tsx';
 import type { IPos, SourceFilters } from '@/features/source/Source.types.ts';
+import { CollapsibleFilter } from '@/features/source/browse/components/filters/CollapsibleFilter.tsx';
 
 interface Props {
     state: ExtractByKeyValue<SourceFilters, 'type', 'GroupFilter'>['filters'];
@@ -29,25 +22,14 @@ interface Props {
 export const GroupFilter: React.FC<Props> = (props: Props) => {
     const { state, name, positions, updateFilterValue, update } = props;
 
-    const [open, setOpen] = React.useState(false);
-
     return (
-        <Box sx={{ mx: -2 }}>
-            <ListItemButton onClick={() => setOpen(!open)}>
-                <ListItemText primary={name} />
-                {open ? <ExpandLess /> : <ExpandMore />}
-            </ListItemButton>
-            <Collapse in={open} unmountOnExit>
-                {/* Container is moved outside 2, so content has to go inside 4 */}
-                <Stack sx={{ mx: 4 }}>
-                    <Options
-                        sourceFilter={state as SourceFilters[]}
-                        positions={positions}
-                        updateFilterValue={updateFilterValue}
-                        update={update}
-                    />
-                </Stack>
-            </Collapse>
-        </Box>
+        <CollapsibleFilter name={name}>
+            <Options
+                sourceFilter={state as SourceFilters[]}
+                positions={positions}
+                updateFilterValue={updateFilterValue}
+                update={update}
+            />
+        </CollapsibleFilter>
     );
 };

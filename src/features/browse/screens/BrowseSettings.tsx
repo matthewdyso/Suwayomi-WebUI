@@ -27,12 +27,11 @@ import type { MetadataBrowseSettings } from '@/features/browse/Browse.types.ts';
 import type { ServerSettings as GqlServerSettings } from '@/features/settings/Settings.types.ts';
 import { getErrorMessage } from '@/lib/HelperFunctions.ts';
 import { useAppTitle } from '@/features/navigation-bar/hooks/useAppTitle.ts';
-import Typography from '@mui/material/Typography';
-import Stack from '@mui/material/Stack';
 import ErrorOutlineOutlinedIcon from '@mui/icons-material/ErrorOutlineOutlined';
 import { ListSubheader } from '@/base/components/lists/ListSubheader.tsx';
 import { ListItemLink } from '@/base/components/lists/ListItemLink.tsx';
 import { AppRoutes } from '@/base/AppRoute.constants.ts';
+import { InfoPreference } from '@/features/settings/components/InfoPreference.tsx';
 
 type ExtensionsSettings = Pick<GqlServerSettings, 'maxSourcesInParallel' | 'localSourcePath'>;
 
@@ -149,10 +148,9 @@ export const BrowseSettings = () => {
                         onChange={() => updateMetadataServerSettings('showNsfw', !showNsfw)}
                     />
                 </ListItem>
-                <Stack sx={{ px: 2, gap: 1 }}>
-                    <ErrorOutlineOutlinedIcon />
-                    <Typography color="textSecondary">{t`This does not prevent unofficial or potentially incorrectly flagged extensions from surfacing NSFW (18+) content within the app.`}</Typography>
-                </Stack>
+                <InfoPreference icon={<ErrorOutlineOutlinedIcon />}>
+                    {t`This does not prevent unofficial or potentially incorrectly flagged extensions from surfacing NSFW (18+) content within the app.`}
+                </InfoPreference>
             </List>
         </List>
     );

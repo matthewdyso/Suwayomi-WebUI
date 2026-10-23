@@ -26,7 +26,6 @@ import { LanguageSelect } from '@/base/components/inputs/LanguageSelect.tsx';
 import { ExtensionCard } from '@/features/browse/extensions/components/ExtensionCard.tsx';
 import { StyledGroupedVirtuoso } from '@/base/components/virtuoso/StyledGroupedVirtuoso.tsx';
 import { StyledGroupHeader } from '@/base/components/virtuoso/StyledGroupHeader.tsx';
-import { StyledGroupItemWrapper } from '@/base/components/virtuoso/StyledGroupItemWrapper.tsx';
 import { EmptyViewAbsoluteCentered } from '@/base/components/feedback/EmptyViewAbsoluteCentered.tsx';
 import { defaultPromiseErrorHandler } from '@/lib/DefaultPromiseErrorHandler.ts';
 import { VirtuosoUtil } from '@/lib/virtuoso/Virtuoso.util.tsx';
@@ -77,9 +76,9 @@ const GroupHeader = ({
         <StyledGroupHeader
             key={groupName}
             isFirstItem={isFirstItem}
-            sx={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', pr: 1 }}
+            sx={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
         >
-            <Typography variant="h5" component="h2">
+            <Typography variant="header" component="h2">
                 {translateExtensionLanguage(groupName)}
             </Typography>
             {isUpdateGroup && (
@@ -274,18 +273,13 @@ export function Extensions({ tabsMenuHeight }: { tabsMenuHeight: number }) {
     const showAddRepoInfo = !allExtensions?.length && !areReposDefined;
     if (showAddRepoInfo) {
         return (
-            <Stack
-                sx={{
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    rowGap: '10px',
-                    paddingTop: '20px',
-                }}
-            >
-                <Typography>{t`You have to add a extension store to be able to install extensions`}</Typography>
+            <Stack sx={{ alignItems: 'center', justifyContent: 'center', gap: 2, px: 3, pt: 3, textAlign: 'center' }}>
+                <Typography variant="bodyMedium" sx={{ color: 'text.secondary' }}>
+                    {t`You have to add a extension store to be able to install extensions`}
+                </Typography>
                 <Button
                     component={Link}
-                    variant="contained"
+                    variant="tonal"
                     to={AppRoutes.settings.children.browse.children.extensionStores.path}
                 >
                     {t`Add extension store`}
@@ -321,16 +315,12 @@ export function Extensions({ tabsMenuHeight }: { tabsMenuHeight: number }) {
                 const item = visibleExtensions[index];
 
                 return (
-                    <StyledGroupItemWrapper>
-                        <ExtensionCard
-                            extension={item}
-                            handleUpdate={handleExtensionUpdate}
-                            showSourceStore={areMultipleReposInUse}
-                            forcedState={
-                                updatingExtensionIds.includes(item.pkgName) ? ExtensionState.UPDATING : undefined
-                            }
-                        />
-                    </StyledGroupItemWrapper>
+                    <ExtensionCard
+                        extension={item}
+                        handleUpdate={handleExtensionUpdate}
+                        showSourceStore={areMultipleReposInUse}
+                        forcedState={updatingExtensionIds.includes(item.pkgName) ? ExtensionState.UPDATING : undefined}
+                    />
                 );
             }}
         />

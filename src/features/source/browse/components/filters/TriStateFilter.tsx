@@ -7,7 +7,7 @@
  */
 
 import React from 'react';
-import { ThreeStateCheckboxInput } from '@/base/components/inputs/ThreeStateCheckboxInput.tsx';
+import { TriStateItem } from '@/base/components/settings/SheetRows.tsx';
 import { TriState } from '@/lib/graphql/generated/graphql-base.types.ts';
 import type { IPos } from '@/features/source/Source.types.ts';
 import isEqual from 'lodash/fp/isEqual';
@@ -67,7 +67,7 @@ export const TriStateFilter: React.FC<Props> = (props) => {
 
     if (state !== undefined) {
         return (
-            <ThreeStateCheckboxInput
+            <TriStateItem
                 label={name}
                 checked={[undefined, true, false][val]}
                 onChange={(checked) => handleChange(checked)}

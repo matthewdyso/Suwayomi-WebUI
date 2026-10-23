@@ -8,6 +8,7 @@
 
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
+import Divider from '@mui/material/Divider';
 import { useParams } from 'react-router-dom';
 import { useMemo } from 'react';
 import { useLingui } from '@lingui/react/macro';
@@ -25,6 +26,8 @@ import { Meta } from '@/features/extension/info/components/Meta.tsx';
 import { ActionButton } from '@/features/extension/info/components/ActionButton.tsx';
 import { SourceCard } from '@/features/extension/info/components/SourceCard.tsx';
 import { STABLE_EMPTY_OBJECT } from '@/base/Base.constants.ts';
+
+const EXTENSION_INFO_MAX_WIDTH = 600;
 
 export const ExtensionInfo = () => {
     const { t } = useLingui();
@@ -76,14 +79,18 @@ export const ExtensionInfo = () => {
     assertIsDefined(extension);
 
     return (
-        <Stack sx={{ gap: 2 }}>
-            <Header {...extension} />
-            <Meta {...extension} />
-            <Stack sx={{ flexDirection: 'row' }}>
-                <ActionButton {...{ ...extension, isInstalled: true, hasUpdate: false }} />
-                {extension.hasUpdate && !extension.isObsolete && <ActionButton {...extension} />}
+        <Stack>
+            {/* capped on wide screens, so the action buttons don't stretch across the whole window */}
+            <Stack sx={{ width: '100%', maxWidth: EXTENSION_INFO_MAX_WIDTH, mx: 'auto' }}>
+                <Header {...extension} />
+                <Meta {...extension} />
+                <Stack sx={{ flexDirection: 'row', gap: 2, px: 2, pt: 1, pb: 2 }}>
+                    <ActionButton {...{ ...extension, isInstalled: true, hasUpdate: false }} />
+                    {extension.hasUpdate && !extension.isObsolete && <ActionButton {...extension} />}
+                </Stack>
             </Stack>
-            <Box sx={{ px: 1 }}>
+            <Divider />
+            <Box sx={{ py: 1 }}>
                 {sources.map((source) => (
                     <SourceCard key={source.id} {...source} />
                 ))}

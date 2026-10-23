@@ -9,34 +9,19 @@
 import Chip from '@mui/material/Chip';
 import CircularProgress from '@mui/material/CircularProgress';
 import { useNavigate, useLocation } from 'react-router-dom';
-import type { MigrationProgress } from '@/features/migration/Migration.types.ts';
+import { useLingui } from '@lingui/react/macro';
 import { MigrationPhase } from '@/features/migration/Migration.types.ts';
 import { MigrationManager } from '@/features/migration/MigrationManager.ts';
 import { AppRoutes } from '@/base/AppRoute.constants.ts';
-import DoneAllIcon from '@mui/icons-material/DoneAll';
+import DoneAllRoundedIcon from '@mui/icons-material/DoneAllRounded';
 import { useLayoutEffect, useState } from 'react';
+import { DEFAULT_FAB_STYLE } from '@/base/components/buttons/StyledFab.tsx';
 
-const getButtonText = (phase: MigrationPhase, progress: MigrationProgress) => {
-    switch (phase) {
-        case MigrationPhase.SEARCHING:
-            if (progress.total === progress.completed) {
-                return `Searching`;
-            }
-
-            return `Searching (${progress.completed}/${progress.total})`;
-
-        case MigrationPhase.MIGRATING:
-            if (progress.total === progress.completed) {
-                return `Migrating`;
-            }
-
-            return `Migrating (${progress.completed}/${progress.total})`;
-        default:
-            return 'Migrating';
-    }
-};
-
+/**
+ * Progress of a running migration, shown outside the migration screens; above the navigation bar like a FAB.
+ */
 export const MigrationFABIndicator = () => {
+    const { t } = useLingui();
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -55,16 +40,34 @@ export const MigrationFABIndicator = () => {
         return null;
     }
 
+    const isSearching = phase === MigrationPhase.SEARCHING;
+    const { completed, total } = isSearching ? searchProgress : migrationProgress;
+    const isProgressComplete = completed === total;
+
+    const getLabel = () => {
+        if (isSearching) {
+            return isProgressComplete ? t`Searching` : t`Searching (${completed}/${total})`;
+        }
+
+        return isProgressComplete ? t`Migrating` : t`Migrating (${completed}/${total})`;
+    };
+
     return (
         <Chip
-            icon={MigrationManager.isPhaseComplete() ? <DoneAllIcon /> : <CircularProgress size={16} color="inherit" />}
-            label={getButtonText(phase, phase === MigrationPhase.SEARCHING ? searchProgress : migrationProgress)}
+            icon={
+                MigrationManager.isPhaseComplete() ? (
+                    <DoneAllRoundedIcon />
+                ) : (
+                    <CircularProgress size={16} color="inherit" />
+                )
+            }
+            label={getLabel()}
             color="primary"
             onClick={() => navigate(AppRoutes.migrate.path)}
             sx={{
-                position: 'fixed',
-                bottom: (theme) => theme.spacing(2),
-                right: (theme) => theme.spacing(2),
+                position: DEFAULT_FAB_STYLE.position,
+                bottom: DEFAULT_FAB_STYLE.bottom,
+                right: DEFAULT_FAB_STYLE.right,
                 zIndex: (theme) => theme.zIndex.fab,
                 cursor: 'pointer',
             }}

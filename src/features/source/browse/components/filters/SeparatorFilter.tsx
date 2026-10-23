@@ -14,7 +14,7 @@ interface Props {
 }
 
 export const SeparatorFilter: React.FC<Props> = ({ name }) => (
-    <Divider key={name} sx={{ my: 1 }} textAlign="center">
+    <Divider sx={{ my: 1, typography: 'labelMedium', color: 'm3.onSurfaceVariant' }} textAlign="center">
         {name}
     </Divider>
 );
