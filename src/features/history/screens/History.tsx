@@ -14,7 +14,6 @@ import { LoadingPlaceholder } from '@/base/components/feedback/LoadingPlaceholde
 import { EmptyViewAbsoluteCentered } from '@/base/components/feedback/EmptyViewAbsoluteCentered.tsx';
 import { StyledGroupedVirtuoso } from '@/base/components/virtuoso/StyledGroupedVirtuoso.tsx';
 import { StyledGroupHeader } from '@/base/components/virtuoso/StyledGroupHeader.tsx';
-import { StyledGroupItemWrapper } from '@/base/components/virtuoso/StyledGroupItemWrapper.tsx';
 import { defaultPromiseErrorHandler } from '@/lib/DefaultPromiseErrorHandler.ts';
 import { VirtuosoUtil } from '@/lib/virtuoso/Virtuoso.util.tsx';
 import { getErrorMessage } from '@/lib/HelperFunctions.ts';
@@ -160,16 +159,14 @@ export const History: React.FC = () => {
             )}
             computeItemKey={computeLastReadEntryItemKey}
             itemContent={(index) => (
-                <StyledGroupItemWrapper>
-                    <ChapterHistoryCard
-                        chapter={lastReadEntries[index]}
-                        otherChapters={
-                            otherEntriesByMangaByGroup[
-                                getDateString(epochToDate(Number(lastReadEntries[index].lastReadAt)))
-                            ][lastReadEntries[index].mangaId]
-                        }
-                    />
-                </StyledGroupItemWrapper>
+                <ChapterHistoryCard
+                    chapter={lastReadEntries[index]}
+                    otherChapters={
+                        otherEntriesByMangaByGroup[
+                            getDateString(epochToDate(Number(lastReadEntries[index].lastReadAt)))
+                        ][lastReadEntries[index].mangaId]
+                    }
+                />
             )}
         />
     );

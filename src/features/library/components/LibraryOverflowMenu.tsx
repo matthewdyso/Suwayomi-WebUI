@@ -20,12 +20,22 @@ import { AppRoutes } from '@/base/AppRoute.constants.ts';
 import { assertIsDefined } from '@/base/Asserts.ts';
 import type { MangaIdInfo } from '@/features/manga/Manga.types.ts';
 import { useStartSync } from '@/features/sync/hooks/useStartSync.ts';
+import type { CategoryIdInfo } from '@/features/category/Category.types.ts';
+import type { GlobalUpdateControls } from '@/features/updates/components/UpdateChecker.tsx';
 
 /**
  * Mihon's library overflow menu: the actions that don't fit into the app bar on a phone (and sync, when it's enabled).
- * Updating the category stays in the update button's menu, which tracks the running update.
+ * With "globalUpdate" (phones) it also starts and stops the global update, which has its own button on wider screens.
  */
-export const LibraryOverflowMenu = ({ mangas, onSelectAll }: { mangas: MangaIdInfo[]; onSelectAll: () => void }) => {
+export const LibraryOverflowMenu = ({
+    mangas,
+    onSelectAll,
+    globalUpdate,
+}: {
+    mangas: MangaIdInfo[];
+    onSelectAll: () => void;
+    globalUpdate?: GlobalUpdateControls & { categoryId: CategoryIdInfo['id'] };
+}) => {
     const { t } = useLingui();
     const sync = useStartSync();
 
@@ -57,6 +67,23 @@ export const LibraryOverflowMenu = ({ mangas, onSelectAll }: { mangas: MangaIdIn
                             </IconButton>
                         </CustomTooltip>
                         <Menu {...bindMenu(popupState)}>
+                            {globalUpdate?.isRunning && (
+                                <MenuItem onClick={runAndClose(() => globalUpdate.toggle())}>
+                                    {t`Stop global update`}
+                                </MenuItem>
+                            )}
+                            {globalUpdate &&
+                                !globalUpdate.isRunning && [
+                                    <MenuItem key="library" onClick={runAndClose(() => globalUpdate.toggle())}>
+                                        {t`Update library`}
+                                    </MenuItem>,
+                                    <MenuItem
+                                        key="category"
+                                        onClick={runAndClose(() => globalUpdate.toggle(globalUpdate.categoryId))}
+                                    >
+                                        {t`Update category`}
+                                    </MenuItem>,
+                                ]}
                             <MenuItem disabled={!mangas.length} onClick={runAndClose(openRandomManga)}>
                                 {t`Open random entry`}
                             </MenuItem>

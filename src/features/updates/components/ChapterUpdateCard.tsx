@@ -7,26 +7,34 @@
  */
 
 import Box from '@mui/material/Box';
-import CardActionArea from '@mui/material/CardActionArea';
-import Card from '@mui/material/Card';
-import { Link } from 'react-router-dom';
-import { memo, useState } from 'react';
-import { DownloadStateIndicatorCircular } from '@/base/components/downloads/DownloadStateIndicatorCircular.tsx';
+import type { SxProps, Theme } from '@mui/material/styles';
+import { memo } from 'react';
+import { useLingui } from '@lingui/react/macro';
 import type { ChapterUpdateListFieldsFragment } from '@/lib/graphql/generated/graphql.ts';
 import { AppRoutes } from '@/base/AppRoute.constants.ts';
-import { ChapterCardThumbnail } from '@/features/chapter/components/cards/ChapterCardThumbnail.tsx';
-import { ChapterCardMetadata } from '@/features/chapter/components/cards/ChapterCardMetadata.tsx';
-import { ChapterDownloadButton } from '@/features/chapter/components/buttons/ChapterDownloadButton.tsx';
-import { ChapterDownloadRetryButton } from '@/features/chapter/components/buttons/ChapterDownloadRetryButton.tsx';
-import { Chapters } from '@/features/chapter/services/Chapters.ts';
-import { ListCardContent } from '@/base/components/lists/cards/ListCardContent.tsx';
-import Stack from '@mui/material/Stack';
-import Collapse from '@mui/material/Collapse';
 import { STABLE_EMPTY_ARRAY } from '@/base/Base.constants.ts';
-import { Virtuoso } from 'react-virtuoso';
+import { ListRow } from '@/base/components/lists/ListRow.tsx';
 import { ReaderService } from '@/features/reader/services/ReaderService.ts';
-import { ChapterCardExpandButton } from '@/features/chapter/components/buttons/ChapterCardExpandButton.tsx';
+import { MangaCoverLink } from '@/features/manga/components/MangaCoverLink.tsx';
+import { getCoverImageWidth } from '@/base/components/images/CoverImage.tsx';
+import { ChapterDownloadActions } from '@/features/chapter/components/ChapterDownloadActions.tsx';
+import { ChapterRowGroup } from '@/features/chapter/components/ChapterRowGroup.tsx';
+import { ChapterStatusIcons } from '@/features/chapter/components/ChapterStatusIcons.tsx';
 
+const COVER_SIZE = 44;
+
+// the chapter name shares a flex line with its icons, so it cuts itself off
+const SINGLE_LINE_SX = {
+    display: 'block',
+    minWidth: 0,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+} satisfies SxProps<Theme>;
+
+/**
+ * Mihon's "UpdatesUiItem": a 56 px row with a square cover, the manga title and the chapter with its read progress.
+ */
 export const ChapterUpdateCard = memo(
     ({
         chapter,
@@ -35,92 +43,55 @@ export const ChapterUpdateCard = memo(
         chapter: ChapterUpdateListFieldsFragment;
         otherChapters?: ChapterUpdateListFieldsFragment[];
     }) => {
+        const { t } = useLingui();
         const { manga } = chapter;
 
-        const [isExpanded, setIsExpanded] = useState(false);
-
-        const isGroup = !!otherChapters.length;
+        const hasReadProgress = !chapter.isRead && chapter.lastPageRead > 0;
 
         return (
-            <Card>
-                <CardActionArea
-                    component={Link}
-                    to={AppRoutes.reader.path(chapter.manga.id, chapter.sourceOrder)}
-                    state={Chapters.getReaderOpenChapterLocationState(chapter)}
+            <ChapterRowGroup
+                otherChapters={otherChapters}
+                leadingWidth={getCoverImageWidth('square', COVER_SIZE)}
+                renderChapter={(otherChapter) => <ChapterUpdateCard chapter={otherChapter} />}
+            >
+                <ListRow
+                    to={AppRoutes.reader.path(manga.id, chapter.sourceOrder)}
                     onClick={(e) => {
                         e.preventDefault();
-                        e.stopPropagation();
                         ReaderService.openReader(chapter);
                     }}
-                    sx={{
-                        color: (theme) => theme.palette.text[chapter.isRead ? 'disabled' : 'primary'],
-                    }}
-                >
-                    <ListCardContent sx={{ justifyContent: 'space-between' }}>
-                        <Box sx={{ display: 'flex', flexGrow: 1, gap: 1, alignItems: 'center' }}>
-                            <ChapterCardThumbnail
-                                mangaId={manga.id}
-                                sourceId={manga.sourceId}
-                                mangaTitle={manga.title}
-                                thumbnailUrl={manga.thumbnailUrl}
-                                thumbnailUrlLastFetched={manga.thumbnailUrlLastFetched}
-                                slots={
-                                    isGroup
-                                        ? {
-                                              listCardAvatar: {
-                                                  slots: {
-                                                      spinnerImageProps: {
-                                                          spinnerStyle: {
-                                                              height: 74,
-                                                              aspectRatio: '3 / 4',
-                                                          },
-                                                          imgStyle: {
-                                                              height: 74,
-                                                              aspectRatio: '3 / 4',
-                                                          },
-                                                      },
-                                                      avatarProps: {
-                                                          sx: {
-                                                              height: 74,
-                                                          },
-                                                      },
-                                                  },
-                                              },
-                                          }
-                                        : undefined
-                                }
-                            />
-                            <Stack>
-                                <ChapterCardMetadata
-                                    title={manga.title}
-                                    secondaryText={chapter.scanlator}
-                                    ternaryText={chapter.name}
-                                />
-                                {isGroup && (
-                                    <ChapterCardExpandButton
-                                        count={otherChapters.length}
-                                        expanded={isExpanded}
-                                        setExpanded={setIsExpanded}
-                                    />
-                                )}
-                            </Stack>
+                    // Mihon pads only horizontally: the 44 px cover and the 48 px download button fit the 56 px row
+                    sx={{ py: 0 }}
+                    leading={<MangaCoverLink manga={manga} ratio="square" height={COVER_SIZE} />}
+                    dimmed={chapter.isRead}
+                    headline={manga.title}
+                    headlineVariant="bodyMedium"
+                    supporting={
+                        <Box component="span" sx={{ display: 'flex', alignItems: 'center' }}>
+                            <ChapterStatusIcons chapter={chapter} bookmarkSize={14} />
+                            <Box component="span" sx={SINGLE_LINE_SX}>
+                                {chapter.name}
+                            </Box>
+                            {hasReadProgress && (
+                                <Box component="span" sx={{ flexShrink: 0, whiteSpace: 'pre', color: 'text.disabled' }}>
+                                    {` • ${t`Page ${chapter.lastPageRead + 1}`}`}
+                                </Box>
+                            )}
+                            {/* not in Mihon, but tells apart the groups of a series that more than one group scans;
+                                it gives way to the chapter name when the line is too short for both */}
+                            {chapter.scanlator && (
+                                <Box component="span" sx={[SINGLE_LINE_SX, { whiteSpace: 'pre', flexShrink: 1000 }]}>
+                                    {` • ${chapter.scanlator}`}
+                                </Box>
+                            )}
                         </Box>
-                        <DownloadStateIndicatorCircular chapterId={chapter.id} />
-                        <ChapterDownloadRetryButton chapterId={chapter.id} />
-                        <ChapterDownloadButton chapterId={chapter.id} isDownloaded={chapter.isDownloaded} />
-                    </ListCardContent>
-                </CardActionArea>
-                {isGroup && (
-                    <Collapse in={isExpanded}>
-                        <Virtuoso
-                            useWindowScroll
-                            data={otherChapters}
-                            computeItemKey={(index) => otherChapters[index].id}
-                            itemContent={(_index, otherChapter) => <ChapterUpdateCard chapter={otherChapter} />}
-                        />
-                    </Collapse>
-                )}
-            </Card>
+                    }
+                    supportingVariant="bodySmall"
+                    supportingMaxLines={1}
+                    supportingEmphasis="high"
+                    trailing={<ChapterDownloadActions chapter={chapter} showDownloaded />}
+                />
+            </ChapterRowGroup>
         );
     },
 );

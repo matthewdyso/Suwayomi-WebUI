@@ -240,11 +240,26 @@ export function Library() {
             <>
                 <AppbarSearch searchHistoryKey="library" suggestions={mangaTitles} />
                 <LibraryToolbarMenu category={activeTab} />
-                <UpdateChecker categoryId={activeTab.id} />
-                <LibraryOverflowMenu mangas={mangas} onSelectAll={() => handleModeChange(true)} />
+                {/* phones: Mihon has no update button, the update is in the overflow menu */}
+                {isMobileWidth ? (
+                    <UpdateChecker categoryId={activeTab.id}>
+                        {(globalUpdate) => (
+                            <LibraryOverflowMenu
+                                mangas={mangas}
+                                onSelectAll={() => handleModeChange(true)}
+                                globalUpdate={{ ...globalUpdate, categoryId: activeTab.id }}
+                            />
+                        )}
+                    </UpdateChecker>
+                ) : (
+                    <>
+                        <UpdateChecker categoryId={activeTab.id} />
+                        <LibraryOverflowMenu mangas={mangas} onSelectAll={() => handleModeChange(true)} />
+                    </>
+                )}
             </>
         ),
-        [activeTab, mangas, mangaTitles],
+        [activeTab, mangas, mangaTitles, isMobileWidth],
     );
     // Mihon's selection toolbar shows only the number of selected entries
     useAppBarActionMode(

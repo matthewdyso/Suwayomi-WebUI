@@ -6,7 +6,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
 import Switch from '@mui/material/Switch';
@@ -22,6 +21,7 @@ import { makeToast } from '@/base/utils/Toast.ts';
 import { getErrorMessage } from '@/lib/HelperFunctions.ts';
 import type { MetadataHistorySettings } from '@/features/history/History.types.ts';
 import { useAppTitle } from '@/features/navigation-bar/hooks/useAppTitle.ts';
+import { PreferenceList } from '@/features/settings/components/PreferenceList.tsx';
 
 export const HistorySettings = () => {
     const { t } = useLingui();
@@ -51,7 +51,7 @@ export const HistorySettings = () => {
     }
 
     return (
-        <List sx={{ pt: 0 }}>
+        <PreferenceList>
             <ListItem>
                 <ListItemText primary={t`Hide history`} />
                 <Switch
@@ -60,6 +60,6 @@ export const HistorySettings = () => {
                     onChange={() => updateMetadataServerSettings('hideHistory', !hideHistory)}
                 />
             </ListItem>
-        </List>
+        </PreferenceList>
     );
 };

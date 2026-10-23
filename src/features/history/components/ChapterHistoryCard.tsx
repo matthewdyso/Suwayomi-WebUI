@@ -7,27 +7,29 @@
  */
 
 import Box from '@mui/material/Box';
-import CardActionArea from '@mui/material/CardActionArea';
-import Card from '@mui/material/Card';
-import { Link } from 'react-router-dom';
-import { memo, useState } from 'react';
-import { DownloadStateIndicatorCircular } from '@/base/components/downloads/DownloadStateIndicatorCircular.tsx';
+import { memo } from 'react';
+import { useLingui } from '@lingui/react/macro';
 import type { ChapterHistoryListFieldsFragment } from '@/lib/graphql/generated/graphql.ts';
 import { AppRoutes } from '@/base/AppRoute.constants.ts';
-import { Chapters } from '@/features/chapter/services/Chapters.ts';
-import { epochToDate, timeFormatter } from '@/base/utils/DateHelper.ts';
-import { ChapterCardThumbnail } from '@/features/chapter/components/cards/ChapterCardThumbnail.tsx';
-import { ChapterCardMetadata } from '@/features/chapter/components/cards/ChapterCardMetadata.tsx';
-import { ChapterDownloadButton } from '@/features/chapter/components/buttons/ChapterDownloadButton.tsx';
-import { ChapterDownloadRetryButton } from '@/features/chapter/components/buttons/ChapterDownloadRetryButton.tsx';
-import { ListCardContent } from '@/base/components/lists/cards/ListCardContent';
-import { ReaderService } from '@/features/reader/services/ReaderService.ts';
 import { STABLE_EMPTY_ARRAY } from '@/base/Base.constants.ts';
-import Collapse from '@mui/material/Collapse';
-import { Virtuoso } from 'react-virtuoso';
-import Stack from '@mui/material/Stack';
-import { ChapterCardExpandButton } from '@/features/chapter/components/buttons/ChapterCardExpandButton.tsx';
+import { epochToDate, timeFormatter } from '@/base/utils/DateHelper.ts';
+import type { ListRowHeight } from '@/base/components/lists/ListRow.tsx';
+import { ListRow } from '@/base/components/lists/ListRow.tsx';
+import { ReaderService } from '@/features/reader/services/ReaderService.ts';
+import { MangaCoverLink } from '@/features/manga/components/MangaCoverLink.tsx';
+import { getCoverImageWidth } from '@/base/components/images/CoverImage.tsx';
+import { ChapterDownloadActions } from '@/features/chapter/components/ChapterDownloadActions.tsx';
+import { ChapterRowGroup } from '@/features/chapter/components/ChapterRowGroup.tsx';
 
+const ROW_HEIGHT: ListRowHeight = 96;
+/**
+ * The book cover fills the row's height inside its 8 px vertical padding.
+ */
+const COVER_HEIGHT = 80;
+
+/**
+ * Mihon's "HistoryItem": a 96 px row with a book cover, the manga title and the last read chapter with its time.
+ */
 export const ChapterHistoryCard = memo(
     ({
         chapter,
@@ -36,68 +38,42 @@ export const ChapterHistoryCard = memo(
         chapter: ChapterHistoryListFieldsFragment;
         otherChapters?: ChapterHistoryListFieldsFragment[];
     }) => {
+        const { t } = useLingui();
         const { manga } = chapter;
 
-        const [isExpanded, setIsExpanded] = useState(false);
-
-        const isGroup = !!otherChapters.length;
+        const readAt = timeFormatter.format(epochToDate(Number(chapter.lastReadAt)).valueOf());
+        // chapters without a parsed number (-1) keep their name
+        const chapterLabel = chapter.chapterNumber >= 0 ? t`Ch. ${chapter.chapterNumber}` : chapter.name;
 
         return (
-            <Card>
-                <CardActionArea
-                    component={Link}
-                    to={AppRoutes.reader.path(chapter.manga.id, chapter.sourceOrder)}
-                    state={Chapters.getReaderOpenChapterLocationState(chapter)}
+            <ChapterRowGroup
+                otherChapters={otherChapters}
+                leadingWidth={getCoverImageWidth('book', COVER_HEIGHT)}
+                renderChapter={(otherChapter) => <ChapterHistoryCard chapter={otherChapter} />}
+            >
+                <ListRow
+                    to={AppRoutes.reader.path(manga.id, chapter.sourceOrder)}
                     onClick={(e) => {
                         e.preventDefault();
-                        e.stopPropagation();
                         ReaderService.openReader(chapter);
                     }}
-                    sx={{
-                        color: (theme) => theme.palette.text[chapter.isRead ? 'disabled' : 'primary'],
-                    }}
-                >
-                    <ListCardContent sx={{ justifyContent: 'space-between' }}>
-                        <Box sx={{ display: 'flex', flexGrow: 1, gap: 1, alignItems: 'center' }}>
-                            <ChapterCardThumbnail
-                                mangaId={manga.id}
-                                sourceId={manga.sourceId}
-                                mangaTitle={manga.title}
-                                thumbnailUrl={manga.thumbnailUrl}
-                                thumbnailUrlLastFetched={manga.thumbnailUrlLastFetched}
-                            />
-
-                            <Stack>
-                                <ChapterCardMetadata
-                                    title={manga.title}
-                                    secondaryText={chapter.scanlator}
-                                    ternaryText={`${chapter.name} — ${timeFormatter.format(epochToDate(Number(chapter.lastReadAt)).valueOf())}`}
-                                />
-                                {isGroup && (
-                                    <ChapterCardExpandButton
-                                        count={otherChapters.length}
-                                        expanded={isExpanded}
-                                        setExpanded={setIsExpanded}
-                                    />
-                                )}
-                            </Stack>
+                    minHeight={ROW_HEIGHT}
+                    leading={<MangaCoverLink manga={manga} ratio="book" height={COVER_HEIGHT} />}
+                    headline={manga.title}
+                    // Mihon's history title is bodyMedium in semi bold, which is the "header" style
+                    headlineVariant="header"
+                    headlineMaxLines={2}
+                    supporting={
+                        <Box component="span" sx={{ display: 'block', mt: 0.5 }}>
+                            {t`${chapterLabel} - ${readAt}`}
                         </Box>
-                        <DownloadStateIndicatorCircular chapterId={chapter.id} />
-                        <ChapterDownloadRetryButton chapterId={chapter.id} />
-                        <ChapterDownloadButton chapterId={chapter.id} isDownloaded={chapter.isDownloaded} />
-                    </ListCardContent>
-                </CardActionArea>
-                {isGroup && (
-                    <Collapse in={isExpanded}>
-                        <Virtuoso
-                            useWindowScroll
-                            data={otherChapters}
-                            computeItemKey={(index) => otherChapters[index].id}
-                            itemContent={(_index, otherChapter) => <ChapterHistoryCard chapter={otherChapter} />}
-                        />
-                    </Collapse>
-                )}
-            </Card>
+                    }
+                    supportingVariant="bodyMedium"
+                    supportingMaxLines={1}
+                    supportingEmphasis="high"
+                    trailing={<ChapterDownloadActions chapter={chapter} />}
+                />
+            </ChapterRowGroup>
         );
     },
 );

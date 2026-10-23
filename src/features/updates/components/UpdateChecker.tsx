@@ -6,39 +6,51 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import { useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
+import { useEffect } from 'react';
+import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
-import RefreshIcon from '@mui/icons-material/Refresh';
+import RefreshRoundedIcon from '@mui/icons-material/RefreshRounded';
 import PopupState, { bindMenu, bindTrigger } from 'material-ui-popup-state';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
-import ClearIcon from '@mui/icons-material/Clear';
-import Stack from '@mui/material/Stack';
+import ClearRoundedIcon from '@mui/icons-material/ClearRounded';
 import { useLingui } from '@lingui/react/macro';
 import { CustomTooltip } from '@/base/components/CustomTooltip.tsx';
 import { requestManager } from '@/lib/requests/RequestManager.ts';
 import { makeToast } from '@/base/utils/Toast.ts';
-import { CircularProgressWithText } from '@/base/components/feedback/CircularProgressWithText.tsx';
+import { WAVY_ICON_PROGRESS_PROPS, WavyCircularProgress } from '@/base/components/feedback/WavyProgress.tsx';
 import { defaultPromiseErrorHandler } from '@/lib/DefaultPromiseErrorHandler.ts';
 import { dateTimeFormatter } from '@/base/utils/DateHelper.ts';
-import { MediaQuery } from '@/base/utils/MediaQuery.tsx';
 import type { CategoryIdInfo } from '@/features/category/Category.types.ts';
 
 import { getErrorMessage } from '@/lib/HelperFunctions.ts';
+import { useAppBarProgress } from '@/features/navigation-bar/hooks/useAppBarProgress.ts';
 
 let lastRunningState = false;
 
+export type GlobalUpdateControls = {
+    isRunning: boolean;
+    /**
+     * Starts an update of the library or the category, or stops the running update.
+     */
+    toggle: (categoryId?: CategoryIdInfo['id']) => void;
+};
+
+/**
+ * The global update's button. "children" replaces the button, e.g. with menu entries (Mihon's library overflow menu
+ * on phones); the checker still tracks the running update and its progress bar.
+ */
 export function UpdateChecker({
     categoryId,
     handleFinishedUpdate,
+    children,
 }: {
     categoryId?: CategoryIdInfo['id'];
     handleFinishedUpdate?: () => void;
+    children?: (controls: GlobalUpdateControls) => ReactNode;
 }) {
     const { t } = useLingui();
-    const isTouchDevice = MediaQuery.useIsTouchDevice();
-
-    const [isHovered, setIsHovered] = useState(false);
 
     const { data: lastUpdateTimestampData, refetch: reFetchLastTimestamp } =
         requestManager.useGetLastGlobalUpdateTimestamp();
@@ -51,6 +63,9 @@ export function UpdateChecker({
 
     const isRunning = !!status?.jobsInfo.isRunning;
     const progress = status ? (status.jobsInfo.finishedJobs / status.jobsInfo.totalJobs) * 100 : 0;
+
+    // the button's tooltip names the action, the bar along the app bar's bottom edge reports the progress
+    useAppBarProgress(isRunning ? { value: progress, 'aria-label': t`Global update` } : null);
 
     useEffect(() => {
         if (!lastRunningState && isRunning) {
@@ -95,33 +110,47 @@ export function UpdateChecker({
         }
     };
 
+    if (children) {
+        return children({
+            isRunning,
+            toggle: (category) => {
+                onClick(category).catch(defaultPromiseErrorHandler('UpdateChecker::toggle'));
+            },
+        });
+    }
+
     return (
         <PopupState variant="popover" popupId="library-update-checker-menu">
             {(popupState) => (
                 <>
                     <CustomTooltip title={isRunning ? t`Stop global update` : t`Global update (last update: ${date})`}>
                         <IconButton
-                            sx={{ position: 'relative' }}
                             {...(categoryId !== undefined && !isRunning
                                 ? bindTrigger(popupState)
                                 : { onClick: () => onClick() })}
-                            onMouseEnter={() => setIsHovered(true)}
-                            onMouseLeave={() => setIsHovered(false)}
                             color="inherit"
                         >
                             {!isRunning ? (
-                                <RefreshIcon />
+                                <RefreshRoundedIcon />
                             ) : (
-                                <>
-                                    <ClearIcon sx={{ opacity: Number(isTouchDevice || isHovered) }} />
-                                    <Stack sx={{ position: 'absolute' }}>
-                                        <CircularProgressWithText
-                                            progress={progress}
-                                            showText={!isTouchDevice && !isHovered}
-                                            progressProps={{ color: 'inherit' }}
-                                        />
-                                    </Stack>
-                                </>
+                                <Box
+                                    aria-hidden
+                                    sx={{
+                                        position: 'relative',
+                                        display: 'grid',
+                                        placeItems: 'center',
+                                        width: WAVY_ICON_PROGRESS_PROPS.size,
+                                        height: WAVY_ICON_PROGRESS_PROPS.size,
+                                    }}
+                                >
+                                    <WavyCircularProgress
+                                        {...WAVY_ICON_PROGRESS_PROPS}
+                                        value={progress}
+                                        gap={2}
+                                        sx={{ position: 'absolute', inset: 0 }}
+                                    />
+                                    <ClearRoundedIcon sx={{ fontSize: 16 }} />
+                                </Box>
                             )}
                         </IconButton>
                     </CustomTooltip>

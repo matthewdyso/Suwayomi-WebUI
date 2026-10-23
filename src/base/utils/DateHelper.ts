@@ -24,6 +24,12 @@ export const dateTimeFormatter = new Intl.DateTimeFormat(navigator.language, {
     minute: '2-digit',
 });
 
+const relativeDayFormatter = new Intl.RelativeTimeFormat(navigator.language, { numeric: 'auto' });
+/**
+ * Mihon names the days of the last week relative to today ("3 days ago").
+ */
+const RELATIVE_DAYS_LIMIT = 7;
+
 export const epochToDate = (epoch: number): Dayjs => dayjs.unix(epoch);
 
 export const isSameDay = (first: Dayjs, second: Dayjs): boolean => first.isSame(second, 'day');
@@ -32,7 +38,7 @@ export const isSameDay = (first: Dayjs, second: Dayjs): boolean => first.isSame(
  * Returns a string in localized format for the passed date.
  *
  * In case the date is from today or yesterday a special string will be returned including "Today"
- * or "Yesterday".
+ * or "Yesterday", for the days before that within the last week a relative one ("3 days ago").
  * Optionally this special string can include the localized time of the passed date ("Today/Yesterday at HH:mm").
  *
  * @example
@@ -70,6 +76,11 @@ export const getDateString = (date: Dayjs | number, withTime: boolean = false, d
 
     if (dateTime) {
         return dateTimeFormatter.format(actualDate.toDate());
+    }
+
+    const daysAgo = dayjs().startOf('day').diff(actualDate.startOf('day'), 'day');
+    if (daysAgo > 0 && daysAgo < RELATIVE_DAYS_LIMIT) {
+        return relativeDayFormatter.format(-daysAgo, 'day');
     }
 
     return dateFormatter.format(actualDate.toDate());

@@ -6,52 +6,40 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
-import CircularProgress from '@mui/material/CircularProgress';
-import CloudSyncIcon from '@mui/icons-material/CloudSync';
+import CloudSyncRoundedIcon from '@mui/icons-material/CloudSyncRounded';
 import { useLingui } from '@lingui/react/macro';
 import { CustomTooltip } from '@/base/components/CustomTooltip.tsx';
-import { requestManager } from '@/lib/requests/RequestManager.ts';
-import { makeToast } from '@/base/utils/Toast.ts';
-import { getErrorMessage } from '@/lib/HelperFunctions.ts';
-import { StartSyncResult, SyncState } from '@/lib/graphql/generated/graphql-base.types.ts';
-import { SYNC_START_RESULT_TRANSLATION, SYNC_STATE_TRANSLATION } from '@/features/settings/Settings.constants.ts';
+import { WAVY_ICON_PROGRESS_PROPS, WavyCircularProgress } from '@/base/components/feedback/WavyProgress.tsx';
+import { M3_LAYOUT } from '@/features/theme/m3/M3Layout.constants.ts';
+import { useStartSync } from '@/features/sync/hooks/useStartSync.ts';
 
 export function SyncButton() {
     const { t } = useLingui();
+    const { isEnabled, isSyncing, syncStateTitle, startSync } = useStartSync();
 
-    const { data: settingsData } = requestManager.useGetServerSettings();
-    const { data: syncStatusData } = requestManager.useGetSyncStatus();
-
-    const syncState = syncStatusData?.lastSyncStatus?.state;
-    const isSyncing = !!syncState && ![SyncState.Success, SyncState.Error].includes(syncState);
-
-    if (!settingsData?.settings.syncYomiEnabled) {
+    if (!isEnabled) {
         return null;
     }
 
-    const startSync = async () => {
-        try {
-            const response = await requestManager.startSync().response;
-            const result = response.data?.startSync.result;
-            if (result) {
-                makeToast(
-                    t(SYNC_START_RESULT_TRANSLATION[result]),
-                    result === StartSyncResult.Success ? 'success' : 'warning',
-                );
-            }
-        } catch (e) {
-            makeToast(t`Could not start sync`, 'error', getErrorMessage(e));
-        }
-    };
-
     return (
-        <CustomTooltip title={isSyncing ? t(SYNC_STATE_TRANSLATION[syncState]) : t`Sync now`}>
+        <CustomTooltip title={syncStateTitle ?? t`Sync now`}>
             {isSyncing ? (
-                <CircularProgress size={24} color="inherit" />
+                // takes the icon button's place so the other app bar actions don't move
+                <Box
+                    sx={{
+                        display: 'grid',
+                        placeItems: 'center',
+                        width: M3_LAYOUT.minTouchTarget,
+                        height: M3_LAYOUT.minTouchTarget,
+                    }}
+                >
+                    <WavyCircularProgress {...WAVY_ICON_PROGRESS_PROPS} aria-label={syncStateTitle} />
+                </Box>
             ) : (
-                <IconButton onClick={startSync} disabled={isSyncing} color="inherit">
-                    <CloudSyncIcon />
+                <IconButton onClick={startSync} color="inherit">
+                    <CloudSyncRoundedIcon />
                 </IconButton>
             )}
         </CustomTooltip>
