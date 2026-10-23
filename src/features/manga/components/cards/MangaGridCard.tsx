@@ -6,41 +6,76 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import Link from '@mui/material/Link';
 import { Link as RouterLink } from 'react-router-dom';
-import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import CardActionArea from '@mui/material/CardActionArea';
+import ButtonBase from '@mui/material/ButtonBase';
 import Stack from '@mui/material/Stack';
-import { styled } from '@mui/material/styles';
+import { alpha, styled } from '@mui/material/styles';
+import type { SxProps, Theme } from '@mui/material/styles';
 import { memo, useRef } from 'react';
 import { CustomTooltip } from '@/base/components/CustomTooltip.tsx';
-import { SpinnerImage } from '@/base/components/SpinnerImage.tsx';
+import { CoverImage } from '@/base/components/images/CoverImage.tsx';
 import { MangaOptionButton } from '@/features/manga/components/MangaOptionButton.tsx';
 import { Mangas } from '@/features/manga/services/Mangas.ts';
 import type { SpecificMangaCardProps } from '@/features/manga/Manga.types.ts';
 import { TypographyMaxLines } from '@/base/components/texts/TypographyMaxLines.tsx';
-import { MANGA_COVER_ASPECT_RATIO } from '@/features/manga/Manga.constants.ts';
 import { GridLayout } from '@/base/Base.types.ts';
 import { MediaQuery } from '@/base/utils/MediaQuery.tsx';
 import { MUIUtil } from '@/lib/mui/MUI.util.ts';
+import { M3_SHAPE } from '@/features/theme/m3/M3Shape.constants.ts';
+import {
+    getMangaCardInteractionSx,
+    MANGA_CARD_CONTROLS_Z_INDEX,
+    MangaCardStateLayer,
+} from '@/features/manga/components/cards/MangaCard.styles.tsx';
 
-const BottomGradient = styled('div')({
-    position: 'absolute',
-    bottom: 0,
-    width: '100%',
-    height: '30%',
-    background: 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 100%)',
+/**
+ * Mihon dims the covers of selected items so the selection color shines through.
+ */
+const SELECTED_COVER_ALPHA = 0.76;
+
+/**
+ * Mihon's compact grid title scrim: the bottom third of the cover, fading to black at .667 alpha (0xAA).
+ */
+const COMPACT_TITLE_SCRIM_ALPHA = 0.667;
+
+const GRID_ITEM_TITLE_LINES = 2;
+
+/**
+ * Mihon's "GridItemTitle": titleSmall at 12 / 18. Spacing around it has to be margin: padding would show the clamped
+ * third line.
+ */
+const getGridItemTitleSx = (theme: Theme) => ({
+    ...theme.typography.titleSmall,
+    fontSize: theme.typography.pxToRem(12),
+    lineHeight: theme.typography.pxToRem(18),
 });
 
-const BottomGradientDoubledDown = styled('div')({
+const CompactTitleScrim = styled('div')(({ theme }) => ({
     position: 'absolute',
+    insetInline: 0,
     bottom: 0,
-    width: '100%',
-    height: '20%',
-    background: 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 100%)',
+    height: '33%',
+    background: `linear-gradient(to bottom, transparent, ${alpha(theme.palette.common.black, COMPACT_TITLE_SCRIM_ALPHA)})`,
+}));
+
+const CoverOverlayRow = styled(Stack)({
+    position: 'absolute',
+    zIndex: MANGA_CARD_CONTROLS_Z_INDEX,
+    flexDirection: 'row',
+    insetInline: 0,
 });
 
+const GridItemTitle = ({ title, sx }: { title: string; sx: SxProps<Theme> }) => (
+    <CustomTooltip title={title} placement="top">
+        <TypographyMaxLines component="h3" lines={GRID_ITEM_TITLE_LINES} sx={sx}>
+            {title}
+        </TypographyMaxLines>
+    </CustomTooltip>
+);
+
+/**
+ * Mihon's compact (title over the cover) and comfortable (title below the cover) grid items.
+ */
 export const MangaGridCard = memo(
     ({
         manga,
@@ -60,150 +95,78 @@ export const MangaGridCard = memo(
         const optionButtonRef = useRef<HTMLButtonElement>(null);
 
         const { id, title } = manga;
+        const isComfortable = gridLayout === GridLayout.Comfortable;
 
         return (
-            <Link
+            <ButtonBase
                 component={RouterLink}
+                className="MangaGridCard-root"
+                disableRipple
                 {...longPressBind(() => popupState.open(optionButtonRef.current))}
                 to={mangaLinkTo}
                 state={Mangas.createLocationState(manga, mode)}
                 onContextMenu={preventMobileContextMenu}
-                sx={MUIUtil.mergeSx(MediaQuery.preventMobileContextMenuSx(), { textDecoration: 'none' })}
+                sx={MUIUtil.mergeSx(MediaQuery.preventMobileContextMenuSx(), getMangaCardInteractionSx(mode), {
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'stretch',
+                    width: '100%',
+                    p: 0.5,
+                    borderRadius: M3_SHAPE.small,
+                    textAlign: 'start',
+                    color: selected ? 'm3.onSecondary' : 'm3.onSurface',
+                    bgcolor: selected ? 'm3.secondary' : undefined,
+                })}
             >
-                <Box
-                    sx={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        m: 0.25,
-                        outline: selected ? '4px solid' : undefined,
-                        borderRadius: selected ? '1px' : undefined,
-                        outlineColor: (theme) => theme.palette.primary.main,
-                        backgroundColor: (theme) => (selected ? theme.palette.primary.main : undefined),
-                        '@media (hover: hover) and (pointer: fine)': {
-                            '&:hover .manga-option-button': {
-                                visibility: 'visible',
-                                pointerEvents: 'all',
-                            },
-                            '&:hover .source-manga-library-state-button': {
-                                display: 'inline-flex',
-                            },
-                            '&:hover .source-manga-library-state-indicator': {
-                                display: mode === 'source' ? 'none' : 'flex',
-                            },
-                        },
-                    }}
+                <CoverImage
+                    alt={title}
+                    src={Mangas.getThumbnailUrl(manga)}
+                    dimmed={inLibraryIndicator && isInLibrary}
+                    // only the image fades, the badges, title and buttons on the cover stay opaque
+                    sx={selected ? { '& img': { opacity: SELECTED_COVER_ALPHA } } : undefined}
                 >
-                    <Card
-                        sx={{
-                            // force standard aspect ratio of manga covers
-                            aspectRatio: MANGA_COVER_ASPECT_RATIO,
-                            display: 'flex',
-                        }}
-                    >
-                        <CardActionArea
-                            sx={{
-                                position: 'relative',
-                                height: '100%',
-                            }}
-                        >
-                            <SpinnerImage
-                                alt={title}
-                                src={Mangas.getThumbnailUrl(manga)}
-                                imgStyle={
-                                    inLibraryIndicator && isInLibrary
-                                        ? {
-                                              height: '100%',
-                                              width: '100%',
-                                              objectFit: 'cover',
-                                              filter: 'brightness(0.4)',
-                                          }
-                                        : {
-                                              height: '100%',
-                                              width: '100%',
-                                              objectFit: 'cover',
-                                          }
-                                }
-                                spinnerStyle={{
-                                    display: 'grid',
-                                    placeItems: 'center',
-                                }}
-                            />
-                            <Stack
-                                direction="row"
-                                sx={{
-                                    alignItems: 'start',
-                                    justifyContent: 'space-between',
-                                    position: 'absolute',
-                                    top: (theme) => theme.spacing(1),
-                                    left: (theme) => theme.spacing(1),
-                                    right: (theme) => theme.spacing(1),
-                                }}
-                            >
-                                {mangaBadges}
-                                <MangaOptionButton
-                                    ref={optionButtonRef}
-                                    popupState={popupState}
-                                    id={id}
-                                    selected={selected}
-                                    handleSelection={handleSelection}
-                                />
-                            </Stack>
-                            <>
-                                {gridLayout !== GridLayout.Comfortable && (
-                                    <>
-                                        <BottomGradient />
-                                        <BottomGradientDoubledDown />
-                                    </>
-                                )}
-                                <Stack
-                                    direction="row"
-                                    sx={{
-                                        justifyContent: gridLayout !== GridLayout.Comfortable ? 'space-between' : 'end',
-                                        alignItems: 'end',
-                                        position: 'absolute',
-                                        bottom: 0,
-                                        width: '100%',
-                                        p: 1,
-                                        gap: 1,
-                                    }}
-                                >
-                                    {gridLayout !== GridLayout.Comfortable && (
-                                        <CustomTooltip title={title} placement="top">
-                                            <TypographyMaxLines
-                                                component="h3"
-                                                sx={{
-                                                    color: 'white',
-                                                    textShadow: '0px 0px 3px #000000',
-                                                }}
-                                            >
-                                                {title}
-                                            </TypographyMaxLines>
-                                        </CustomTooltip>
-                                    )}
-                                    {continueReadingButton}
-                                </Stack>
-                            </>
-                        </CardActionArea>
-                    </Card>
-                    {gridLayout === GridLayout.Comfortable && (
-                        <Stack sx={{ pb: 1 }}>
-                            <CustomTooltip title={title} placement="top">
-                                <TypographyMaxLines
-                                    component="h3"
-                                    sx={{
-                                        color: (theme) =>
-                                            selected ? theme.palette.primary.contrastText : 'text.primary',
-                                        height: '3rem',
-                                        pt: 0.5,
-                                    }}
-                                >
-                                    {title}
-                                </TypographyMaxLines>
-                            </CustomTooltip>
+                    {!isComfortable && <CompactTitleScrim />}
+                    <CoverOverlayRow sx={{ top: 0, p: 0.5, gap: 0.5, alignItems: 'start' }}>
+                        <Stack sx={{ flexDirection: 'row', flexWrap: 'wrap', gap: 0.5, flexGrow: 1 }}>
+                            {mangaBadges}
                         </Stack>
-                    )}
-                </Box>
-            </Link>
+                        <MangaOptionButton
+                            ref={optionButtonRef}
+                            popupState={popupState}
+                            id={id}
+                            selected={selected}
+                            handleSelection={handleSelection}
+                        />
+                    </CoverOverlayRow>
+                    <CoverOverlayRow sx={{ bottom: 0, alignItems: 'end', justifyContent: 'end' }}>
+                        {!isComfortable && (
+                            <GridItemTitle
+                                title={title}
+                                sx={(theme) => ({
+                                    ...getGridItemTitleSx(theme),
+                                    flexGrow: 1,
+                                    m: 1,
+                                    color: theme.palette.common.white,
+                                    textShadow: `0 0 4px ${theme.palette.common.black}`,
+                                })}
+                            />
+                        )}
+                        {continueReadingButton}
+                    </CoverOverlayRow>
+                </CoverImage>
+                {isComfortable && (
+                    <GridItemTitle
+                        title={title}
+                        sx={(theme) => ({
+                            ...getGridItemTitleSx(theme),
+                            m: 0.5,
+                            // Mihon reserves both lines, so the rows of the grid line up
+                            minHeight: `calc(${GRID_ITEM_TITLE_LINES} * ${getGridItemTitleSx(theme).lineHeight})`,
+                        })}
+                    />
+                )}
+                <MangaCardStateLayer />
+            </ButtonBase>
         );
     },
 );

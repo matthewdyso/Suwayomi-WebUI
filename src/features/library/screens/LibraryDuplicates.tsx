@@ -29,7 +29,6 @@ import type { GetMangasDuplicatesQuery, GetMangasDuplicatesQueryVariables } from
 import { GET_MANGAS_DUPLICATES } from '@/lib/graphql/manga/MangaQuery.ts';
 import { BaseMangaGrid } from '@/features/manga/components/BaseMangaGrid.tsx';
 import type { IMangaGridProps } from '@/features/manga/components/MangaGrid.tsx';
-import { StyledGroupItemWrapper } from '@/base/components/virtuoso/StyledGroupItemWrapper.tsx';
 import { VirtuosoUtil } from '@/lib/virtuoso/Virtuoso.util.tsx';
 import type {
     LibraryDuplicatesWorkerInput,
@@ -89,6 +88,8 @@ export const LibraryDuplicates = () => {
 
         if (!libraryMangas.length) {
             setMangasByTitle({});
+            // nothing to check; while the library is still loading, "loading" keeps the placeholder up
+            setIsCheckingForDuplicates(false);
             return () => {};
         }
 
@@ -138,6 +139,10 @@ export const LibraryDuplicates = () => {
         );
     }
 
+    if (!duplicatedTitles.length) {
+        return <EmptyViewAbsoluteCentered message={t`No manga found`} />;
+    }
+
     if (gridLayout === GridLayout.List) {
         return (
             <StyledGroupedVirtuoso
@@ -145,21 +150,19 @@ export const LibraryDuplicates = () => {
                 groupCounts={mangasCountByTitle}
                 groupContent={(index) => (
                     <StyledGroupHeader isFirstItem={index === 0}>
-                        <Typography variant="h5" component="h2">
+                        <Typography variant="header" component="h2">
                             {duplicatedTitles[index]}
                         </Typography>
                     </StyledGroupHeader>
                 )}
                 computeItemKey={computeItemKey}
                 itemContent={(index) => (
-                    <StyledGroupItemWrapper>
-                        <MangaCard
-                            manga={duplicatedMangas[index] as IMangaGridProps['mangas'][number]}
-                            gridLayout={gridLayout}
-                            selected={null}
-                            mode="duplicate"
-                        />
-                    </StyledGroupItemWrapper>
+                    <MangaCard
+                        manga={duplicatedMangas[index] as IMangaGridProps['mangas'][number]}
+                        gridLayout={gridLayout}
+                        selected={null}
+                        mode="duplicate"
+                    />
                 )}
             />
         );
@@ -168,7 +171,7 @@ export const LibraryDuplicates = () => {
     return duplicatedTitles.map((title, index) => (
         <Box key={title}>
             <StyledGroupHeader sx={{ pt: index === 0 ? undefined : 0, pb: 0 }} isFirstItem={false}>
-                <Typography variant="h5" component="h2">
+                <Typography variant="header" component="h2">
                     {title}
                 </Typography>
             </StyledGroupHeader>

@@ -14,6 +14,7 @@ import { Menu } from '@/base/components/menu/Menu.tsx';
 import { useManageMangaLibraryState } from '@/features/manga/hooks/useManageMangaLibraryState.tsx';
 import { MangaGridCard } from '@/features/manga/components/cards/MangaGridCard.tsx';
 import { MangaListCard } from '@/features/manga/components/cards/MangaListCard.tsx';
+import { CONTINUE_READING_BUTTON_GRID_SX } from '@/features/manga/components/cards/MangaCard.styles.tsx';
 import type { MangaCardMode, MangaCardProps } from '@/features/manga/Manga.types.ts';
 import { ContinueReadingButton } from '@/features/manga/components/ContinueReadingButton.tsx';
 import { MangaBadges } from '@/features/manga/components/MangaBadges.tsx';
@@ -33,6 +34,8 @@ import { getErrorMessage } from '@/lib/HelperFunctions.ts';
 import { assertIsDefined } from '@/base/Asserts.ts';
 import { usePress } from '@/base/hooks/usePress.ts';
 import { Confirmation } from '@/base/AppAwaitableComponent.ts';
+import { Sources } from '@/features/source/services/Sources.ts';
+import { MediaQuery } from '@/base/utils/MediaQuery.tsx';
 
 const getMangaLinkTo = (mode: MangaCardMode, mangaId: number): string => {
     switch (mode) {
@@ -100,6 +103,12 @@ export const MangaCard = memo((props: MangaCardProps) => {
             }
 
             if (isDefaultMode) {
+                // like Mihon, a long press on a touch screen starts a selection; pointer devices get the menu
+                if (handleSelection && MediaQuery.isTouchDevice()) {
+                    handleSelection(id, true);
+                    return;
+                }
+
                 openMenu?.();
                 return;
             }
@@ -199,6 +208,8 @@ export const MangaCard = memo((props: MangaCardProps) => {
                                 showContinueReadingButton={showContinueReadingButton && mode === 'default'}
                                 chapter={firstUnreadChapter}
                                 mangaLinkTo={mangaLinkTo}
+                                size={gridLayout === GridLayout.Comfortable ? 'large' : 'small'}
+                                sx={gridLayout === GridLayout.List ? undefined : CONTINUE_READING_BUTTON_GRID_SX}
                             />
                         }
                         mangaBadges={
@@ -207,6 +218,7 @@ export const MangaCard = memo((props: MangaCardProps) => {
                                 isInLibrary={isInLibrary}
                                 unread={unreadCount}
                                 downloadCount={downloadCount}
+                                isLocal={Sources.isLocalSource({ id: manga.sourceId })}
                                 updateLibraryState={updateLibraryState}
                                 mode={mode}
                             />

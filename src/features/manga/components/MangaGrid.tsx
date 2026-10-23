@@ -19,6 +19,7 @@ import React, {
 import type { GridTypeMap } from '@mui/material/Grid';
 import Grid from '@mui/material/Grid';
 import type { BoxProps } from '@mui/material/Box';
+import type { SxProps, Theme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import type { GridItemProps } from 'react-virtuoso';
 import { useLingui } from '@lingui/react/macro';
@@ -34,8 +35,27 @@ import { useMetadataServerSettings } from '@/features/settings/services/ServerSe
 import { VirtuosoGridPersisted } from '@/lib/virtuoso/Component/VirtuosoGridPersisted.tsx';
 import { MUIUtil } from '@/lib/mui/MUI.util.ts';
 
-const GridContainer = ({ children, ref, ...props }: GridTypeMap['props'] & { ref?: Ref<HTMLDivElement> }) => (
-    <Grid {...props} ref={ref} container spacing={1}>
+/**
+ * Mihon's "GridHorizontalSpacer" and "GridVerticalSpacer"; list rows have no gaps.
+ */
+const GRID_SPACING = 0.5;
+
+/**
+ * Mihon's content padding: 8 around grids, lists are full-bleed with 8 above and below.
+ */
+export const getMangaGridWrapperSx = (gridLayout?: GridLayout): SxProps<Theme> =>
+    gridLayout === GridLayout.List ? { py: 1 } : { p: 1 };
+
+type GridContainerProps = GridTypeMap['props'] & { ref?: Ref<HTMLDivElement> };
+
+const GridContainer = ({ children, ref, ...props }: GridContainerProps) => (
+    <Grid {...props} ref={ref} container spacing={GRID_SPACING}>
+        {children}
+    </Grid>
+);
+
+const ListContainer = ({ children, ref, ...props }: GridContainerProps) => (
+    <Grid {...props} ref={ref} container>
         {children}
     </Grid>
 );
@@ -56,6 +76,18 @@ const GridItemContainerWithDimension = (
         </Grid>
     );
 };
+
+/**
+ * Items of a fixed width, e.g. Mihon's 96 dp global search cards in a horizontal row.
+ */
+const GridItemContainerWithFixedWidth =
+    (itemWidth: number) =>
+    // MUI GridProps and Virtuoso GridItemProps use different types for the "ref" prop which conflict with each other
+    ({ children, sx, ...itemProps }: GridTypeMap['props'] & Omit<Partial<GridItemProps>, 'ref'>) => (
+        <Grid {...itemProps} sx={MUIUtil.mergeSx({ flex: '0 0 auto', width: itemWidth }, sx)}>
+            {children}
+        </Grid>
+    );
 
 type TManga = MangaCardProps['manga'];
 
@@ -107,7 +139,7 @@ const HorizontalGrid = ({
     <Grid
         ref={ref}
         container
-        spacing={1}
+        spacing={GRID_SPACING}
         sx={{
             width: '100%',
             overflowX: 'auto',
@@ -164,7 +196,7 @@ const VerticalGrid = ({
                 increaseViewportBy={window.innerHeight * 0.5}
                 totalCount={mangas.length}
                 components={{
-                    List: GridContainer,
+                    List: gridLayout === GridLayout.List ? ListContainer : GridContainer,
                     Item: GridItemContainer,
                 }}
                 endReached={() => loadMore()}
@@ -190,7 +222,7 @@ const VerticalGrid = ({
         ) : isLoading ? (
             <LoadingPlaceholder />
         ) : hasNextPage ? (
-            <div style={{ height: '75px' }} />
+            <Box sx={{ height: 75 }} />
         ) : null}
         {/* oxlint-enable no-nested-ternary */}
     </>
@@ -205,6 +237,11 @@ export interface IMangaGridProps
     horizontal?: boolean | undefined;
     noFaces?: boolean | undefined;
     gridWrapperProps?: Omit<BoxProps, 'ref'>;
+    /**
+     * Replaces the "mangaGridItemWidth" setting; in a horizontal grid every item is exactly this wide (Mihon's fixed
+     * 96 dp global search cards).
+     */
+    itemWidth?: number;
 }
 
 export const MangaGrid: React.FC<IMangaGridProps> = ({
@@ -225,6 +262,7 @@ export const MangaGrid: React.FC<IMangaGridProps> = ({
     retry,
     gridWrapperProps,
     onMigrateSelect,
+    itemWidth,
 }) => {
     const { t } = useLingui();
 
@@ -239,9 +277,13 @@ export const MangaGrid: React.FC<IMangaGridProps> = ({
     const [dimensions, setDimensions] = useState(
         gridWrapperRef.current?.offsetWidth ?? Math.max(0, document.documentElement.offsetWidth - navBarWidth),
     );
+    const actualItemWidth = itemWidth ?? mangaGridItemWidth;
     const GridItemContainer = useMemo(
-        () => GridItemContainerWithDimension(dimensions, mangaGridItemWidth, gridLayout),
-        [dimensions, mangaGridItemWidth, gridLayout],
+        () =>
+            horizontal && itemWidth
+                ? GridItemContainerWithFixedWidth(itemWidth)
+                : GridItemContainerWithDimension(dimensions, actualItemWidth, gridLayout),
+        [horizontal, itemWidth, dimensions, actualItemWidth, gridLayout],
     );
 
     // always show vertical scrollbar to prevent https://github.com/Suwayomi/Suwayomi-WebUI/issues/758

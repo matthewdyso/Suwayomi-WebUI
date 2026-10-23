@@ -7,12 +7,18 @@
  */
 
 import type { IMangaGridProps } from '@/features/manga/components/MangaGrid.tsx';
-import { MangaGrid } from '@/features/manga/components/MangaGrid.tsx';
+import { getMangaGridWrapperSx, MangaGrid } from '@/features/manga/components/MangaGrid.tsx';
 
 type TMangaBaseGrid = Omit<IMangaGridProps['mangas'][number], 'downloadCount' | 'unreadCount' | 'chapters'>;
 
 export function BaseMangaGrid(props: Omit<IMangaGridProps, 'mangas'> & { mangas: TMangaBaseGrid[] }) {
-    const { mangas } = props;
+    const { mangas, gridLayout } = props;
 
-    return <MangaGrid gridWrapperProps={{ sx: { p: 1 } }} {...props} mangas={mangas as IMangaGridProps['mangas']} />;
+    return (
+        <MangaGrid
+            gridWrapperProps={{ sx: getMangaGridWrapperSx(gridLayout) }}
+            {...props}
+            mangas={mangas as IMangaGridProps['mangas']}
+        />
+    );
 }

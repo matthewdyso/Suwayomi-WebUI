@@ -8,15 +8,15 @@
 
 import type { ComponentProps } from 'react';
 import { useMemo, useState } from 'react';
-import Fab from '@mui/material/Fab';
-import AddIcon from '@mui/icons-material/Add';
-import Box from '@mui/material/Box';
+import AddRounded from '@mui/icons-material/AddRounded';
+import Stack from '@mui/material/Stack';
 import type { DragEndEvent } from '@dnd-kit/core';
 import { closestCenter, DndContext } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useLingui } from '@lingui/react/macro';
 import { requestManager } from '@/lib/requests/RequestManager.ts';
-import { DEFAULT_FULL_FAB_HEIGHT } from '@/base/components/buttons/StyledFab.tsx';
+import { DEFAULT_FULL_FAB_HEIGHT, StyledFab } from '@/base/components/buttons/StyledFab.tsx';
+import { useFabExpanded } from '@/base/hooks/useFabExpanded.ts';
 import { LoadingPlaceholder } from '@/base/components/feedback/LoadingPlaceholder.tsx';
 import { EmptyViewAbsoluteCentered } from '@/base/components/feedback/EmptyViewAbsoluteCentered.tsx';
 import { defaultPromiseErrorHandler } from '@/lib/DefaultPromiseErrorHandler.ts';
@@ -40,6 +40,8 @@ export function CategorySettings() {
     const dndSensors = DndKitUtil.useSensorsForDevice();
 
     useAppTitle(t`Edit categories`);
+
+    const isFabExpanded = useFabExpanded();
 
     const { data, loading, error, refetch } = requestManager.useGetCategories<
         GetCategoriesSettingsQuery,
@@ -120,7 +122,13 @@ export function CategorySettings() {
                 onDragCancel={() => setDndActiveCategory(null)}
                 onDragAbort={() => setDndActiveCategory(null)}
             >
-                <Box sx={{ paddingBottom: DEFAULT_FULL_FAB_HEIGHT }}>
+                {!categories.length && (
+                    <EmptyViewAbsoluteCentered
+                        message={t`You have no categories. Tap the plus button to create one for organizing your library.`}
+                    />
+                )}
+                {/* Mihon's card stack: 16 px side padding, 8 px between the cards */}
+                <Stack sx={{ gap: 1, px: 2, pt: 1, pb: DEFAULT_FULL_FAB_HEIGHT }}>
                     <SortableContext items={categories} strategy={verticalListSortingStrategy}>
                         {categories.map((category, index) => (
                             <DndSortableItem
@@ -133,22 +141,18 @@ export function CategorySettings() {
                         ))}
                     </SortableContext>
                     <DndOverlayItem isActive={!!dndActiveCategory}>
-                        <CategorySettingsCard category={dndActiveCategory!} onEdit={noOp} />
+                        <CategorySettingsCard category={dndActiveCategory!} onEdit={noOp} lifted />
                     </DndOverlayItem>
-                </Box>
+                </Stack>
             </DndContext>
-            <Fab
-                color="primary"
-                aria-label="add"
-                sx={{
-                    position: 'fixed',
-                    bottom: (theme) => theme.spacing(2),
-                    right: (theme) => theme.spacing(2),
-                }}
+            <StyledFab
+                variant={isFabExpanded ? 'extended' : 'circular'}
+                aria-label={t`Add`}
                 onClick={() => handleDialogOpen()}
             >
-                <AddIcon />
-            </Fab>
+                <AddRounded />
+                {isFabExpanded && t`Add`}
+            </StyledFab>
 
             {dialogOpen && (
                 <CreateOrEditCategoryDialog category={categories[categoryToEdit]} onClose={handleDialogCancel} />

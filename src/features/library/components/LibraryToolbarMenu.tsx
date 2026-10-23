@@ -6,7 +6,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import FilterList from '@mui/icons-material/FilterList';
+import FilterListRounded from '@mui/icons-material/FilterListRounded';
 import IconButton from '@mui/material/IconButton';
 import type { ComponentProps } from 'react';
 import { useState } from 'react';
@@ -14,20 +14,14 @@ import { useLingui } from '@lingui/react/macro';
 import { CustomTooltip } from '@/base/components/CustomTooltip.tsx';
 import { LibraryOptionsPanel } from '@/features/library/components/LibraryOptionsPanel.tsx';
 import { getCategoryMetadata } from '@/features/category/services/CategoryMetadata.ts';
-import ShuffleIcon from '@mui/icons-material/Shuffle';
-import { makeToast } from '@/base/utils/Toast.ts';
-import { getErrorMessage } from '@/lib/HelperFunctions.ts';
-import { ReactRouter } from '@/lib/react-router/ReactRouter.ts';
-import { AppRoutes } from '@/base/AppRoute.constants.ts';
-import { assertIsDefined } from '@/base/Asserts.ts';
-import type { MangaIdInfo } from '@/features/manga/Manga.types.ts';
 
+/**
+ * Mihon's library filter action: tinted with the "active" color while any filter is set, opens the options sheet.
+ */
 export const LibraryToolbarMenu = ({
     category,
-    mangas,
 }: {
     category: ComponentProps<typeof LibraryOptionsPanel>['category'];
-    mangas: MangaIdInfo[];
 }) => {
     const { t } = useLingui();
 
@@ -53,28 +47,9 @@ export const LibraryToolbarMenu = ({
 
     return (
         <>
-            <CustomTooltip title={t`Open random entry`} disabled={!mangas.length}>
-                <IconButton
-                    disabled={!mangas.length}
-                    onClick={async () => {
-                        try {
-                            const randomManga = mangas[Math.floor(Math.random() * mangas.length)];
-
-                            assertIsDefined(randomManga);
-
-                            ReactRouter.navigate(AppRoutes.manga.path(randomManga.id));
-                        } catch (e) {
-                            makeToast(t`Could not open random entry`, 'error', getErrorMessage(e));
-                        }
-                    }}
-                    color="inherit"
-                >
-                    <ShuffleIcon />
-                </IconButton>
-            </CustomTooltip>
-            <CustomTooltip title={t`Settings`}>
-                <IconButton onClick={() => setOpen(!open)} color={active ? 'warning' : 'inherit'}>
-                    <FilterList />
+            <CustomTooltip title={t`Filter`}>
+                <IconButton onClick={() => setOpen(!open)} sx={{ color: active ? 'm3.active' : 'inherit' }}>
+                    <FilterListRounded />
                 </IconButton>
             </CustomTooltip>
             <LibraryOptionsPanel

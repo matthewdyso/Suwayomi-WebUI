@@ -6,33 +6,50 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import { styled } from '@mui/material/styles';
 import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
+import CollectionsBookmarkRounded from '@mui/icons-material/CollectionsBookmarkRounded';
+import FolderRounded from '@mui/icons-material/FolderRounded';
+import type { ComponentProps } from 'react';
+import type { SxProps, Theme } from '@mui/material/styles';
 import { useLingui } from '@lingui/react/macro';
 import type { MangaCardMode } from '@/features/manga/Manga.types.ts';
 import { MediaQuery } from '@/base/utils/MediaQuery.tsx';
 import { useMetadataServerSettings } from '@/features/settings/services/ServerSettingsMetadata.ts';
 import { MUIUtil } from '@/lib/mui/MUI.util.ts';
+import type { TextBadgeColor } from '@/base/components/badges/TextBadge.tsx';
+import { TextBadge, TextBadgeGroup } from '@/base/components/badges/TextBadge.tsx';
 
-const BadgeContainer = styled('div')(({ theme }) => ({
-    display: 'flex',
-    height: 'fit-content',
-    borderRadius: theme.shape.borderRadius,
-    overflow: 'hidden',
-}));
+const IconBadge = ({
+    label,
+    icon,
+    color,
+    className,
+    sx,
+}: {
+    label: string;
+    icon: ComponentProps<typeof TextBadge>['icon'];
+    color?: TextBadgeColor;
+    className?: string;
+    sx?: SxProps<Theme>;
+}) => (
+    <TextBadgeGroup role="img" aria-label={label} className={className} sx={sx}>
+        <TextBadge icon={icon} color={color} />
+    </TextBadgeGroup>
+);
 
-const Badge = styled(Typography)(({ theme }) => ({
-    color: theme.palette.primary.contrastText,
-    paddingInline: theme.spacing(0.3),
-}));
-
+/**
+ * Mihon's cover badges: an icon badge for entries already in the library (browse), the download (tertiary) and
+ * unread (secondary) counts, and at the end a folder badge for entries of the local source.
+ *
+ * Renders the badge groups side by side; the card places them (top of the cover, or the end of a list row).
+ */
 export const MangaBadges = ({
     inLibraryIndicator,
     updateLibraryState,
     isInLibrary,
     unread,
     downloadCount,
+    isLocal = false,
     mode,
 }: {
     inLibraryIndicator?: boolean;
@@ -40,6 +57,7 @@ export const MangaBadges = ({
     isInLibrary: boolean;
     unread?: number;
     downloadCount?: number;
+    isLocal?: boolean;
     mode: MangaCardMode;
 }) => {
     const { t } = useLingui();
@@ -50,8 +68,13 @@ export const MangaBadges = ({
         settings: { showUnreadBadge, showDownloadBadge },
     } = useMetadataServerSettings();
 
+    const showDownloadCount =
+        ((showDownloadBadge && mode === 'default') || mode === 'duplicate') && (downloadCount ?? 0) > 0;
+    const showUnreadCount = ((showUnreadBadge && mode === 'default') || mode === 'duplicate') && (unread ?? 0) > 0;
+    const showLocalBadge = isLocal && (mode === 'default' || mode === 'duplicate');
+
     return (
-        <BadgeContainer>
+        <>
             {!isTouchDevice && inLibraryIndicator && mode === 'source' && (
                 <Button
                     className="source-manga-library-state-button"
@@ -73,26 +96,27 @@ export const MangaBadges = ({
                 </Button>
             )}
             {inLibraryIndicator && isInLibrary && (
-                <Typography
+                <IconBadge
+                    label={t`In Library`}
+                    icon={CollectionsBookmarkRounded}
                     className="source-manga-library-state-indicator"
-                    sx={{ backgroundColor: 'primary.dark', color: 'primary.contrastText', p: 0.3 }}
-                >
-                    {t`In Library`}
-                </Typography>
+                />
             )}
-            {((showUnreadBadge && mode === 'default') || mode === 'duplicate') && (unread ?? 0) > 0 && (
-                <Badge sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText' }}>{unread}</Badge>
+            {(showDownloadCount || showUnreadCount) && (
+                <TextBadgeGroup>
+                    {showDownloadCount && <TextBadge color="tertiary">{downloadCount}</TextBadge>}
+                    {showUnreadCount && <TextBadge>{unread}</TextBadge>}
+                </TextBadgeGroup>
             )}
-            {((showDownloadBadge && mode === 'default') || mode === 'duplicate') && (downloadCount ?? 0) > 0 && (
-                <Badge
-                    sx={{
-                        backgroundColor: 'secondary.main',
-                        color: 'secondary.contrastText',
-                    }}
-                >
-                    {downloadCount}
-                </Badge>
+            {showLocalBadge && (
+                // Mihon's end badge group
+                <IconBadge
+                    label={t`Local source`}
+                    icon={FolderRounded}
+                    color="tertiary"
+                    sx={{ marginInlineStart: 'auto' }}
+                />
             )}
-        </BadgeContainer>
+        </>
     );
 };

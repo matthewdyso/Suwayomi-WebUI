@@ -7,16 +7,22 @@
  */
 
 import type { MessageDescriptor } from '@lingui/core';
-import FormLabel from '@mui/material/FormLabel';
+import Chip from '@mui/material/Chip';
 import RadioGroup from '@mui/material/RadioGroup';
+import Typography from '@mui/material/Typography';
 import { useLingui } from '@lingui/react/macro';
 import { msg } from '@lingui/core/macro';
 import type { ReactNode } from 'react';
-import { CheckboxInput } from '@/base/components/inputs/CheckboxInput.tsx';
-import { RadioInput } from '@/base/components/inputs/RadioInput.tsx';
-import { SortRadioInput } from '@/base/components/inputs/SortRadioInput.tsx';
-import { ThreeStateCheckboxInput } from '@/base/components/inputs/ThreeStateCheckboxInput.tsx';
+import { useState } from 'react';
 import { OptionsTabs } from '@/base/components/modals/OptionsTabs.tsx';
+import {
+    CheckboxItem,
+    HeadingItem,
+    SliderItem,
+    SortItem,
+    TriStateItem,
+} from '@/base/components/settings/SheetRows.tsx';
+import { ChipRow } from '@/base/components/chips/ChipRow.tsx';
 import { requestManager } from '@/lib/requests/RequestManager.ts';
 import { Trackers } from '@/features/tracker/services/Trackers.ts';
 import type { GetTrackersSettingsQuery } from '@/lib/graphql/generated/graphql.ts';
@@ -31,9 +37,9 @@ import {
 import { makeToast } from '@/base/utils/Toast.ts';
 import {
     createUpdateMetadataServerSettings,
-    updateMetadataServerSettings,
     useMetadataServerSettings,
 } from '@/features/settings/services/ServerSettingsMetadata.ts';
+import { MANGA_GRID_WIDTH, SERVER_SETTINGS_METADATA_DEFAULT } from '@/features/settings/Settings.constants.ts';
 import { FilterMode, type LibrarySortMode } from '@/features/library/Library.types.ts';
 import type { CategoryMetadataInfo, ICategoryMetadata } from '@/features/category/Category.types.ts';
 import { MANGA_STATUS_TO_TRANSLATION } from '@/features/manga/Manga.constants.ts';
@@ -76,6 +82,65 @@ const FILTER_MODE_DISPLAY_DATA: ValueToDisplayData<FilterMode> = {
 
 const FILTER_MODES = Object.values(FilterMode);
 
+const DISPLAY_MODES: [GridLayout, MessageDescriptor][] = [
+    [GridLayout.Compact, msg`Compact grid`],
+    [GridLayout.Comfortable, msg`Comfortable grid`],
+    [GridLayout.List, msg`List`],
+];
+
+const useUpdateDisplaySetting = () => {
+    const { t } = useLingui();
+
+    return createUpdateMetadataServerSettings((e) =>
+        makeToast(t`Could not save the default search settings to the server`, 'error', getErrorMessage(e)),
+    );
+};
+
+/**
+ * The value of a single thumb slider (MUI types it for range sliders too).
+ */
+const getSingleSliderValue = (value: number | number[]): number => (Array.isArray(value) ? value[0] : value);
+
+/**
+ * Commits the width once the slider is released; the value shown while dragging is local.
+ */
+const ItemWidthSliderItem = () => {
+    const { t } = useLingui();
+
+    const {
+        settings: { mangaGridItemWidth },
+    } = useMetadataServerSettings();
+    const updateSetting = useUpdateDisplaySetting();
+
+    const [draggedWidth, setDraggedWidth] = useState<number>();
+    const itemWidth = draggedWidth ?? mangaGridItemWidth;
+
+    const commit = (width: number) =>
+        updateSetting('mangaGridItemWidth', width).finally(() => setDraggedWidth(undefined));
+
+    return (
+        <SliderItem
+            label={t`Manga item width`}
+            value={`${itemWidth}${t`px`}`}
+            onDefault={
+                mangaGridItemWidth !== SERVER_SETTINGS_METADATA_DEFAULT.mangaGridItemWidth
+                    ? () => commit(SERVER_SETTINGS_METADATA_DEFAULT.mangaGridItemWidth)
+                    : undefined
+            }
+            slotProps={{
+                slider: {
+                    value: itemWidth,
+                    min: MANGA_GRID_WIDTH.min,
+                    max: MANGA_GRID_WIDTH.max,
+                    step: MANGA_GRID_WIDTH.step,
+                    onChange: (_, value) => setDraggedWidth(getSingleSliderValue(value)),
+                    onChangeCommitted: (_, value) => commit(getSingleSliderValue(value)),
+                },
+            }}
+        />
+    );
+};
+
 const CollapsableFilter = ({
     title,
     items,
@@ -95,7 +160,11 @@ const CollapsableFilter = ({
 
     return (
         <Collapsable
-            header={title}
+            header={
+                <Typography variant="header" component="span">
+                    {title}
+                </Typography>
+            }
             headerEnd={
                 <Stack sx={{ flexGrow: 1, flexDirection: 'row', justifyContent: 'flex-end', gap: 1, flexWrap: 'wrap' }}>
                     {mode && !!setMode && (
@@ -117,14 +186,13 @@ const CollapsableFilter = ({
                         />
                     )}
                     <ResetButton
+                        asIconButton
                         disabled={!isActive}
                         onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
                             reset();
                         }}
-                        variant="outlined"
-                        size="small"
                     />
                 </Stack>
             }
@@ -133,14 +201,15 @@ const CollapsableFilter = ({
             slots={{
                 headerContainer: {
                     sx: {
-                        mt: 2,
+                        minHeight: 48,
+                        px: 3,
                         flexWrap: 'wrap',
+                        color: isActive ? 'm3.active' : 'm3.onSurfaceVariant',
                     },
                 },
                 headerWrapper: {
-                    component: FormLabel,
                     sx: {
-                        color: isActive ? 'warning.main' : undefined,
+                        alignItems: 'center',
                     },
                 },
             }}
@@ -180,9 +249,7 @@ export const LibraryOptionsPanel = ({
     const {
         settings: { showTabSize, showContinueReadingButton, showDownloadBadge, showUnreadBadge, gridLayout },
     } = useMetadataServerSettings();
-    const setSettingValue = createUpdateMetadataServerSettings((e) =>
-        makeToast(t`Could not save the default search settings to the server`, 'error', getErrorMessage(e)),
-    );
+    const setSettingValue = useUpdateDisplaySetting();
 
     const resetFilters = (
         deleteKeys: (keyof ICategoryMetadata)[] = [
@@ -210,38 +277,39 @@ export const LibraryOptionsPanel = ({
             onClose={onClose}
             tabs={['filter', 'sort', 'display']}
             tabTitle={(key) => t(TITLES[key])}
+            tabRowEnd={
+                <ResetButton
+                    asIconButton
+                    disabled={!active}
+                    onClick={() => resetFilters()}
+                    sx={{ color: active ? 'm3.active' : 'm3.onSurfaceVariant', mr: 0.5 }}
+                />
+            }
             tabContent={(key) => {
                 if (key === 'filter') {
                     return (
                         <>
-                            <ResetButton
-                                disabled={!active}
-                                onClick={() => resetFilters()}
-                                sx={{ alignSelf: 'flex-end' }}
-                                variant="outlined"
-                                size="small"
-                            />
-                            <ThreeStateCheckboxInput
-                                label={t`Unread`}
-                                checked={categoryLibraryOptions.hasUnreadChapters}
-                                onChange={(c) => updateCategoryLibraryOptions('hasUnreadChapters', c)}
-                            />
-                            <ThreeStateCheckboxInput
-                                label={t`Started`}
-                                checked={categoryLibraryOptions.hasReadChapters}
-                                onChange={(c) => updateCategoryLibraryOptions('hasReadChapters', c)}
-                            />
-                            <ThreeStateCheckboxInput
+                            <TriStateItem
                                 label={t`Downloaded`}
                                 checked={categoryLibraryOptions.hasDownloadedChapters}
                                 onChange={(c) => updateCategoryLibraryOptions('hasDownloadedChapters', c)}
                             />
-                            <ThreeStateCheckboxInput
+                            <TriStateItem
+                                label={t`Unread`}
+                                checked={categoryLibraryOptions.hasUnreadChapters}
+                                onChange={(c) => updateCategoryLibraryOptions('hasUnreadChapters', c)}
+                            />
+                            <TriStateItem
+                                label={t`Started`}
+                                checked={categoryLibraryOptions.hasReadChapters}
+                                onChange={(c) => updateCategoryLibraryOptions('hasReadChapters', c)}
+                            />
+                            <TriStateItem
                                 label={t`Bookmarked`}
                                 checked={categoryLibraryOptions.hasBookmarkedChapters}
                                 onChange={(c) => updateCategoryLibraryOptions('hasBookmarkedChapters', c)}
                             />
-                            <ThreeStateCheckboxInput
+                            <TriStateItem
                                 label={t`Duplicate chapters`}
                                 checked={categoryLibraryOptions.hasDuplicateChapters}
                                 onChange={(c) => updateCategoryLibraryOptions('hasDuplicateChapters', c)}
@@ -249,7 +317,7 @@ export const LibraryOptionsPanel = ({
                             <CollapsableFilter
                                 title={t`Status`}
                                 items={Object.values(MangaStatus).map((status) => (
-                                    <ThreeStateCheckboxInput
+                                    <TriStateItem
                                         key={status}
                                         label={t(MANGA_STATUS_TO_TRANSLATION[status])}
                                         checked={categoryLibraryOptions.hasStatus[status]}
@@ -268,7 +336,7 @@ export const LibraryOptionsPanel = ({
                                 <CollapsableFilter
                                     title={t`Tracked`}
                                     items={loggedInTrackers.map((tracker) => (
-                                        <ThreeStateCheckboxInput
+                                        <TriStateItem
                                             key={tracker.id}
                                             label={tracker.name}
                                             checked={categoryLibraryOptions.hasTrackerBinding.filters[tracker.id]}
@@ -298,7 +366,7 @@ export const LibraryOptionsPanel = ({
                                 <CollapsableFilter
                                     title={t`Source`}
                                     items={librarySources.map((source) => (
-                                        <ThreeStateCheckboxInput
+                                        <TriStateItem
                                             key={source.id}
                                             label={source.displayName ?? source.id}
                                             checked={categoryLibraryOptions.hasSource[source.id]}
@@ -318,72 +386,71 @@ export const LibraryOptionsPanel = ({
                     );
                 }
                 if (key === 'sort') {
-                    return SORT_OPTIONS.map(([mode, label]) => (
-                        <SortRadioInput
-                            key={mode}
-                            label={t(label)}
-                            checked={categoryLibraryOptions.sortBy === mode}
-                            checkedIcon={mode === 'random' ? <Replay color="primary" /> : undefined}
-                            sortDescending={categoryLibraryOptions.sortDesc}
-                            onClick={() =>
-                                mode !== categoryLibraryOptions.sortBy
-                                    ? updateCategoryLibraryOptions('sortBy', mode)
-                                    : updateCategoryLibraryOptions('sortDesc', !categoryLibraryOptions.sortDesc)
-                            }
-                        />
-                    ));
+                    return (
+                        <RadioGroup value={categoryLibraryOptions.sortBy}>
+                            {SORT_OPTIONS.map(([mode, label]) => (
+                                <SortItem
+                                    key={mode}
+                                    label={t(label)}
+                                    value={mode}
+                                    checked={categoryLibraryOptions.sortBy === mode}
+                                    checkedIcon={mode === 'random' ? <Replay color="primary" /> : undefined}
+                                    sortDescending={categoryLibraryOptions.sortDesc}
+                                    onClick={() =>
+                                        mode !== categoryLibraryOptions.sortBy
+                                            ? updateCategoryLibraryOptions('sortBy', mode)
+                                            : updateCategoryLibraryOptions('sortDesc', !categoryLibraryOptions.sortDesc)
+                                    }
+                                />
+                            ))}
+                        </RadioGroup>
+                    );
                 }
                 if (key === 'display') {
+                    const activeGridLayout = gridLayout ?? GridLayout.Compact;
+
                     return (
                         <>
-                            <FormLabel>{t`Display mode`}</FormLabel>
-                            <RadioGroup
-                                onChange={(e) => updateMetadataServerSettings('gridLayout', Number(e.target.value))}
-                                value={gridLayout}
-                            >
-                                <RadioInput
-                                    label={t`Compact grid`}
-                                    value={GridLayout.Compact}
-                                    checked={gridLayout == null || gridLayout === GridLayout.Compact}
-                                />
-                                <RadioInput
-                                    label={t`Comfortable grid`}
-                                    value={GridLayout.Comfortable}
-                                    checked={gridLayout === GridLayout.Comfortable}
-                                />
-                                <RadioInput
-                                    label={t`List`}
-                                    value={GridLayout.List}
-                                    checked={gridLayout === GridLayout.List}
-                                />
-                            </RadioGroup>
-                            <FormLabel sx={{ mt: 2 }}>{t`Badges`}</FormLabel>
-                            <CheckboxInput
-                                label={t`Unread badges`}
-                                checked={showUnreadBadge}
-                                onChange={() => updateMetadataServerSettings('showUnreadBadge', !showUnreadBadge)}
-                            />
-                            <CheckboxInput
+                            <HeadingItem>{t`Display mode`}</HeadingItem>
+                            <ChipRow wrap sx={{ px: 3, pb: 1.25 }}>
+                                {DISPLAY_MODES.map(([layout, label]) => {
+                                    const isSelected = activeGridLayout === layout;
+
+                                    return (
+                                        <Chip
+                                            key={layout}
+                                            label={t(label)}
+                                            variant={isSelected ? 'filled' : 'outlined'}
+                                            aria-pressed={isSelected}
+                                            onClick={() => setSettingValue('gridLayout', layout)}
+                                        />
+                                    );
+                                })}
+                            </ChipRow>
+                            {activeGridLayout !== GridLayout.List && <ItemWidthSliderItem />}
+                            <HeadingItem>{t`Overlay`}</HeadingItem>
+                            <CheckboxItem
                                 label={t`Download badges`}
                                 checked={showDownloadBadge}
-                                onChange={() => updateMetadataServerSettings('showDownloadBadge', !showDownloadBadge)}
+                                onChange={() => setSettingValue('showDownloadBadge', !showDownloadBadge)}
                             />
-                            <FormLabel sx={{ mt: 2 }}>{t`Tabs`}</FormLabel>
-                            <CheckboxInput
-                                label={t`Show number of items`}
-                                checked={showTabSize}
-                                onChange={() => setSettingValue('showTabSize', !showTabSize)}
+                            <CheckboxItem
+                                label={t`Unread badges`}
+                                checked={showUnreadBadge}
+                                onChange={() => setSettingValue('showUnreadBadge', !showUnreadBadge)}
                             />
-                            <FormLabel sx={{ mt: 2 }}>{t`Other`}</FormLabel>
-                            <CheckboxInput
+                            <CheckboxItem
                                 label={t`Show continue reading button`}
                                 checked={showContinueReadingButton}
                                 onChange={() =>
-                                    updateMetadataServerSettings(
-                                        'showContinueReadingButton',
-                                        !showContinueReadingButton,
-                                    )
+                                    setSettingValue('showContinueReadingButton', !showContinueReadingButton)
                                 }
+                            />
+                            <HeadingItem>{t`Tabs`}</HeadingItem>
+                            <CheckboxItem
+                                label={t`Show number of items`}
+                                checked={showTabSize}
+                                onChange={() => setSettingValue('showTabSize', !showTabSize)}
                             />
                         </>
                     );

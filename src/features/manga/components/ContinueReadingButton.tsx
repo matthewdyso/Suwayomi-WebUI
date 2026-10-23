@@ -6,8 +6,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import Button from '@mui/material/Button';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import ButtonBase from '@mui/material/ButtonBase';
+import type { SxProps, Theme } from '@mui/material/styles';
+import PlayArrowRounded from '@mui/icons-material/PlayArrowRounded';
 import { Link } from 'react-router-dom';
 import { Chapters } from '@/features/chapter/services/Chapters.ts';
 import { MUIUtil } from '@/lib/mui/MUI.util.ts';
@@ -19,17 +20,23 @@ import type {
     ChapterSourceOrderInfo,
 } from '@/features/chapter/Chapter.types.ts';
 import { ContinueReadingTooltip } from '@/features/manga/components/ContinueReadingTooltip.tsx';
+import type { CoverIconButtonSize } from '@/features/manga/components/cards/CoverIconButton.styles.ts';
+import { getCoverIconButtonSx } from '@/features/manga/components/cards/CoverIconButton.styles.ts';
 
 export const ContinueReadingButton = ({
     showContinueReadingButton,
     chapter,
     mangaLinkTo,
+    size = 'large',
+    sx,
 }: {
     showContinueReadingButton: boolean;
     chapter?:
         | (ChapterSourceOrderInfo & ChapterReadInfo & ChapterNumberInfo & ChapterNameInfo & ChapterScanlatorInfo)
         | null;
     mangaLinkTo: string;
+    size?: CoverIconButtonSize;
+    sx?: SxProps<Theme>;
 }) => {
     if (!showContinueReadingButton || !chapter) {
         return null;
@@ -44,18 +51,16 @@ export const ContinueReadingButton = ({
             sourceOrder={sourceOrder}
             scanlator={scanlator}
         >
-            <Button
+            <ButtonBase
                 {...MUIUtil.preventRippleProp()}
-                variant="contained"
-                size="small"
-                sx={{ minWidth: 'unset', py: 0.5, px: 0.75 }}
+                sx={MUIUtil.mergeSx(getCoverIconButtonSx(size), sx)}
                 component={Link}
                 to={`${mangaLinkTo}/chapter/${sourceOrder}`}
                 state={Chapters.getReaderOpenChapterLocationState(chapter)}
                 onClick={(e) => e.stopPropagation()}
             >
-                <PlayArrowIcon />
-            </Button>
+                <PlayArrowRounded />
+            </ButtonBase>
         </ContinueReadingTooltip>
     );
 };

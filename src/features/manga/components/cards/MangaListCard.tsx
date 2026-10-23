@@ -6,22 +6,27 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import Card from '@mui/material/Card';
-import CardActionArea from '@mui/material/CardActionArea';
-import Box from '@mui/material/Box';
+import ButtonBase from '@mui/material/ButtonBase';
 import Stack from '@mui/material/Stack';
 import { Link as RouterLink } from 'react-router-dom';
 import { memo, useRef } from 'react';
 import { CustomTooltip } from '@/base/components/CustomTooltip.tsx';
 import { TypographyMaxLines } from '@/base/components/texts/TypographyMaxLines.tsx';
+import { CoverImage } from '@/base/components/images/CoverImage.tsx';
 import type { SpecificMangaCardProps } from '@/features/manga/Manga.types.ts';
 import { Mangas } from '@/features/manga/services/Mangas.ts';
 import { MangaOptionButton } from '@/features/manga/components/MangaOptionButton.tsx';
-import { ListCardAvatar } from '@/base/components/lists/cards/ListCardAvatar.tsx';
-import { ListCardContent } from '@/base/components/lists/cards/ListCardContent';
 import { MediaQuery } from '@/base/utils/MediaQuery.tsx';
 import { MUIUtil } from '@/lib/mui/MUI.util.ts';
+import {
+    getMangaCardInteractionSx,
+    MANGA_CARD_CONTROLS_Z_INDEX,
+    MangaCardStateLayer,
+} from '@/features/manga/components/cards/MangaCard.styles.tsx';
 
+/**
+ * Mihon's library list item: 56 px row with a square cover, a two line title, the badges and the continue button.
+ */
 export const MangaListCard = memo(
     ({
         manga,
@@ -43,81 +48,61 @@ export const MangaListCard = memo(
         const { id, title } = manga;
 
         return (
-            <Card>
-                <CardActionArea
-                    component={RouterLink}
-                    to={mangaLinkTo}
-                    state={Mangas.createLocationState(manga, mode)}
-                    {...longPressBind(() => popupState.open(optionButtonRef.current))}
-                    onContextMenu={preventMobileContextMenu}
-                    sx={MUIUtil.mergeSx(MediaQuery.preventMobileContextMenuSx(), {
-                        '@media (hover: hover) and (pointer: fine)': {
-                            '&:hover .manga-option-button': {
-                                visibility: 'visible',
-                                pointerEvents: 'all',
-                            },
-                            '&:hover .source-manga-library-state-button': {
-                                display: 'inline-flex',
-                            },
-                            '&:hover .source-manga-library-state-indicator': {
-                                display: mode === 'source' ? 'none' : 'inline-flex',
-                            },
-                        },
-                    })}
+            <ButtonBase
+                component={RouterLink}
+                className="MangaListCard-root"
+                disableRipple
+                to={mangaLinkTo}
+                state={Mangas.createLocationState(manga, mode)}
+                {...longPressBind(() => popupState.open(optionButtonRef.current))}
+                onContextMenu={preventMobileContextMenu}
+                sx={MUIUtil.mergeSx(MediaQuery.preventMobileContextMenuSx(), getMangaCardInteractionSx(mode), {
+                    display: 'flex',
+                    justifyContent: 'flex-start',
+                    width: '100%',
+                    height: 56,
+                    px: 2,
+                    py: 1,
+                    textAlign: 'start',
+                    color: 'm3.onSurface',
+                    bgcolor: selected ? 'm3.selected' : undefined,
+                })}
+            >
+                <CoverImage
+                    ratio="square"
+                    small
+                    alt={title}
+                    src={Mangas.getThumbnailUrl(manga)}
+                    dimmed={inLibraryIndicator && isInLibrary}
+                    sx={{ height: '100%' }}
+                />
+                <CustomTooltip title={title} placement="top">
+                    <TypographyMaxLines variant="bodyMedium" component="h3" sx={{ flexGrow: 1, minWidth: 0, px: 2 }}>
+                        {title}
+                    </TypographyMaxLines>
+                </CustomTooltip>
+                <Stack
+                    sx={{
+                        position: 'relative',
+                        zIndex: MANGA_CARD_CONTROLS_Z_INDEX,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 1,
+                    }}
                 >
-                    <ListCardContent
-                        sx={{
-                            justifyContent: 'space-between',
-                            position: 'relative',
-                        }}
-                    >
-                        <ListCardAvatar
-                            iconUrl={Mangas.getThumbnailUrl(manga)}
-                            alt={manga.title}
-                            slots={{
-                                spinnerImageProps: {
-                                    imgStyle: {
-                                        imageRendering: 'pixelated',
-                                        filter: inLibraryIndicator && isInLibrary ? 'brightness(0.4)' : undefined,
-                                    },
-                                },
-                            }}
-                        />
-                        <Box
-                            sx={{
-                                display: 'flex',
-                                flexDirection: 'row',
-                                flexGrow: 1,
-                                width: 'min-content',
-                            }}
-                        >
-                            <CustomTooltip title={title} placement="top">
-                                <TypographyMaxLines variant="h6" component="h3">
-                                    {title}
-                                </TypographyMaxLines>
-                            </CustomTooltip>
-                        </Box>
-                        <Stack
-                            direction="row"
-                            sx={{
-                                alignItems: 'center',
-                                gap: 0.5,
-                            }}
-                        >
-                            {mangaBadges}
-                            {continueReadingButton}
-                            <MangaOptionButton
-                                ref={optionButtonRef}
-                                popupState={popupState}
-                                id={id}
-                                selected={selected}
-                                handleSelection={handleSelection}
-                                asCheckbox
-                            />
-                        </Stack>
-                    </ListCardContent>
-                </CardActionArea>
-            </Card>
+                    <Stack sx={{ flexDirection: 'row', alignItems: 'center', gap: 0.5 }}>{mangaBadges}</Stack>
+                    {continueReadingButton}
+                    <MangaOptionButton
+                        ref={optionButtonRef}
+                        popupState={popupState}
+                        id={id}
+                        selected={selected}
+                        handleSelection={handleSelection}
+                        asCheckbox
+                    />
+                </Stack>
+                <MangaCardStateLayer />
+            </ButtonBase>
         );
     },
 );

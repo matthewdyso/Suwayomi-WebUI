@@ -6,10 +6,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { ChipProps } from '@mui/material/Chip';
-import Chip from '@mui/material/Chip';
 import Tab from '@mui/material/Tab';
-import { styled, useTheme } from '@mui/material/styles';
+import { styled } from '@mui/material/styles';
 import { useCallback, useMemo, useState } from 'react';
 import { useQueryParam, NumberParam, StringParam } from 'use-query-params';
 import Button from '@mui/material/Button';
@@ -22,12 +20,12 @@ import { EmptyViewAbsoluteCentered } from '@/base/components/feedback/EmptyViewA
 import { LoadingPlaceholder } from '@/base/components/feedback/LoadingPlaceholder.tsx';
 import { TabPanel } from '@/base/components/tabs/TabPanel.tsx';
 import { LibraryToolbarMenu } from '@/features/library/components/LibraryToolbarMenu.tsx';
+import { LibraryOverflowMenu } from '@/features/library/components/LibraryOverflowMenu.tsx';
 import { LibraryMangaGrid } from '@/features/library/components/LibraryMangaGrid.tsx';
 import { AppbarSearch } from '@/base/components/AppbarSearch.tsx';
 import { UpdateChecker } from '@/features/updates/components/UpdateChecker.tsx';
-import { SyncButton } from '@/features/sync/components/SyncButton.tsx';
 import { useSelectableCollection } from '@/base/collection/hooks/useSelectableCollection.ts';
-import { SelectableCollectionSelectMode } from '@/base/collection/components/SelectableCollectionSelectMode.tsx';
+import { SelectableCollectionSelectAll } from '@/base/collection/components/SelectableCollectionSelectAll.tsx';
 import { useGetVisibleLibraryMangas } from '@/features/library/hooks/useGetVisibleLibraryMangas.ts';
 import { SelectionFAB } from '@/base/collection/components/SelectionFAB.tsx';
 import { MangaActionMenuItems } from '@/features/manga/components/MangaActionMenuItems.tsx';
@@ -48,25 +46,26 @@ import { useMetadataServerSettings } from '@/features/settings/services/ServerSe
 import { GET_MANGAS_COUNT } from '@/lib/graphql/manga/MangaQuery.ts';
 import { useAppTitle } from '@/features/navigation-bar/hooks/useAppTitle.ts';
 import { useAppAction } from '@/features/navigation-bar/hooks/useAppAction.ts';
+import { useAppBarActionMode } from '@/features/navigation-bar/hooks/useAppBarActionMode.ts';
+import { useFlatAppBar } from '@/features/navigation-bar/hooks/useFlatAppBar.ts';
 import { AppRoutes } from '@/base/AppRoute.constants.ts';
 import { SearchParam } from '@/base/Base.types.ts';
 import { STABLE_EMPTY_ARRAY } from '@/base/Base.constants.ts';
 import type { MangaIdInfo } from '@/features/manga/Manga.types.ts';
 import { OffsetComponent } from '@/base/OffsetComponent.tsx';
-import { MUIUtil } from '@/lib/mui/MUI.util.ts';
+import { Pill, PILL_FONT_SIZE } from '@/base/components/badges/Pill.tsx';
+import { MediaQuery } from '@/base/utils/MediaQuery.tsx';
+import { useAppBottomActionMenu } from '@/features/navigation-bar/hooks/useAppBottomActionMenu.ts';
+import { LibraryBottomActionMenu } from '@/features/library/components/LibraryBottomActionMenu.tsx';
 
 const TitleWithSizeTag = styled('span')({
     display: 'flex',
     alignItems: 'center',
+    minWidth: 0,
 });
-
-const TitleSizeTag = ({ sx, ...props }: ChipProps) => (
-    <Chip {...props} size="small" sx={MUIUtil.mergeSx(sx, { marginLeft: '5px' })} />
-);
 
 export function Library() {
     const { t } = useLingui();
-    const theme = useTheme();
 
     const {
         settings: { showTabSize },
@@ -129,7 +128,6 @@ export function Library() {
 
     const [isSelectModeActive, setIsSelectModeActive] = useState(false);
     const {
-        areNoItemsForKeySelected: areNoItemsSelected,
         areAllItemsForKeySelected: areAllItemsSelected,
         selectedItemIds,
         handleSelectAll,
@@ -146,7 +144,7 @@ export function Library() {
             setIsSelectModeActive(!!(selectedItemIds.length + (selected ? 1 : -1)));
             handleSelection(id, selected, selectOptions);
         },
-        [setIsSelectModeActive, handleSelection],
+        [setIsSelectModeActive, handleSelection, selectedItemIds.length],
     );
 
     const selectedMangas = useMemo(
@@ -163,8 +161,22 @@ export function Library() {
         [selectedItemIds.length, mangas],
     );
 
+    const isMobileWidth = MediaQuery.useIsMobileWidth();
+    const endSelection = useCallback(() => {
+        setIsSelectModeActive(false);
+        clearSelection();
+    }, [clearSelection]);
+
+    // phones: Mihon's bottom action menu in place of the navigation bar
+    useAppBottomActionMenu(
+        isSelectModeActive && isMobileWidth ? (
+            <LibraryBottomActionMenu selectedMangas={selectedMangas} onDone={endSelection} />
+        ) : null,
+        [isSelectModeActive, isMobileWidth, selectedMangas, endSelection],
+    );
+
     const selectionFab = useMemo(() => {
-        if (!isSelectModeActive) {
+        if (!isSelectModeActive || isMobileWidth) {
             return null;
         }
 
@@ -175,15 +187,24 @@ export function Library() {
                         selectedMangas={selectedMangas}
                         onClose={() => {
                             handleClose();
-                            setIsSelectModeActive(false);
-                            clearSelection();
+                            endSelection();
                         }}
                         setHideMenu={setHideMenu}
                     />
                 )}
             </SelectionFAB>
         );
-    }, [isSelectModeActive, selectedMangas]);
+    }, [isSelectModeActive, isMobileWidth, selectedMangas, endSelection]);
+
+    const handleModeChange = (checked: boolean) => {
+        setIsSelectModeActive(checked);
+
+        if (checked) {
+            handleSelectAll(true, [...new Set(mangas.map((manga) => manga.id))]);
+        } else {
+            tabs.forEach((tab) => handleSelectAll(false, [], tab.id.toString()));
+        }
+    };
 
     const triggerGlobalSearchButton = useMemo(
         () =>
@@ -206,46 +227,45 @@ export function Library() {
         <TitleWithSizeTag>
             {t`Library`}
             {showTabSize && (
-                <TitleSizeTag
-                    sx={theme.applyStyles('light', { backgroundColor: 'background.paper' })}
-                    label={librarySize}
-                />
+                <Pill variant="onSurface" fontSize={PILL_FONT_SIZE.title}>
+                    {librarySize}
+                </Pill>
             )}
         </TitleWithSizeTag>,
         t`Library`,
-        [t, showTabSize, librarySize, theme],
+        [t, showTabSize, librarySize],
     );
     useAppAction(
-        <>
-            {!isSelectModeActive && activeTab && (
-                <>
-                    <AppbarSearch searchHistoryKey="library" suggestions={mangaTitles} />
-                    <LibraryToolbarMenu category={activeTab} mangas={mangas} />
-                    <SyncButton />
-                    <UpdateChecker categoryId={activeTab?.id} />
-                </>
-            )}
-            {!!mangas.length && (
-                <SelectableCollectionSelectMode
-                    isActive={isSelectModeActive}
-                    areAllItemsSelected={areAllItemsSelected}
-                    onSelectAll={(selectAll) =>
-                        handleSelectAll(selectAll, [...new Set(mangas.map((manga) => manga.id))])
-                    }
-                    onModeChange={(checked) => {
-                        setIsSelectModeActive(checked);
-
-                        if (checked) {
-                            handleSelectAll(true, [...new Set(mangas.map((manga) => manga.id))]);
-                        } else {
-                            tabs.forEach((tab) => handleSelectAll(false, [], tab.id.toString()));
-                        }
-                    }}
-                />
-            )}
-        </>,
-        [isSelectModeActive, areNoItemsSelected, areAllItemsSelected, activeTab, mangas, mangaTitles],
+        activeTab && (
+            <>
+                <AppbarSearch searchHistoryKey="library" suggestions={mangaTitles} />
+                <LibraryToolbarMenu category={activeTab} />
+                <UpdateChecker categoryId={activeTab.id} />
+                <LibraryOverflowMenu mangas={mangas} onSelectAll={() => handleModeChange(true)} />
+            </>
+        ),
+        [activeTab, mangas, mangaTitles],
     );
+    // Mihon's selection toolbar shows only the number of selected entries
+    useAppBarActionMode(
+        isSelectModeActive
+            ? {
+                  title: selectedItemIds.length,
+                  actions: (
+                      <SelectableCollectionSelectAll
+                          areAllItemsSelected={areAllItemsSelected}
+                          onChange={(selectAll) =>
+                              handleSelectAll(selectAll, [...new Set(mangas.map((manga) => manga.id))])
+                          }
+                      />
+                  ),
+                  onCancel: () => handleModeChange(false),
+              }
+            : null,
+        [isSelectModeActive, selectedItemIds.length, areAllItemsSelected, mangas],
+    );
+
+    useFlatAppBar(tabs.length > 1);
 
     const handleTabChange = (newTab: number) => {
         setTabSearchParam(newTab);
@@ -305,12 +325,15 @@ export function Library() {
                 <TabsMenu value={activeTab.id} onChange={(e, newTab) => handleTabChange(newTab)}>
                     {tabs.map((tab) => (
                         <Tab
-                            sx={{ flexGrow: 1, maxWidth: 'unset' }}
                             key={tab.id}
                             label={
                                 <TitleWithSizeTag>
                                     {tab.name}
-                                    {showTabSize ? <TitleSizeTag label={getTabCount(tab)} /> : null}
+                                    {showTabSize && (
+                                        <Pill variant="onSurface" fontSize={PILL_FONT_SIZE.tab}>
+                                            {getTabCount(tab)}
+                                        </Pill>
+                                    )}
                                 </TitleWithSizeTag>
                             }
                             value={tab.id}
