@@ -7,10 +7,10 @@
  */
 
 import { Fragment } from 'react';
-import List from '@mui/material/List';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
-import ListAltIcon from '@mui/icons-material/ListAlt';
+import LabelOutlinedIcon from '@mui/icons-material/LabelOutlined';
+import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
 import { useLingui } from '@lingui/react/macro';
 import { msg } from '@lingui/core/macro';
@@ -23,13 +23,18 @@ import { useMetadataServerSettings } from '@/features/settings/services/ServerSe
 import type { NavbarItem } from '@/features/navigation-bar/NavigationBar.types.ts';
 import { NavBarItemMoreGroup } from '@/features/navigation-bar/NavigationBar.types.ts';
 import { useAppTitle } from '@/features/navigation-bar/hooks/useAppTitle.ts';
+import { useHiddenAppBar } from '@/features/navigation-bar/hooks/useHiddenAppBar.ts';
 import { STABLE_EMPTY_ARRAY } from '@/base/Base.constants.ts';
+import { LogoHeader } from '@/features/settings/components/LogoHeader.tsx';
+import { PreferenceList } from '@/features/settings/components/PreferenceList.tsx';
 
 export const More = () => {
     const { t } = useLingui();
     const isMobileWidth = MediaQuery.useIsMobileWidth();
 
     useAppTitle(t`More`);
+    // Mihon's More tab has no app bar on phones; the logo header starts below the status bar
+    useHiddenAppBar(isMobileWidth);
 
     const {
         settings: { hideHistory },
@@ -50,8 +55,8 @@ export const More = () => {
         {
             path: AppRoutes.settings.children.categories.path,
             title: msg`Categories`,
-            SelectedIconComponent: ListAltIcon,
-            IconComponent: ListAltIcon,
+            SelectedIconComponent: LabelOutlinedIcon,
+            IconComponent: LabelOutlinedIcon,
             show: 'both',
             moreGroup: NavBarItemMoreGroup.HIDDEN_ITEM,
         },
@@ -63,23 +68,26 @@ export const More = () => {
     };
 
     return (
-        <List sx={{ p: 0 }}>
-            {Object.entries(finalHiddenNavBarItemsByGroup).map(([group, items], index, list) => (
-                <Fragment key={group}>
-                    {items.map((item) => (
-                        <ListItemLink key={item.path} to={item.path}>
-                            <ListItemIcon>
-                                <item.IconComponent />
-                            </ListItemIcon>
-                            <ListItemText
-                                primary={t(item.moreTitle ?? item.title)}
-                                secondary={item.useBadge?.().title}
-                            />
-                        </ListItemLink>
-                    ))}
-                    {index !== list.length - 1 && <Divider />}
-                </Fragment>
-            ))}
-        </List>
+        <Box sx={{ pt: isMobileWidth ? 'env(safe-area-inset-top)' : undefined }}>
+            <LogoHeader paddingY={32} />
+            <PreferenceList>
+                {Object.entries(finalHiddenNavBarItemsByGroup).map(([group, items], index, list) => (
+                    <Fragment key={group}>
+                        {items.map((item) => (
+                            <ListItemLink key={item.path} to={item.path}>
+                                <ListItemIcon>
+                                    <item.IconComponent />
+                                </ListItemIcon>
+                                <ListItemText
+                                    primary={t(item.moreTitle ?? item.title)}
+                                    secondary={item.useBadge?.().title}
+                                />
+                            </ListItemLink>
+                        ))}
+                        {index !== list.length - 1 && <Divider />}
+                    </Fragment>
+                ))}
+            </PreferenceList>
+        </Box>
     );
 };

@@ -60,20 +60,14 @@ export const BackupValidationDialog = ({
                 )}
             </DialogContent>
             <DialogActions>
-                <Stack
-                    direction="row"
-                    sx={{
-                        justifyContent: 'space-between',
-                        width: '100%',
-                    }}
-                >
+                {/* M3 dialogs only use text buttons; the ways to fix the backup's issues go first */}
+                <Stack direction="row" sx={{ mr: 'auto' }}>
                     {!!validationResult?.missingSources.length && (
                         <Button
                             onClick={onDismiss}
                             component={Link}
                             to={AppRoutes.browse.path(BrowseTab.EXTENSIONS)}
-                            autoFocus={!!validationResult?.missingSources.length}
-                            variant={validationResult?.missingSources.length ? 'contained' : 'text'}
+                            autoFocus
                         >
                             {t`Install`}
                         </Button>
@@ -83,29 +77,19 @@ export const BackupValidationDialog = ({
                             onClick={onDismiss}
                             component={Link}
                             to={AppRoutes.settings.children.tracking.path}
-                            autoFocus={!!validationResult?.missingTrackers.length}
-                            variant={validationResult?.missingTrackers.length ? 'contained' : 'text'}
+                            autoFocus
                         >
                             {t`Log in`}
                         </Button>
                     )}
-                    <Stack direction="row">
-                        <Button onClick={onDismiss}>{t`Cancel`}</Button>
-                        <Button
-                            onClick={onSubmit}
-                            autoFocus={
-                                !validationResult?.missingSources.length && !validationResult?.missingTrackers.length
-                            }
-                            variant={
-                                !validationResult?.missingSources.length && !validationResult?.missingTrackers.length
-                                    ? 'contained'
-                                    : 'text'
-                            }
-                        >
-                            {t`Restore`}
-                        </Button>
-                    </Stack>
                 </Stack>
+                <Button onClick={onDismiss}>{t`Cancel`}</Button>
+                <Button
+                    onClick={onSubmit}
+                    autoFocus={!validationResult?.missingSources.length && !validationResult?.missingTrackers.length}
+                >
+                    {t`Restore`}
+                </Button>
             </DialogActions>
         </Dialog>
     );

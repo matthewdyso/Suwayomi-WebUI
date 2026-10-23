@@ -97,7 +97,7 @@ export const SERVER_SETTINGS_METADATA_DEFAULT: MetadataServerSettings = {
     shouldUsePureBlackMode: false,
     customThemes: {},
     mangaThumbnailBackdrop: true,
-    mangaDynamicColorSchemes: true,
+    mangaDynamicColorSchemes: false,
     mangaGridItemWidth: MANGA_GRID_WIDTH.default,
 };
 

@@ -15,7 +15,6 @@ import DialogContentText from '@mui/material/DialogContentText';
 import PopupState, { bindMenu, bindTrigger } from 'material-ui-popup-state';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
-import Stack from '@mui/material/Stack';
 import { useLingui } from '@lingui/react/macro';
 import { useUpdateChecker } from '@/features/app-updates/hooks/useUpdateChecker.tsx';
 
@@ -63,63 +62,47 @@ export const VersionUpdateInfoDialog = ({
                 <DialogContentText>{info}</DialogContentText>
             </DialogContent>
             <DialogActions>
-                <Stack
-                    direction="row"
-                    sx={{
-                        justifyContent: changelogUrl ? 'space-between' : 'end',
-                        width: '100%',
-                    }}
-                >
-                    {changelogUrl && (
-                        <Button href={changelogUrl} target="_blank" rel="noreferrer">
-                            {t`Changelog`}
-                        </Button>
+                {changelogUrl && (
+                    <Button href={changelogUrl} target="_blank" rel="noreferrer" sx={{ mr: 'auto' }}>
+                        {t`Changelog`}
+                    </Button>
+                )}
+                <PopupState variant="popover" popupId="update-checker-close-menu">
+                    {(popupState) => (
+                        <>
+                            <Button disabled={disabled} {...bindTrigger(popupState)}>
+                                {t`Close`}
+                            </Button>
+                            <Menu {...bindMenu(popupState)}>
+                                <MenuItem
+                                    onClick={() => {
+                                        updateChecker.remindLater();
+                                        popupState.close();
+                                    }}
+                                >
+                                    {t`Remind later`}
+                                </MenuItem>
+                                <MenuItem
+                                    onClick={() => {
+                                        updateChecker.ignoreUpdate();
+                                        popupState.close();
+                                    }}
+                                >
+                                    {t`Ignore`}
+                                </MenuItem>
+                            </Menu>
+                        </>
                     )}
-                    <Stack direction="row">
-                        <PopupState variant="popover" popupId="update-checker-close-menu">
-                            {(popupState) => (
-                                <>
-                                    <Button disabled={disabled} {...bindTrigger(popupState)}>
-                                        {t`Close`}
-                                    </Button>
-                                    <Menu {...bindMenu(popupState)}>
-                                        <MenuItem
-                                            onClick={() => {
-                                                updateChecker.remindLater();
-                                                popupState.close();
-                                            }}
-                                        >
-                                            {t`Remind later`}
-                                        </MenuItem>
-                                        <MenuItem
-                                            onClick={() => {
-                                                updateChecker.ignoreUpdate();
-                                                popupState.close();
-                                            }}
-                                        >
-                                            {t`Ignore`}
-                                        </MenuItem>
-                                    </Menu>
-                                </>
-                            )}
-                        </PopupState>
-                        {actionUrl ? (
-                            <Button
-                                disabled={disabled}
-                                variant="contained"
-                                href={actionUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                            >
-                                {actionTitle}
-                            </Button>
-                        ) : (
-                            <Button disabled={disabled} onClick={onAction} variant="contained">
-                                {actionTitle}
-                            </Button>
-                        )}
-                    </Stack>
-                </Stack>
+                </PopupState>
+                {actionUrl ? (
+                    <Button disabled={disabled} href={actionUrl} target="_blank" rel="noreferrer">
+                        {actionTitle}
+                    </Button>
+                ) : (
+                    <Button disabled={disabled} onClick={onAction}>
+                        {actionTitle}
+                    </Button>
+                )}
             </DialogActions>
         </Dialog>
     );

@@ -22,6 +22,7 @@ import { useLocalStorage } from '@/base/hooks/useStorage.tsx';
 import { AppRoutes } from '@/base/AppRoute.constants.ts';
 import { STABLE_EMPTY_OBJECT } from '@/base/Base.constants.ts';
 import { SubpathUtil } from '@/lib/utils/SubpathUtil.ts';
+import { getServerChangelogUrl } from '@/features/app-updates/AppUpdates.utils.ts';
 
 const disabledUpdateCheck = () => Promise.resolve();
 
@@ -60,10 +61,7 @@ export const ServerUpdateChecker = () => {
         selectedServerChannelInfo?.tag,
     );
 
-    const changelogUrl =
-        aboutServer?.buildType.toLowerCase() === 'stable'
-            ? `https://github.com/Suwayomi/Suwayomi-Server/releases/tag/${aboutServer.version}`
-            : 'https://github.com/Suwayomi/Suwayomi-Server/blob/master/CHANGELOG.md';
+    const changelogUrl = getServerChangelogUrl(aboutServer?.buildType, aboutServer?.version);
 
     const isSameAsCurrent = !version || !serverVersion || serverVersion === version;
 
@@ -123,17 +121,14 @@ export const ServerUpdateChecker = () => {
                 <DialogContentText>{t`Server was updated to version ${version} (${aboutServer?.buildType})`}</DialogContentText>
             </DialogContent>
             <DialogActions>
-                {changelogUrl && (
-                    <Button href={changelogUrl} target="_blank" rel="noreferrer">
-                        {t`Changelog`}
-                    </Button>
-                )}
+                <Button href={changelogUrl} target="_blank" rel="noreferrer">
+                    {t`Changelog`}
+                </Button>
                 <Button
                     onClick={() => {
                         setServerVersion(version);
                         setOpen(false);
                     }}
-                    variant="contained"
                 >
                     {t`Ok`}
                 </Button>

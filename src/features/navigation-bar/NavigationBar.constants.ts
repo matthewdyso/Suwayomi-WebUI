@@ -18,7 +18,9 @@ import GetAppIcon from '@mui/icons-material/GetApp';
 import GetAppOutlinedIcon from '@mui/icons-material/GetAppOutlined';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import SettingsIcon from '@mui/icons-material/Settings';
+import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import InfoIcon from '@mui/icons-material/Info';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { useLingui } from '@lingui/react/macro';
 import { msg, plural } from '@lingui/core/macro';
 import type { NavbarItem } from '@/features/navigation-bar/NavigationBar.types.ts';
@@ -122,7 +124,7 @@ const NAVIGATION_BAR_DESKTOP_ITEMS = [
         path: AppRoutes.settings.path,
         title: msg`Settings`,
         SelectedIconComponent: SettingsIcon,
-        IconComponent: SettingsIcon,
+        IconComponent: SettingsOutlinedIcon,
         show: 'desktop',
         moreGroup: NavBarItemMoreGroup.SETTING_INFO,
     },
@@ -130,7 +132,7 @@ const NAVIGATION_BAR_DESKTOP_ITEMS = [
         path: AppRoutes.about.path,
         title: msg`About`,
         SelectedIconComponent: InfoIcon,
-        IconComponent: InfoIcon,
+        IconComponent: InfoOutlinedIcon,
         show: 'desktop',
         moreGroup: NavBarItemMoreGroup.SETTING_INFO,
     },

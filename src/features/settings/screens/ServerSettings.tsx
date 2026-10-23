@@ -63,6 +63,7 @@ import { convertToAutoBackupFlags, getAutoBackupFlagsInfo } from '@/features/bac
 import type { BackupFlagInclusionState } from '@/features/backup/Backup.types.ts';
 import { getDateString } from '@/base/utils/DateHelper.ts';
 import { ListSubheader } from '@/base/components/lists/ListSubheader.tsx';
+import { PreferenceList } from '@/features/settings/components/PreferenceList.tsx';
 
 const convertSyncDataToBackupFlags = (settings: ServerSettingsType): BackupFlagInclusionState => ({
     includeManga: settings.syncDataManga,
@@ -243,7 +244,7 @@ export const ServerSettings = () => {
     const isSyncing = !!syncState && ![SyncState.Success, SyncState.Error].includes(syncState);
 
     return (
-        <List sx={{ pt: 0 }}>
+        <PreferenceList>
             {localSettings}
             <List
                 subheader={
@@ -908,6 +909,6 @@ export const ServerSettings = () => {
                     handleChange={(maxLogFolderSize) => updateSetting('maxLogFolderSize', maxLogFolderSize)}
                 />
             </List>
-        </List>
+        </PreferenceList>
     );
 };

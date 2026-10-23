@@ -18,6 +18,7 @@ import { requestManager } from '@/lib/requests/RequestManager.ts';
 import { ImageCache } from '@/lib/service-worker/ImageCache.ts';
 import { makeToast } from '@/base/utils/Toast.ts';
 import { getErrorMessage } from '@/lib/HelperFunctions.ts';
+import { PreferenceList } from '@/features/settings/components/PreferenceList.tsx';
 
 export const ImagesSettings = () => {
     const { t } = useLingui();
@@ -39,7 +40,7 @@ export const ImagesSettings = () => {
     };
 
     return (
-        <List sx={{ pt: 0 }}>
+        <PreferenceList>
             <ListItemButton disabled={isClearingServerCache} onClick={clearCache}>
                 <ListItemText
                     primary={t`Clear cache`}
@@ -60,6 +61,6 @@ export const ImagesSettings = () => {
                     <ListItemText primary={t`Image serve processing`} />
                 </ListItemLink>
             </List>
-        </List>
+        </PreferenceList>
     );
 };

@@ -6,18 +6,19 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import Button from '@mui/material/Button';
-import CircularProgress from '@mui/material/CircularProgress';
-import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import DownloadIcon from '@mui/icons-material/Download';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import DownloadingIcon from '@mui/icons-material/Downloading';
+import Box from '@mui/material/Box';
+import ListItem from '@mui/material/ListItem';
+import ListItemButton from '@mui/material/ListItemButton';
+import ListItemText from '@mui/material/ListItemText';
+import RefreshRoundedIcon from '@mui/icons-material/RefreshRounded';
+import DownloadRoundedIcon from '@mui/icons-material/DownloadRounded';
+import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded';
 import { t } from '@lingui/core/macro';
 import { UpdateState } from '@/lib/graphql/generated/graphql-base.types.ts';
+import { WavyCircularProgress } from '@/base/components/feedback/WavyProgress.tsx';
 
 export type BaseVersionInfoProps = {
+    title: string;
     version: string;
     isCheckingForUpdate: boolean;
     isUpdateAvailable: boolean;
@@ -37,30 +38,34 @@ export type VersionInfoProps =
     | (BaseVersionInfoProps & PropertiesNever<TriggerVersionInfoProps> & LinkVersionInfoProps)
     | (BaseVersionInfoProps & TriggerVersionInfoProps & PropertiesNever<LinkVersionInfoProps>);
 
-const getUpdateCheckButtonIcon = (
+// as large as the icons it takes the place of
+const PROGRESS_SIZE = 24;
+
+const getUpdateCheckIcon = (
     isLoading: boolean,
     isUpdateAvailable: boolean,
     updateState?: UpdateState,
+    progress: number = 0,
     asLink: boolean = false,
 ) => {
     const isUpdateInProgress = updateState === UpdateState.Downloading;
     if (isUpdateInProgress) {
-        return <DownloadingIcon />;
+        return <WavyCircularProgress value={progress} size={PROGRESS_SIZE} />;
     }
 
     if (isLoading) {
-        return <CircularProgress size={15} />;
+        return <WavyCircularProgress size={PROGRESS_SIZE} />;
     }
 
     const isRefreshRequired = !isUpdateAvailable || updateState === UpdateState.Error;
     if (isRefreshRequired) {
-        return <RefreshIcon />;
+        return <RefreshRoundedIcon />;
     }
 
-    return asLink ? <OpenInNewIcon /> : <DownloadIcon />;
+    return asLink ? <OpenInNewRoundedIcon /> : <DownloadRoundedIcon />;
 };
 
-const getUpdateCheckButtonText = (
+const getUpdateCheckText = (
     isLoading: boolean,
     isUpdateAvailable: boolean,
     error: any,
@@ -92,7 +97,12 @@ const getUpdateCheckButtonText = (
     return t`This is the latest version`;
 };
 
+/**
+ * Preference row with the version as its subtitle and the update state below it. Clicking it checks for an update,
+ * or starts or opens the available one.
+ */
 export const VersionInfo = ({
+    title,
     version,
     isCheckingForUpdate,
     isUpdateAvailable,
@@ -105,6 +115,7 @@ export const VersionInfo = ({
     url,
 }: VersionInfoProps) => {
     const isUpdateInProgress = updateState === UpdateState.Downloading;
+    const opensUrl = !!url && isUpdateAvailable;
 
     const onClick = () => {
         if (isUpdateInProgress) {
@@ -122,45 +133,49 @@ export const VersionInfo = ({
         }
     };
 
-    return (
-        <Stack
-            sx={{
-                alignItems: 'start',
-            }}
-        >
-            <Typography component="span" variant="body2">
-                {version}
-            </Typography>
-            <Button
+    const content = (
+        <>
+            <ListItemText
+                primary={title}
+                secondary={
+                    <>
+                        <span>{version}</span>
+                        <span>
+                            {getUpdateCheckText(
+                                isCheckingForUpdate,
+                                isUpdateAvailable,
+                                updateCheckError,
+                                updateState,
+                                progress,
+                            )}
+                        </span>
+                    </>
+                }
+                slotProps={{ secondary: { sx: { display: 'flex', flexDirection: 'column' } } }}
+            />
+            <Box
                 sx={{
-                    marginTop: '5px',
-                    backgroundColor: 'transparent',
-                    pointerEvents: isUpdateInProgress ? 'none' : 'unset',
+                    display: 'flex',
+                    ml: 2,
+                    color: isUpdateAvailable ? 'm3.primary' : 'm3.onSurfaceVariant',
                 }}
-                size="small"
-                variant="outlined"
-                startIcon={getUpdateCheckButtonIcon(
-                    isCheckingForUpdate,
-                    isUpdateAvailable,
-                    updateState,
-                    downloadAsLink,
-                )}
-                onClick={onClick}
-                {...(!!url && isUpdateAvailable
-                    ? {
-                          href: url,
-                          target: '_blank',
-                      }
-                    : undefined)}
             >
-                {getUpdateCheckButtonText(
-                    isCheckingForUpdate,
-                    isUpdateAvailable,
-                    updateCheckError,
-                    updateState,
-                    progress,
-                )}
-            </Button>
-        </Stack>
+                {getUpdateCheckIcon(isCheckingForUpdate, isUpdateAvailable, updateState, progress, downloadAsLink)}
+            </Box>
+        </>
+    );
+
+    return (
+        <ListItem disablePadding disableGutters>
+            {opensUrl ? (
+                <ListItemButton component="a" href={url} target="_blank" rel="noreferrer">
+                    {content}
+                </ListItemButton>
+            ) : (
+                <ListItemButton onClick={onClick} aria-busy={isCheckingForUpdate || isUpdateInProgress}>
+                    {content}
+                </ListItemButton>
+            )}
+        </ListItem>
     );
 };

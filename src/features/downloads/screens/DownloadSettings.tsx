@@ -38,6 +38,7 @@ import { getErrorMessage } from '@/lib/HelperFunctions.ts';
 import { useAppTitle } from '@/features/navigation-bar/hooks/useAppTitle.ts';
 import { ListItemLink } from '@/base/components/lists/ListItemLink.tsx';
 import { AppRoutes } from '@/base/AppRoute.constants.ts';
+import { PreferenceList } from '@/features/settings/components/PreferenceList.tsx';
 
 type DownloadSettingsType = Pick<
     ServerSettings,
@@ -115,7 +116,7 @@ export const DownloadSettings = () => {
     );
 
     return (
-        <List sx={{ pt: 0 }}>
+        <PreferenceList>
             <TextSetting
                 settingName={t`Download location`}
                 dialogDescription={t`The path to the directory on the server where downloaded files should get saved in`}
@@ -236,6 +237,6 @@ export const DownloadSettings = () => {
             >
                 <DownloadAheadSetting downloadAheadLimit={metadataSettings.downloadAheadLimit} />
             </List>
-        </List>
+        </PreferenceList>
     );
 };

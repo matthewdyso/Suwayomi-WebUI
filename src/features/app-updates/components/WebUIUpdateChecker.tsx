@@ -16,7 +16,7 @@ import Button from '@mui/material/Button';
 import { useLingui } from '@lingui/react/macro';
 import { defaultPromiseErrorHandler } from '@/lib/DefaultPromiseErrorHandler.ts';
 import type { WebUiUpdateStatus } from '@/lib/graphql/generated/graphql-base.types.ts';
-import { UpdateState, WebUiChannel } from '@/lib/graphql/generated/graphql-base.types.ts';
+import { UpdateState } from '@/lib/graphql/generated/graphql-base.types.ts';
 import { useLocalStorage } from '@/base/hooks/useStorage.tsx';
 import { requestManager } from '@/lib/requests/RequestManager.ts';
 import { makeToast } from '@/base/utils/Toast.ts';
@@ -27,6 +27,7 @@ import { useMetadataServerSettings } from '@/features/settings/services/ServerSe
 import { getErrorMessage, noOp } from '@/lib/HelperFunctions.ts';
 import { STABLE_EMPTY_OBJECT } from '@/base/Base.constants.ts';
 import { AppSession } from '@/base/AppSession.ts';
+import { getWebUIChangelogUrl } from '@/features/app-updates/AppUpdates.utils.ts';
 
 const disabledUpdateCheck = () => Promise.resolve();
 
@@ -65,10 +66,7 @@ export const WebUIUpdateChecker = () => {
         webUIUpdateData?.checkForWebUIUpdate.tag,
     );
 
-    const changelogUrl =
-        updateStatus.info?.channel === WebUiChannel.Stable
-            ? 'https://github.com/Suwayomi/Suwayomi-WebUI/releases/latest'
-            : 'https://github.com/Suwayomi/Suwayomi-WebUI/blob/master/CHANGELOG.md';
+    const changelogUrl = getWebUIChangelogUrl(updateStatus.info?.channel);
 
     const newVersion = aboutWebUI?.tag;
     const isSameAsCurrent = !newVersion || !webUIVersion || webUIVersion === newVersion;
@@ -179,7 +177,6 @@ export const WebUIUpdateChecker = () => {
                             window.location.reload();
                         }
                     }}
-                    variant="contained"
                 >
                     {shouldForceRefresh ? t`Refresh` : t`Ok`}
                 </Button>

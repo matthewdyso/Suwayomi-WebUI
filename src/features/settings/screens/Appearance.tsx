@@ -9,14 +9,14 @@
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
-import MenuItem from '@mui/material/MenuItem';
 import { ListSubheader } from '@/base/components/lists/ListSubheader.tsx';
 import Switch from '@mui/material/Switch';
 import Link from '@mui/material/Link';
+import type { SxProps, Theme } from '@mui/material/styles';
 import { useColorScheme } from '@mui/material/styles';
 import { Trans, useLingui } from '@lingui/react/macro';
+import { msg } from '@lingui/core/macro';
 import { useAppThemeContext } from '@/features/theme/AppThemeContext.tsx';
-import { Select } from '@/base/components/inputs/Select.tsx';
 import { MediaQuery } from '@/base/utils/MediaQuery.tsx';
 import { NumberSetting } from '@/base/components/settings/NumberSetting.tsx';
 import { i18nResources, loadCatalog } from '@/i18n';
@@ -38,7 +38,27 @@ import { useAppTitle } from '@/features/navigation-bar/hooks/useAppTitle.ts';
 import { MANGA_GRID_WIDTH, SERVER_SETTINGS_METADATA_DEFAULT } from '@/features/settings/Settings.constants.ts';
 import { MUI_THEME_MODE_KEY } from '@/lib/mui/MUI.constants.ts';
 import { getISOLanguage } from '@/lib/ISOLanguageUtil.ts';
-import Typography from '@mui/material/Typography';
+import { PreferenceList } from '@/features/settings/components/PreferenceList.tsx';
+import { SelectPreference } from '@/features/settings/components/SelectPreference.tsx';
+import { InfoPreference } from '@/features/settings/components/InfoPreference.tsx';
+import { SelectButton } from '@/base/components/buttons/SelectButton.tsx';
+import { segmentedButtonGroupSx } from '@/features/theme/m3/M3ConnectedButtonGroup.ts';
+import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
+import type { ValueToDisplayData } from '@/base/Base.types.ts';
+
+// Mihon's order
+const THEME_MODES = [ThemeMode.SYSTEM, ThemeMode.LIGHT, ThemeMode.DARK];
+
+// the check only shows on the selected segment
+const THEME_MODE_DISPLAY_DATA: ValueToDisplayData<ThemeMode> = {
+    [ThemeMode.SYSTEM]: { title: msg`System`, icon: <CheckRoundedIcon /> },
+    [ThemeMode.LIGHT]: { title: msg`Light`, icon: <CheckRoundedIcon /> },
+    [ThemeMode.DARK]: { title: msg`Dark`, icon: <CheckRoundedIcon /> },
+};
+
+// Inline links in small text: padding widens the touch target to iOS's 44 pt without moving the surrounding text
+// (vertical padding of inline elements doesn't change the line height, the negative margin undoes the horizontal one).
+const INLINE_LINK_SX = { py: '14px', px: 0.5, mx: -0.5 } satisfies SxProps<Theme>;
 
 export const Appearance = () => {
     const { t } = useLingui();
@@ -55,6 +75,13 @@ export const Appearance = () => {
     const updateMetadataSetting = createUpdateMetadataServerSettings<keyof MetadataThemeSettings>((e) =>
         makeToast(t`Failed to save changes`, 'error', getErrorMessage(e)),
     );
+
+    const updateThemeMode = (newMode: ThemeMode) => {
+        setThemeMode(newMode);
+        setMode(newMode);
+        // in case a non "colorSchemes" mui theme is active, "setMode" does not update the mode ("mui-mode") value
+        AppStorage.local.setItem(MUI_THEME_MODE_KEY, newMode, true);
+    };
 
     const isDarkMode = MediaQuery.getThemeMode(actualThemeMode) === ThemeMode.DARK;
 
@@ -73,7 +100,7 @@ export const Appearance = () => {
     }
 
     return (
-        <List>
+        <PreferenceList>
             <List
                 subheader={
                     <ListSubheader component="div" id="appearance-theme" customOffsetProps={{ sx: { zIndex: 2 } }}>
@@ -81,30 +108,21 @@ export const Appearance = () => {
                     </ListSubheader>
                 }
             >
-                <ListItem>
-                    <ListItemText primary={t`Theme mode`} />
-                    <Select<ThemeMode>
-                        value={actualThemeMode}
-                        onChange={(e) => {
-                            const newMode = e.target.value as 'system' | 'light' | 'dark';
-
-                            setThemeMode(newMode as ThemeMode);
-                            setMode(newMode);
-                            // in case a non "colorSchemes" mui theme is active, "setMode" does not update the mode ("mui-mode") value
-                            AppStorage.local.setItem(MUI_THEME_MODE_KEY, newMode, true);
-                        }}
-                    >
-                        <MenuItem key={ThemeMode.SYSTEM} value={ThemeMode.SYSTEM}>
-                            {t`System`}
-                        </MenuItem>
-                        <MenuItem key={ThemeMode.DARK} value={ThemeMode.DARK}>
-                            {t`Dark`}
-                        </MenuItem>
-                        <MenuItem key={ThemeMode.LIGHT} value={ThemeMode.LIGHT}>
-                            {t`Light`}
-                        </MenuItem>
-                    </Select>
-                </ListItem>
+                {/* Mihon's segmented theme mode buttons share the row equally, without a visible label */}
+                <SelectButton
+                    value={actualThemeMode}
+                    values={THEME_MODES}
+                    setValue={updateThemeMode}
+                    valueToDisplayData={THEME_MODE_DISPLAY_DATA}
+                    slotProps={{
+                        stack: {
+                            role: 'group',
+                            'aria-label': t`Theme mode`,
+                            sx: [segmentedButtonGroupSx, { flexWrap: 'nowrap', px: 2, py: 1 }],
+                        },
+                        button: { sx: { flex: 1 } },
+                    }}
+                />
                 <ThemeList />
                 {isDarkMode && (
                     <ListItem>
@@ -118,67 +136,51 @@ export const Appearance = () => {
             </List>
             <List
                 subheader={
-                    <ListSubheader component="div" id="appearance-theme">
+                    <ListSubheader component="div" id="appearance-display">
                         {t`Display`}
                     </ListSubheader>
                 }
             >
-                <ListItem>
-                    <ListItemText
-                        primary={t`Language`}
-                        secondary={
-                            <Trans>
-                                Feel free to translate the project on Weblate (
-                                <Link
-                                    href="https://hosted.weblate.org/projects/suwayomi/suwayomi-webui"
-                                    target="_blank"
-                                    rel="noreferrer"
-                                >
-                                    WebUI
-                                </Link>{' '}
-                                and{' '}
-                                <Link
-                                    href="https://hosted.weblate.org/projects/suwayomi/suwayomi-server"
-                                    target="_blank"
-                                    rel="noreferrer"
-                                >
-                                    Server
-                                </Link>
-                                )
-                            </Trans>
-                        }
-                    />
-                    <Select
-                        value={locale}
-                        onChange={({ target: { value: newLocale } }) => {
-                            updateMetadataSetting('locale', newLocale).catch((e) =>
-                                makeToast(t`Could not save changes`, 'error', getErrorMessage(e)),
-                            );
-                            loadCatalog(newLocale).catch((e: Error) => {
-                                makeToast(t`Could not load language`, 'error', getErrorMessage(e));
-                            });
-                        }}
-                        renderValue={(selected) => {
-                            const selectedLanguage =
-                                i18nResources.find((language) => language === selected) ?? selected;
-
-                            return languageCodeToName(selectedLanguage);
-                        }}
-                    >
-                        {i18nResources.map((language) => (
-                            <MenuItem
-                                key={language}
-                                value={language}
-                                sx={{ flexDirection: 'column', alignItems: 'flex-start' }}
-                            >
-                                {languageCodeToName(language)}
-                                <Typography color="textSecondary" variant="body2">
-                                    {getISOLanguage(language)?.name}
-                                </Typography>
-                            </MenuItem>
-                        ))}
-                    </Select>
-                </ListItem>
+                <SelectPreference
+                    title={t`Language`}
+                    value={locale}
+                    options={i18nResources.map((language) => ({
+                        value: language,
+                        label: languageCodeToName(language),
+                        description: getISOLanguage(language)?.name,
+                    }))}
+                    onChange={(newLocale) => {
+                        updateMetadataSetting('locale', newLocale).catch((e) =>
+                            makeToast(t`Could not save changes`, 'error', getErrorMessage(e)),
+                        );
+                        loadCatalog(newLocale).catch((e: Error) => {
+                            makeToast(t`Could not load language`, 'error', getErrorMessage(e));
+                        });
+                    }}
+                />
+                <InfoPreference>
+                    <Trans>
+                        Feel free to translate the project on Weblate (
+                        <Link
+                            href="https://hosted.weblate.org/projects/suwayomi/suwayomi-webui"
+                            sx={INLINE_LINK_SX}
+                            target="_blank"
+                            rel="noreferrer"
+                        >
+                            WebUI
+                        </Link>{' '}
+                        and{' '}
+                        <Link
+                            href="https://hosted.weblate.org/projects/suwayomi/suwayomi-server"
+                            sx={INLINE_LINK_SX}
+                            target="_blank"
+                            rel="noreferrer"
+                        >
+                            Server
+                        </Link>
+                        )
+                    </Trans>
+                </InfoPreference>
                 <NumberSetting
                     settingTitle={t`Manga item width`}
                     settingValue={`px: ${mangaGridItemWidth}`}
@@ -216,6 +218,6 @@ export const Appearance = () => {
                     />
                 </ListItem>
             </List>
-        </List>
+        </PreferenceList>
     );
 };

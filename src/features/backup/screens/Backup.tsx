@@ -7,11 +7,13 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
+import Box from '@mui/material/Box';
 import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
 import { fromEvent } from 'file-selector';
 import ListItemButton from '@mui/material/ListItemButton';
-import ListItemIcon from '@mui/material/ListItemIcon';
+import Typography from '@mui/material/Typography';
 import { ListSubheader } from '@/base/components/lists/ListSubheader.tsx';
 import { useEventListener, useMergedRef, useWindowEvent } from '@mantine/hooks';
 import { AwaitableComponent } from 'awaitable-component';
@@ -20,7 +22,7 @@ import { plural } from '@lingui/core/macro';
 import { requestManager } from '@/lib/requests/RequestManager.ts';
 import { makeToast } from '@/base/utils/Toast.ts';
 import { BackupRestoreState } from '@/lib/graphql/generated/graphql-base.types.ts';
-import { CircularProgressWithText } from '@/base/components/feedback/CircularProgressWithText.tsx';
+import { WavyLinearProgress } from '@/base/components/feedback/WavyProgress.tsx';
 import { TextSetting } from '@/base/components/settings/text/TextSetting.tsx';
 import { NumberSetting } from '@/base/components/settings/NumberSetting.tsx';
 import { TimeSetting } from '@/base/components/settings/TimeSetting.tsx';
@@ -38,6 +40,7 @@ import {
     getBackupCleanupDisplayValue,
 } from '@/features/backup/Backup.utils.ts';
 import type { BackupSettingsType } from '@/features/backup/Backup.types.ts';
+import { PreferenceList } from '@/features/settings/components/PreferenceList.tsx';
 
 let backupRestoreId: string | undefined;
 
@@ -250,7 +253,7 @@ export function Backup() {
 
     return (
         <>
-            <List sx={{ padding: 0 }}>
+            <PreferenceList>
                 <ListItemButton onClick={createBackup}>
                     <ListItemText primary={t`Create backup`} secondary={t`Back up library as a Tachiyomi backup`} />
                 </ListItemButton>
@@ -259,12 +262,18 @@ export function Backup() {
                         primary={t`Restore Backup`}
                         secondary={t`You can also drag and drop the backup file here to restore it`}
                     />
-                    {backupRestoreId ? (
-                        <ListItemIcon>
-                            <CircularProgressWithText progress={restoreProgress} />
-                        </ListItemIcon>
-                    ) : null}
                 </ListItemButton>
+                {/* outside the disabled button so the progress isn't drawn at the disabled opacity */}
+                {backupRestoreId && (
+                    <ListItem sx={{ gap: 2 }}>
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                            <WavyLinearProgress value={restoreProgress} aria-label={t`Restoring backup…`} />
+                        </Box>
+                        <Typography variant="bodySmall" sx={{ color: 'm3.onSurfaceVariant' }}>
+                            {`${Math.round(restoreProgress)}%`}
+                        </Typography>
+                    </ListItem>
+                )}
                 <List
                     subheader={
                         <ListSubheader component="div" id="backup-settings">
@@ -340,8 +349,8 @@ export function Backup() {
                         handleUpdate={(ttl: number) => updateSetting('backupTTL', ttl)}
                     />
                 </List>
-            </List>
-            <input ref={mergedInputRef} type="file" style={{ display: 'none' }} />
+            </PreferenceList>
+            <input ref={mergedInputRef} type="file" hidden />
         </>
     );
 }

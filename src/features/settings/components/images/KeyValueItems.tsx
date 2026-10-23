@@ -53,7 +53,7 @@ export const KeyValueItems = ({
                     onClick={() =>
                         onChange([...(items ?? []), ...addStableIdToKeyValueItems([{ name: '', value: '' }])])
                     }
-                    variant="contained"
+                    variant="tonal"
                     sx={{ width: 'fit-content' }}
                 >
                     {t`Add`}

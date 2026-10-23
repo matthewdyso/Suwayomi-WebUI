@@ -6,46 +6,48 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import IconButton from '@mui/material/IconButton';
-import Typography from '@mui/material/Typography';
-import { StyledGroupHeader } from '@/base/components/virtuoso/StyledGroupHeader.tsx';
-import { MUIUtil } from '@/lib/mui/MUI.util.ts';
-import DragHandle from '@mui/icons-material/DragHandle';
+import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
+import DragHandleRoundedIcon from '@mui/icons-material/DragHandleRounded';
 import type { Ref } from 'react';
+import { ListGroupHeader } from '@/base/components/lists/ListGroupHeader.tsx';
+import { MUIUtil } from '@/lib/mui/MUI.util.ts';
+import { SECONDARY_ALPHA } from '@/features/theme/m3/M3Color.constants.ts';
+import { getDownloadQueueItemSx } from '@/features/downloads/Downloads.utils.ts';
 
+/**
+ * Mihon's download queue section header: "Source (N)" with a drag handle, on a surface that lifts while dragged.
+ */
 export const DownloadGroupHeader = ({
     ref,
-    sourceIndex,
     title,
     language,
     itemCount,
+    isDragOverlay = false,
 }: {
     ref?: Ref<HTMLDivElement>;
-    sourceIndex: number;
     title: string;
     language: string | undefined;
     itemCount: number;
+    isDragOverlay?: boolean;
 }) => (
-    <StyledGroupHeader
+    <Stack
         ref={ref}
-        isFirstItem={!sourceIndex}
-        sx={{
+        sx={MUIUtil.mergeSx(getDownloadQueueItemSx(isDragOverlay), {
             flexDirection: 'row',
-            gap: 1,
             alignItems: 'center',
-            justifyContent: 'space-between',
-            pr: 2,
-        }}
+            mt: 1,
+            pr: 1,
+        })}
     >
-        <Stack>
-            <Typography variant="h5" component="h2">
-                {title} ({itemCount})
-            </Typography>
-            {!!language && <Typography variant="body1">{language}</Typography>}
-        </Stack>
-        <IconButton {...MUIUtil.preventRippleProp()} sx={{ pointerEvents: 'none' }}>
-            <DragHandle />
-        </IconButton>
-    </StyledGroupHeader>
+        <ListGroupHeader component="h2" sx={{ flexGrow: 1, minWidth: 0 }}>
+            {title} ({itemCount})
+            {!!language && (
+                <Box component="span" sx={{ fontWeight: 400, opacity: SECONDARY_ALPHA }}>
+                    {` • ${language}`}
+                </Box>
+            )}
+        </ListGroupHeader>
+        <DragHandleRoundedIcon sx={{ m: 1, color: 'm3.onSurfaceVariant' }} />
+    </Stack>
 );

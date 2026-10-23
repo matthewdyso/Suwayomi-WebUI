@@ -6,12 +6,16 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import PauseIcon from '@mui/icons-material/Pause';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import PauseRoundedIcon from '@mui/icons-material/PauseRounded';
+import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
+import MoreVertRoundedIcon from '@mui/icons-material/MoreVertRounded';
 import Box from '@mui/material/Box';
+import Stack from '@mui/material/Stack';
 import IconButton from '@mui/material/IconButton';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
 import React, { useMemo, useRef, useState } from 'react';
-import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
+import PopupState, { bindMenu, bindTrigger } from 'material-ui-popup-state';
 import type { DragEndEvent } from '@dnd-kit/core';
 import { closestCenter, DndContext } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
@@ -38,19 +42,19 @@ import { STABLE_EMPTY_ARRAY } from '@/base/Base.constants.ts';
 import groupBy from 'lodash/fp/groupBy';
 import uniqBy from 'lodash/fp/uniqBy';
 import mapValues from 'lodash/fp/mapValues';
-import { StyledGroupItemWrapper } from '@/base/components/virtuoso/StyledGroupItemWrapper.tsx';
 import type { SourceIdInfo } from '@/features/source/Source.types.ts';
 import { languageCodeToName } from '@/base/utils/Languages.ts';
 import { DownloadGroupHeader } from '@/features/downloads/components/DownloadGroupHeader.tsx';
 import { plural } from '@lingui/core/macro';
 import { Chapters } from '@/features/chapter/services/Chapters.ts';
-import Refresh from '@mui/icons-material/Refresh';
 import { useOffsetComponent } from '@/base/OffsetComponent.tsx';
+import { Pill, PILL_FONT_SIZE } from '@/base/components/badges/Pill.tsx';
+import { DEFAULT_FULL_FAB_HEIGHT, StyledFab } from '@/base/components/buttons/StyledFab.tsx';
+import { useFabExpanded } from '@/base/hooks/useFabExpanded.ts';
 
 export const DownloadQueue: React.FC = () => {
     const { t } = useLingui();
 
-    useAppTitle(t`Download queue`);
     const { topOffset } = useOffsetComponent();
 
     const [reorderDownloadsMutation] = requestManager.useReorderChaptersInDownloadQueue();
@@ -67,6 +71,24 @@ export const DownloadQueue: React.FC = () => {
     const queue = downloaderData?.queue ?? STABLE_EMPTY_ARRAY;
     const status = downloaderData?.state ?? DownloaderState.Started;
     const isQueueEmpty = !queue.length;
+    const isDownloaderRunning = status === DownloaderState.Started;
+    const toggleQueueStatusLabel = isDownloaderRunning ? t`Pause` : t`Resume`;
+
+    useAppTitle(
+        // Mihon centers the count pill vertically next to the title
+        <Stack component="span" sx={{ flexDirection: 'row', alignItems: 'center', minWidth: 0 }}>
+            {t`Download queue`}
+            {!isQueueEmpty && (
+                <Pill variant="onSurface" fontSize={PILL_FONT_SIZE.title}>
+                    {queue.length}
+                </Pill>
+            )}
+        </Stack>,
+        t`Download queue`,
+        [t, queue.length],
+    );
+
+    const isFabExpanded = useFabExpanded();
 
     const groupHeaderElementBySourceRef = useRef(new Map<SourceIdInfo['id'], Element | null>());
 
@@ -227,26 +249,39 @@ export const DownloadQueue: React.FC = () => {
     };
 
     useAppAction(
-        <>
-            <CustomTooltip title={t`Retry all`} disabled={!failedDownloadChapterIds.length}>
-                <IconButton onClick={retryDownloads} color="inherit" disabled={!failedDownloadChapterIds.length}>
-                    <Refresh />
-                </IconButton>
-            </CustomTooltip>
-
-            <CustomTooltip title={t`Delete all`}>
-                <IconButton onClick={clearQueue} color="inherit">
-                    <DeleteSweepIcon />
-                </IconButton>
-            </CustomTooltip>
-
-            <CustomTooltip title={status === DownloaderState.Started ? t`Stop` : t`Start`} disabled={isQueueEmpty}>
-                <IconButton onClick={toggleQueueStatus} disabled={isQueueEmpty} color="inherit">
-                    {status === DownloaderState.Stopped ? <PlayArrowIcon /> : <PauseIcon />}
-                </IconButton>
-            </CustomTooltip>
-        </>,
-        [status, isQueueEmpty, failedDownloadChapterIds.length],
+        isQueueEmpty ? null : (
+            <PopupState variant="popover" popupId="download-queue-actions">
+                {(popupState) => (
+                    <>
+                        <CustomTooltip title={t`Options`}>
+                            <IconButton {...bindTrigger(popupState)} color="inherit" aria-label={t`Options`}>
+                                <MoreVertRoundedIcon />
+                            </IconButton>
+                        </CustomTooltip>
+                        <Menu {...bindMenu(popupState)}>
+                            <MenuItem
+                                disabled={!failedDownloadChapterIds.length}
+                                onClick={() => {
+                                    popupState.close();
+                                    retryDownloads();
+                                }}
+                            >
+                                {t`Retry all`}
+                            </MenuItem>
+                            <MenuItem
+                                onClick={() => {
+                                    popupState.close();
+                                    clearQueue();
+                                }}
+                            >
+                                {t`Delete all`}
+                            </MenuItem>
+                        </Menu>
+                    </>
+                )}
+            </PopupState>
+        ),
+        [t, isQueueEmpty, failedDownloadChapterIds.length],
     );
 
     // Virtuoso's resize observer can throw this error,
@@ -279,7 +314,7 @@ export const DownloadQueue: React.FC = () => {
     }
 
     return (
-        <Box sx={{ pb: 1 }}>
+        <Box sx={{ pb: DEFAULT_FULL_FAB_HEIGHT }}>
             <DndContext
                 sensors={dndSensors}
                 collisionDetection={closestCenter}
@@ -291,7 +326,7 @@ export const DownloadQueue: React.FC = () => {
                 onDragAbort={() => setDndActiveSource(null)}
             >
                 <SortableContext items={sources} strategy={verticalListSortingStrategy}>
-                    {sources.map((source, sourceIndex) => (
+                    {sources.map((source) => (
                         <DndSortableItem
                             key={`source-${source.id}`}
                             id={source.id}
@@ -301,7 +336,6 @@ export const DownloadQueue: React.FC = () => {
                                 ref={(e) => {
                                     groupHeaderElementBySourceRef.current.set(source.id, e);
                                 }}
-                                sourceIndex={sourceIndex}
                                 title={source.name}
                                 itemCount={chaptersBySource[source.id].length}
                                 language={source.lang ? languageCodeToName(source.lang) : undefined}
@@ -337,13 +371,11 @@ export const DownloadQueue: React.FC = () => {
                                                     dndActiveDownload?.chapter.id
                                                 }
                                             >
-                                                <StyledGroupItemWrapper>
-                                                    <DownloadQueueChapterCard
-                                                        item={downloadsBySource[source.id][index]}
-                                                        reorderDownloads={reorderDownloads}
-                                                        cancelDownloads={cancelDownloads}
-                                                    />
-                                                </StyledGroupItemWrapper>
+                                                <DownloadQueueChapterCard
+                                                    item={downloadsBySource[source.id][index]}
+                                                    reorderDownloads={reorderDownloads}
+                                                    cancelDownloads={cancelDownloads}
+                                                />
                                             </DndSortableItem>
                                         )}
                                     />
@@ -353,6 +385,7 @@ export const DownloadQueue: React.FC = () => {
                                         item={dndActiveDownload!}
                                         reorderDownloads={reorderDownloads}
                                         cancelDownloads={cancelDownloads}
+                                        isDragOverlay
                                     />
                                 </DndOverlayItem>
                             </DndContext>
@@ -361,13 +394,21 @@ export const DownloadQueue: React.FC = () => {
                 </SortableContext>
                 <DndOverlayItem isActive={!!dndActiveSource}>
                     <DownloadGroupHeader
-                        sourceIndex={sources.indexOf(dndActiveSource)}
                         title={dndActiveSource?.name}
                         itemCount={chaptersBySource[dndActiveSource?.id]?.length ?? -1}
                         language={dndActiveSource?.lang ? languageCodeToName(dndActiveSource.lang) : undefined}
+                        isDragOverlay
                     />
                 </DndOverlayItem>
             </DndContext>
+            <StyledFab
+                variant={isFabExpanded ? 'extended' : 'circular'}
+                onClick={toggleQueueStatus}
+                aria-label={toggleQueueStatusLabel}
+            >
+                {isDownloaderRunning ? <PauseRoundedIcon /> : <PlayArrowRoundedIcon />}
+                {isFabExpanded && toggleQueueStatusLabel}
+            </StyledFab>
         </Box>
     );
 };

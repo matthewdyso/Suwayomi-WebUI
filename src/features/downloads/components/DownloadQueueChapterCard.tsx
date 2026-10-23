@@ -6,135 +6,132 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import DragHandle from '@mui/icons-material/DragHandle';
-import Card from '@mui/material/Card';
-import CardActionArea from '@mui/material/CardActionArea';
+import DragHandleRoundedIcon from '@mui/icons-material/DragHandleRounded';
+import MoreVertRoundedIcon from '@mui/icons-material/MoreVertRounded';
+import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
+import ListItemButton from '@mui/material/ListItemButton';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
 import { memo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useLingui } from '@lingui/react/macro';
 import { CustomTooltip } from '@/base/components/CustomTooltip.tsx';
 import { ChapterDownloadRetryButton } from '@/features/chapter/components/buttons/ChapterDownloadRetryButton.tsx';
-import { ChapterCardMetadata } from '@/features/chapter/components/cards/ChapterCardMetadata.tsx';
-import { MUIUtil } from '@/lib/mui/MUI.util.ts';
-import { ListCardContent } from '@/base/components/lists/cards/ListCardContent.tsx';
 import { AppRoutes } from '@/base/AppRoute.constants.ts';
 import type { ChapterDownloadStatus } from '@/features/chapter/Chapter.types.ts';
 import { MediaQuery } from '@/base/utils/MediaQuery.tsx';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import MenuItem from '@mui/material/MenuItem';
-import Menu from '@mui/material/Menu';
 import { DownloadStateIndicatorLinear } from '@/base/components/downloads/DownloadStateIndicatorLinear.tsx';
-import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
 import { DownloadState } from '@/lib/graphql/generated/graphql-base.types.ts';
+import { MUIUtil } from '@/lib/mui/MUI.util.ts';
+import { getDownloadQueueItemSx } from '@/features/downloads/Downloads.utils.ts';
 
 interface ActionProps {
     reorderDownloads: (download: ChapterDownloadStatus, mode: 'top' | 'bottom', series?: boolean) => void;
     cancelDownloads: (download: ChapterDownloadStatus, series?: boolean) => void;
 }
 
-const ActionMenu = ({
-    open,
-    download,
-    reorderDownloads,
-    cancelDownloads,
-    anchorEl,
-}: {
-    open: boolean;
-    download: ChapterDownloadStatus;
-    anchorEl: Element | null;
-} & ActionProps) => {
-    const { t } = useLingui();
+const getPagesText = (item: ChapterDownloadStatus, errorText: string): string | null => {
+    if (item.state === DownloadState.Error) {
+        return errorText;
+    }
 
-    return (
-        <Menu open={open} anchorEl={anchorEl}>
-            <MenuItem onClick={() => reorderDownloads(download, 'top')}>{t`Move to top`}</MenuItem>
-            <MenuItem onClick={() => reorderDownloads(download, 'top', true)}>{t`Move series to top`}</MenuItem>
-            <MenuItem onClick={() => reorderDownloads(download, 'bottom')}>{t`Move to bottom`}</MenuItem>
-            <MenuItem onClick={() => reorderDownloads(download, 'bottom', true)}>{t`Move series to bottom`}</MenuItem>
-            <MenuItem onClick={() => cancelDownloads(download)}>{t`Cancel`}</MenuItem>
-            <MenuItem onClick={() => cancelDownloads(download, true)}>{t`Cancel all for this series`}</MenuItem>
-        </Menu>
-    );
+    const isDownloading = item.state === DownloadState.Downloading || item.progress >= 0.1;
+    if (!isDownloading) {
+        return null;
+    }
+
+    return `${(item.chapter.pageCount * item.progress).toFixed()}/${item.chapter.pageCount}`;
 };
 
+/**
+ * Mihon's download queue item: drag handle, title with page progress, chapter, progress bar and a menu.
+ */
 export const DownloadQueueChapterCard = memo(
-    ({ item, reorderDownloads, cancelDownloads }: { item: ChapterDownloadStatus } & ActionProps) => {
+    ({
+        item,
+        reorderDownloads,
+        cancelDownloads,
+        isDragOverlay = false,
+    }: { item: ChapterDownloadStatus; isDragOverlay?: boolean } & ActionProps) => {
         const { t } = useLingui();
         const preventMobileContextMenu = MediaQuery.usePreventMobileContextMenu();
 
-        const [anchorEl, setAnchorEl] = useState<Element | null>(null);
+        const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLElement | null>(null);
 
-        const [actionMenuOpen, setActionMenuOpen] = useState(false);
+        const pagesText = getPagesText(item, t`Error`);
+        const chapterText = item.chapter.scanlator
+            ? `${item.chapter.name} • ${item.chapter.scanlator}`
+            : item.chapter.name;
+
+        const menuAction = (action: () => void) => () => {
+            setMenuAnchorEl(null);
+            action();
+        };
 
         return (
-            <Card>
-                <CardActionArea
+            <Box sx={getDownloadQueueItemSx(isDragOverlay)}>
+                <ListItemButton
                     component={Link}
                     to={AppRoutes.manga.path(item.manga.id)}
                     onContextMenu={preventMobileContextMenu}
-                    sx={MediaQuery.preventMobileContextMenuSx()}
+                    sx={MUIUtil.mergeSx(MediaQuery.preventMobileContextMenuSx(), { py: 0, pl: 1, pr: 0.5 })}
                 >
-                    <ListCardContent>
-                        <IconButton {...MUIUtil.preventRippleProp()} sx={{ pointerEvents: 'none' }}>
-                            <DragHandle />
-                        </IconButton>
-                        <Stack
-                            sx={{
-                                flexGrow: 1,
-                                flexShrink: 1,
-                                gap: 1,
+                    <DragHandleRoundedIcon sx={{ m: 1, color: 'm3.onSurfaceVariant' }} />
+                    <Stack sx={{ flexGrow: 1, minWidth: 0, py: 1, gap: 0.5 }}>
+                        <Stack sx={{ flexDirection: 'row', gap: 1, alignItems: 'baseline' }}>
+                            <Typography variant="bodyMedium" noWrap sx={{ flexGrow: 1 }}>
+                                {item.manga.title}
+                            </Typography>
+                            {pagesText && (
+                                <Typography variant="bodySmall" sx={{ color: 'm3.onSurfaceVariant' }}>
+                                    {pagesText}
+                                </Typography>
+                            )}
+                        </Stack>
+                        <Typography variant="bodySmall" noWrap>
+                            {chapterText}
+                        </Typography>
+                        <Box sx={{ pt: 0.5 }}>
+                            <DownloadStateIndicatorLinear chapterId={item.chapter.id} />
+                        </Box>
+                    </Stack>
+                    <ChapterDownloadRetryButton chapterId={item.chapter.id} />
+                    <CustomTooltip title={t`Menu`}>
+                        <IconButton
+                            {...MUIUtil.preventRippleProp()}
+                            aria-label={t`Menu`}
+                            aria-haspopup="menu"
+                            onClick={(e) => {
+                                // the button sits inside the row's link
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setMenuAnchorEl(e.currentTarget);
                             }}
                         >
-                            <Stack sx={{ flexDirection: 'row', alignItems: 'end', flexWrap: 'wrap' }}>
-                                <ChapterCardMetadata
-                                    title={item.manga.title}
-                                    secondaryText={item.chapter.scanlator}
-                                    ternaryText={item.chapter.name}
-                                />
-                                <Typography sx={{ pb: 1, flexGrow: 1, textAlign: 'end' }} variant="caption">
-                                    {(() => {
-                                        if (item.state === DownloadState.Error) {
-                                            return t`Error`;
-                                        }
-
-                                        const isDownloading =
-                                            item.state === DownloadState.Downloading || item.progress >= 0.1;
-                                        if (!isDownloading) {
-                                            return null;
-                                        }
-
-                                        return `${(item.chapter.pageCount * item.progress).toFixed()}/${item.chapter.pageCount}`;
-                                    })()}
-                                </Typography>
-                            </Stack>
-                            <DownloadStateIndicatorLinear chapterId={item.chapter.id} />
-                        </Stack>
-                        <ChapterDownloadRetryButton chapterId={item.chapter.id} />
-                        <CustomTooltip title={t`Delete`}>
-                            <IconButton
-                                ref={setAnchorEl}
-                                {...MUIUtil.preventRippleProp()}
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    setActionMenuOpen(!actionMenuOpen);
-                                }}
-                            >
-                                <MoreVertIcon />
-                                <ActionMenu
-                                    open={actionMenuOpen}
-                                    download={item}
-                                    reorderDownloads={reorderDownloads}
-                                    cancelDownloads={cancelDownloads}
-                                    anchorEl={anchorEl}
-                                />
-                            </IconButton>
-                        </CustomTooltip>
-                    </ListCardContent>
-                </CardActionArea>
-            </Card>
+                            <MoreVertRoundedIcon />
+                        </IconButton>
+                    </CustomTooltip>
+                </ListItemButton>
+                <Menu anchorEl={menuAnchorEl} open={!!menuAnchorEl} onClose={() => setMenuAnchorEl(null)}>
+                    <MenuItem onClick={menuAction(() => reorderDownloads(item, 'top'))}>{t`Move to top`}</MenuItem>
+                    <MenuItem onClick={menuAction(() => reorderDownloads(item, 'top', true))}>
+                        {t`Move series to top`}
+                    </MenuItem>
+                    <MenuItem
+                        onClick={menuAction(() => reorderDownloads(item, 'bottom'))}
+                    >{t`Move to bottom`}</MenuItem>
+                    <MenuItem onClick={menuAction(() => reorderDownloads(item, 'bottom', true))}>
+                        {t`Move series to bottom`}
+                    </MenuItem>
+                    <MenuItem onClick={menuAction(() => cancelDownloads(item))}>{t`Cancel`}</MenuItem>
+                    <MenuItem onClick={menuAction(() => cancelDownloads(item, true))}>
+                        {t`Cancel all for this series`}
+                    </MenuItem>
+                </Menu>
+            </Box>
         );
     },
 );

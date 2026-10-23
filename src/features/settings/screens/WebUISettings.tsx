@@ -6,7 +6,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
 import Switch from '@mui/material/Switch';
@@ -34,6 +33,7 @@ import {
     WEB_UI_FLAVOR_SELECT_VALUES,
     WEB_UI_INTERFACE_SELECT_VALUES,
 } from '@/features/settings/Settings.constants.ts';
+import { PreferenceList } from '@/features/settings/components/PreferenceList.tsx';
 
 export const WebUISettings = () => {
     const { t } = useLingui();
@@ -102,7 +102,7 @@ export const WebUISettings = () => {
     const isCustomWebUI = webUISettings.webUIFlavor === WebUiFlavor.Custom;
 
     return (
-        <List sx={{ pt: 0 }}>
+        <PreferenceList>
             <SelectSetting<WebUiFlavor>
                 settingName={t`Flavor`}
                 value={webUISettings.webUIFlavor}
@@ -165,6 +165,6 @@ export const WebUISettings = () => {
                     />
                 </ListItem>
             )}
-        </List>
+        </PreferenceList>
     );
 };

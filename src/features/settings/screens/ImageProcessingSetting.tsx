@@ -8,8 +8,8 @@
 
 import { useState } from 'react';
 import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
+import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import { useLingui } from '@lingui/react/macro';
 import {
     IMAGE_PROCESSING_TYPE_TO_SETTING,
@@ -35,6 +35,7 @@ import {
 import { Processing } from '@/features/settings/components/images/Processing.tsx';
 import { STABLE_EMPTY_ARRAY } from '@/base/Base.constants.ts';
 import type { PartialSettingsType } from '@/lib/graphql/generated/graphql-base.types.ts';
+import { InfoPreference } from '@/features/settings/components/InfoPreference.tsx';
 
 export const ImageProcessingSetting = ({ type }: { type: ImageProcessingType }) => {
     const { t } = useLingui();
@@ -88,11 +89,11 @@ export const ImageProcessingSetting = ({ type }: { type: ImageProcessingType }) 
     }
 
     return (
-        <Stack sx={{ p: 2, gap: 5 }}>
-            <Typography>
+        <Stack sx={{ pb: 2 }}>
+            <InfoPreference>
                 {t`In case no MIME-Type is defined, the "default" one will be used for the processing.\nSet the target mode to disabled to prevent processing for a MIME-Type`}
-            </Typography>
-            <Stack sx={{ flexDirection: 'column', gap: 5 }}>
+            </InfoPreference>
+            <Stack sx={{ px: 2, gap: 5 }}>
                 {tmpConversions.map((conversion, index) => {
                     const { mimeType } = conversion;
 
@@ -118,10 +119,13 @@ export const ImageProcessingSetting = ({ type }: { type: ImageProcessingType }) 
                 direction="row"
                 sx={{
                     gap: 1,
+                    px: 2,
+                    pt: 5,
                 }}
             >
                 <Button
-                    variant="outlined"
+                    variant="tonal"
+                    startIcon={<AddRoundedIcon />}
                     onClick={() => {
                         setTmpConversions((prev) => [
                             ...prev,
