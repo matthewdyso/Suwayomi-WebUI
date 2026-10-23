@@ -7,9 +7,11 @@
  */
 
 import React, { useEffect, useMemo, useState } from 'react';
-import SearchIcon from '@mui/icons-material/Search';
-import HistoryIcon from '@mui/icons-material/History';
-import CloseIcon from '@mui/icons-material/Close';
+import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
+import HistoryRoundedIcon from '@mui/icons-material/HistoryRounded';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
+import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded';
 import IconButton from '@mui/material/IconButton';
 import Autocomplete from '@mui/material/Autocomplete';
 import Box from '@mui/material/Box';
@@ -35,6 +37,10 @@ import List from '@mui/material/List';
 import { ListSubheader } from '@/base/components/lists/ListSubheader.tsx';
 import Button from '@mui/material/Button';
 import { OffsetContainer } from '@/base/OffsetComponent.tsx';
+import { inputBaseClasses } from '@mui/material/InputBase';
+import { useMainRoutePath } from '@/features/navigation-bar/hooks/useMainRoutePath.ts';
+import { useGetOptionForDirection } from '@/features/theme/services/ThemeCreator.ts';
+import { SECONDARY_ALPHA } from '@/features/theme/m3/M3Color.constants.ts';
 
 /** Enough to be worth scrolling through, few enough to not cover the whole screen on mobile. */
 const MAX_SUGGESTIONS = 8;
@@ -43,6 +49,14 @@ const MAX_SUGGESTIONS = 8;
 const SUGGESTION_DEBOUNCE_MS = 150;
 
 const MAX_HISTORY_SUGGESTIONS = 5;
+
+/**
+ * Mihon's search field text: titleMedium at 18 px, regular weight.
+ */
+const SEARCH_FIELD_FONT = {
+    fontSize: '1.125rem',
+    fontWeight: 400,
+} as const;
 
 type SearchSuggestion = {
     label: string;
@@ -64,6 +78,10 @@ export const AppbarSearch: React.FunctionComponent<IProps> = (props) => {
     const theme = useTheme();
     const { t } = useLingui();
     const { setHideTitle, navBarWidth } = useNavBarContext();
+    const getOptionForDirection = useGetOptionForDirection();
+    const isMainRoute = useMainRoutePath() !== null;
+    // without a navigation icon in the app bar, the search gets its own close arrow in front of the field (Mihon)
+    const showCloseArrow = isClosable && isMainRoute;
     const scrollbarYSize = MediaQuery.useGetScrollbarSize('Y');
     const forceUpdate = useForceUpdate();
 
@@ -277,7 +295,7 @@ export const AppbarSearch: React.FunctionComponent<IProps> = (props) => {
                 )}
                 renderOption={({ key, ...optionProps }, option) => (
                     <Box key={key} component="li" sx={{ gap: 1 }} {...optionProps}>
-                        {option.isFromHistory ? <HistoryIcon /> : <SearchIcon />}
+                        {option.isFromHistory ? <HistoryRoundedIcon /> : <SearchRoundedIcon />}
                         <Box sx={{ flexGrow: 1 }}>
                             <CustomTooltip title={option.label} placement="right">
                                 <TypographyMaxLines sx={{ width: 'fit-content' }}>{option.label}</TypographyMaxLines>
@@ -292,57 +310,67 @@ export const AppbarSearch: React.FunctionComponent<IProps> = (props) => {
                                         removeFromHistory(option.label);
                                     }}
                                 >
-                                    <CloseIcon />
+                                    <CloseRoundedIcon />
                                 </IconButton>
                             </CustomTooltip>
                         )}
                     </Box>
                 )}
                 renderInput={(params) => (
-                    <Box sx={{ position: 'relative' }}>
-                        {focused && liveAutoCompletion && (
-                            <Box
-                                sx={{
-                                    position: 'absolute',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    height: '100%',
-                                    width: '100%',
-                                    overflow: 'hidden',
-                                    color: 'text.secondary',
-                                    whiteSpace: 'pre',
-                                    pointerEvents: 'none',
-                                    zIndex: 0,
-                                }}
-                            >
-                                <span style={{ visibility: 'hidden' }}>{searchString}</span>
-                                {liveAutoCompletion.replace(new RegExp(escapeRegex(searchString).trimStart(), 'i'), '')}
-                            </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        {showCloseArrow && (
+                            <IconButton aria-label={t`Close`} onClick={cancelSearch} color="inherit">
+                                {getOptionForDirection(<ArrowBackRoundedIcon />, <ArrowForwardRoundedIcon />)}
+                            </IconButton>
                         )}
-                        <SearchTextField
-                            {...params}
-                            onClick={() => setHideSuggestions(false)}
-                            autoFocus
-                            variant="standard"
-                            fullWidth
-                            onCancel={cancelSearch}
-                            onBlur={handleBlur}
-                            inputRef={inputRef}
-                            sx={theme.applyStyles('light', {
-                                '& .MuiInput-underline:before': {
-                                    borderBottomColor: 'primary.contrastText', // Default color
-                                },
-                                '& .MuiInput-underline:hover:before': {
-                                    borderBottomColor: 'primary.contrastText', // Hover color
-                                },
-                                '& .MuiInput-underline:after': {
-                                    borderBottomColor: 'primary.dark', // Focused color
-                                },
-                            })}
-                            cancelButtonProps={{
-                                sx: theme.applyStyles('light', { color: 'primary.contrastText' }),
-                            }}
-                        />
+                        <Box sx={{ position: 'relative', flexGrow: 1, minWidth: 0, ml: showCloseArrow ? 0.5 : 0 }}>
+                            {focused && liveAutoCompletion && (
+                                <Box
+                                    sx={{
+                                        ...SEARCH_FIELD_FONT,
+                                        position: 'absolute',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        height: '100%',
+                                        width: '100%',
+                                        overflow: 'hidden',
+                                        color: 'text.secondary',
+                                        whiteSpace: 'pre',
+                                        pointerEvents: 'none',
+                                        zIndex: 0,
+                                    }}
+                                >
+                                    <Box component="span" sx={{ visibility: 'hidden' }}>
+                                        {searchString}
+                                    </Box>
+                                    {liveAutoCompletion.replace(
+                                        new RegExp(escapeRegex(searchString).trimStart(), 'i'),
+                                        '',
+                                    )}
+                                </Box>
+                            )}
+                            <SearchTextField
+                                {...params}
+                                slotProps={{
+                                    ...params.slotProps,
+                                    input: { ...params.slotProps.input, disableUnderline: true },
+                                }}
+                                placeholder={t`Search`}
+                                onClick={() => setHideSuggestions(false)}
+                                autoFocus
+                                variant="standard"
+                                fullWidth
+                                onCancel={cancelSearch}
+                                onBlur={handleBlur}
+                                inputRef={inputRef}
+                                sx={{
+                                    [`& .${inputBaseClasses.input}`]: {
+                                        ...SEARCH_FIELD_FONT,
+                                        '&::placeholder': { color: 'inherit', opacity: SECONDARY_ALPHA },
+                                    },
+                                }}
+                            />
+                        </Box>
                     </Box>
                 )}
             />
@@ -351,8 +379,8 @@ export const AppbarSearch: React.FunctionComponent<IProps> = (props) => {
 
     return (
         <CustomTooltip title={t`Search`}>
-            <IconButton onClick={() => updateSearchOpenState(true)} color="inherit">
-                <SearchIcon />
+            <IconButton aria-label={t`Search`} onClick={() => updateSearchOpenState(true)} color="inherit">
+                <SearchRoundedIcon />
             </IconButton>
         </CustomTooltip>
     );

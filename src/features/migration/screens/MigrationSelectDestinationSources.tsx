@@ -100,7 +100,6 @@ export const MigrationSelectDestinationSources = () => {
                 isActive
                 isCancelable={false}
                 areAllItemsSelected={areAllItemsSelected}
-                areNoItemsSelected={areNoItemsSelected}
                 onSelectAll={(selectAll) =>
                     handleSelectAll(selectAll, [...new Set([...selectedItemIds, ...sourceIds])])
                 }

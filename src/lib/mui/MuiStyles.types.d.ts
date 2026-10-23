@@ -7,6 +7,10 @@
  */
 
 import '@mui/material/styles';
+import '@mui/material/Typography';
+import '@mui/material/Button';
+import type { CSSProperties } from 'react';
+import type { M3Palette, M3TypographyVariant } from '@/features/theme/m3/M3.types.ts';
 
 declare module '@mui/material/styles' {
     interface CssThemeVariables {
@@ -18,5 +22,31 @@ declare module '@mui/material/styles' {
     export interface PaletteBackgroundChannel {
         defaultChannel: string;
         paperChannel: string;
+    }
+
+    interface Palette {
+        m3: M3Palette;
+    }
+
+    interface PaletteOptions {
+        m3?: M3Palette;
+    }
+
+    // Module augmentation only merges interfaces; their members come from the record of the M3 variant names.
+    // oxlint-disable-next-line typescript/no-empty-object-type
+    interface TypographyVariants extends Record<M3TypographyVariant, CSSProperties> {}
+
+    // oxlint-disable-next-line typescript/no-empty-object-type
+    interface TypographyVariantsOptions extends Partial<Record<M3TypographyVariant, CSSProperties>> {}
+}
+
+declare module '@mui/material/Typography' {
+    // oxlint-disable-next-line typescript/no-empty-object-type
+    interface TypographyPropsVariantOverrides extends Record<M3TypographyVariant, true> {}
+}
+
+declare module '@mui/material/Button' {
+    interface ButtonPropsVariantOverrides {
+        tonal: true;
     }
 }

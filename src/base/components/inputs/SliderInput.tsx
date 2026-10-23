@@ -12,8 +12,12 @@ import type { TypographyProps } from '@mui/material/Typography';
 import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import { ResetButton } from '@/base/components/buttons/ResetButton.tsx';
+import { Pill } from '@/base/components/badges/Pill.tsx';
 import { MUIUtil } from '@/lib/mui/MUI.util.ts';
 
+/**
+ * Mihon's slider item: the label and the value (in a pill) above a full-width slider.
+ */
 export const SliderInput = ({
     label,
     value,
@@ -29,16 +33,22 @@ export const SliderInput = ({
         slider?: SliderProps;
     };
 }) => (
-    <Stack sx={{ flexDirection: 'row', gap: 2, alignItems: 'center' }}>
-        <Stack sx={{ flexBasis: '25%' }}>
-            <Typography {...slotProps?.label} sx={slotProps?.label?.sx}>
+    <Stack sx={{ gap: '2px' }}>
+        <Stack sx={{ flexDirection: 'row', gap: 1, alignItems: 'center', minHeight: 40 }}>
+            <Typography
+                variant="bodyMedium"
+                {...slotProps?.label}
+                sx={MUIUtil.mergeSx({ flexGrow: 1, minWidth: 0 }, slotProps?.label?.sx)}
+            >
                 {label}
             </Typography>
-            <Typography {...slotProps?.value} sx={slotProps?.value?.sx}>
-                {value}
-            </Typography>
+            <Pill>
+                <Typography variant="bodyMedium" component="span" {...slotProps?.value} sx={slotProps?.value?.sx}>
+                    {value}
+                </Typography>
+            </Pill>
+            {onDefault && <ResetButton asIconButton onClick={onDefault} />}
         </Stack>
-        <Slider {...slotProps?.slider} sx={MUIUtil.mergeSx({ flexBasis: '75%' }, slotProps?.slider?.sx)} />
-        {onDefault && <ResetButton asIconButton onClick={onDefault} />}
+        <Slider {...slotProps?.slider} sx={slotProps?.slider?.sx} />
     </Stack>
 );

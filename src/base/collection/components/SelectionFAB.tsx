@@ -6,7 +6,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import MoreHoriz from '@mui/icons-material/MoreHoriz';
+import MoreHorizRounded from '@mui/icons-material/MoreHorizRounded';
 import Fab from '@mui/material/Fab';
 import Box from '@mui/material/Box';
 import { styled } from '@mui/material/styles';
@@ -20,24 +20,20 @@ interface SelectionFABProps {
     title: string;
 }
 
-const FabContainer = styled(Box)(({ theme }) => ({
+const FabContainer = styled(Box)({
     ...DEFAULT_FAB_STYLE,
-    height: `calc(${DEFAULT_FAB_STYLE.height} + 1)`,
-    paddingTop: '8px',
+    height: 'auto',
     zIndex: 1, // the "Checkbox" (MUI) component of the "ChapterCard" has z-index 1, which causes it to take over the mouse events
-    [theme.breakpoints.down('md')]: {
-        marginBottom: '64px',
-    },
-}));
+});
 
 export const SelectionFAB: React.FC<SelectionFABProps> = ({ children, title }) => (
     <PopupState variant="popover" popupId="selection-fab-menu">
         {(popupState) => (
             <>
                 <FabContainer {...bindTrigger(popupState)}>
-                    <Fab variant="extended" color="primary">
+                    <Fab variant="extended" size="small" color="primary">
                         {title}
-                        <MoreHoriz sx={{ ml: 1 }} />
+                        <MoreHorizRounded />
                     </Fab>
                 </FabContainer>
                 <Menu

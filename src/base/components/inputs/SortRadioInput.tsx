@@ -6,8 +6,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import ArrowDownward from '@mui/icons-material/ArrowDownward';
-import ArrowUpward from '@mui/icons-material/ArrowUpward';
+import ArrowDownwardRounded from '@mui/icons-material/ArrowDownwardRounded';
+import ArrowUpwardRounded from '@mui/icons-material/ArrowUpwardRounded';
+import Box from '@mui/material/Box';
 import { memo } from 'react';
 import type { RadioInputProps } from '@/base/components/inputs/RadioInput.tsx';
 import { RadioInput } from '@/base/components/inputs/RadioInput.tsx';
@@ -16,11 +17,16 @@ interface IProps extends RadioInputProps {
     sortDescending?: boolean | null | undefined;
 }
 
-export const SortRadioInput = memo(({ sortDescending, checkedIcon, ...rest }: IProps) => (
+/**
+ * Mihon's sort item: the active sort shows its direction arrow, the others an empty space instead of a radio circle.
+ */
+export const SortRadioInput = memo(({ sortDescending, checkedIcon, icon, ...rest }: IProps) => (
     <RadioInput
         {...rest}
+        icon={icon ?? <Box sx={{ width: 24, height: 24 }} />}
         checkedIcon={
-            checkedIcon ?? (sortDescending ? <ArrowDownward color="primary" /> : <ArrowUpward color="primary" />)
+            checkedIcon ??
+            (sortDescending ? <ArrowDownwardRounded color="primary" /> : <ArrowUpwardRounded color="primary" />)
         }
     />
 ));

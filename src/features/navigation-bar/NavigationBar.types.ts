@@ -34,6 +34,26 @@ export interface NavbarItem {
     useBadge?: () => { count: number; title: string };
 }
 
+/**
+ * A determinate progress bar along the app bar's bottom edge, e.g. of a running library update.
+ */
+export type AppBarProgress = {
+    /**
+     * 0-100
+     */
+    value: number;
+    'aria-label': string;
+};
+
+/**
+ * Mihon's action-mode toolbar of a selection: a close button, the number of selected items and the selection's actions.
+ */
+export type AppBarActionMode = {
+    title: ReactNode;
+    actions: ReactNode;
+    onCancel: () => void;
+};
+
 export type NavbarContextType = {
     // AppBar title
     title: string | React.ReactNode;
@@ -48,6 +68,9 @@ export type NavbarContextType = {
     // AppBar action buttons
     action: ReactNode;
     setAction: React.Dispatch<React.SetStateAction<ReactNode>>;
+
+    appBarProgress: AppBarProgress | null;
+    setAppBarProgress: React.Dispatch<React.SetStateAction<AppBarProgress | null>>;
 
     // Allow default navbar to be overrided
     override: INavbarOverride;
@@ -65,4 +88,27 @@ export type NavbarContextType = {
 
     bottomBarHeight: number;
     setBottomBarHeight: React.Dispatch<React.SetStateAction<number>>;
+
+    // The app bar is transparent and overlays the content until the window scrolls, its title appears once the window
+    // scrolled past "appBarOverlayRevealAfterPx"
+    isAppBarOverlay: boolean;
+    appBarOverlayRevealAfterPx: number;
+    // "null" disables the overlay
+    setAppBarOverlayRevealAfterPx: React.Dispatch<React.SetStateAction<number | null>>;
+
+    // The app bar keeps its resting color while the content scrolls, because tabs or chips are attached below it
+    isAppBarFlat: boolean;
+    setIsAppBarFlat: React.Dispatch<React.SetStateAction<boolean>>;
+
+    // Screens without a top app bar (Mihon's More tab)
+    isAppBarHidden: boolean;
+    setIsAppBarHidden: React.Dispatch<React.SetStateAction<boolean>>;
+
+    // Replaces the app bar's navigation, title and actions while set
+    appBarActionMode: AppBarActionMode | null;
+    setAppBarActionMode: React.Dispatch<React.SetStateAction<AppBarActionMode | null>>;
+
+    // Replaces the phone's navigation bar, e.g. Mihon's bottom action menu of a selection
+    bottomActionMenu: ReactNode;
+    setBottomActionMenu: React.Dispatch<React.SetStateAction<ReactNode>>;
 };

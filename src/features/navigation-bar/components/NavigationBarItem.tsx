@@ -6,21 +6,35 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { NavbarItem } from '@/features/navigation-bar/NavigationBar.types.ts';
-import { ListItemLink } from '@/base/components/lists/ListItemLink.tsx';
-import { CustomTooltip } from '@/base/components/CustomTooltip.tsx';
-import { TypographyMaxLines } from '@/base/components/texts/TypographyMaxLines.tsx';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
-import { useLocation } from 'react-router-dom';
-import { useTheme } from '@mui/material/styles';
-import type { ComponentProps } from 'react';
-import { useMemo } from 'react';
-import ListItem from '@mui/material/ListItem';
+import type { MouseEvent } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import ButtonBase from '@mui/material/ButtonBase';
 import Badge from '@mui/material/Badge';
+import Box from '@mui/material/Box';
+import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { useLingui } from '@lingui/react/macro';
-import { useNavBarContext } from '@/features/navigation-bar/NavbarContext.tsx';
+import type { NavbarItem } from '@/features/navigation-bar/NavigationBar.types.ts';
+import { CustomTooltip } from '@/base/components/CustomTooltip.tsx';
+import { M3_SHAPE } from '@/features/theme/m3/M3Shape.constants.ts';
+import { M3_SPRING } from '@/features/theme/m3/M3Motion.constants.ts';
+import { m3Transition } from '@/features/theme/m3/M3Motion.utils.ts';
+import { SECONDARY_ALPHA } from '@/features/theme/m3/M3Color.constants.ts';
+import { M3_STATE_LAYER_SX, m3StateLayerInteractionsSx, m3StateLayerSx } from '@/features/theme/m3/M3StateLayer.ts';
+
+/**
+ * - bar: item of the phone's bottom navigation bar
+ * - rail: item of the collapsed desktop navigation (navigation rail)
+ * - drawer: item of the expanded desktop navigation (navigation drawer)
+ */
+export type NavigationBarItemVariant = 'bar' | 'rail' | 'drawer';
+
+const INDICATOR_CLASS_NAME = 'NavigationBarItem-indicator';
+
+const INDICATOR_SIZE: Record<Exclude<NavigationBarItemVariant, 'drawer'>, { width: number; height: number }> = {
+    bar: { width: 64, height: 32 },
+    rail: { width: 56, height: 32 },
+};
 
 export const NavigationBarItem = ({
     path,
@@ -28,90 +42,138 @@ export const NavigationBarItem = ({
     IconComponent,
     SelectedIconComponent,
     useBadge,
-    slots,
-    forceCollapsed,
-}: NavbarItem & {
-    slots?: {
-        listItemLink?: Partial<ComponentProps<typeof ListItemLink>>;
-    };
-    forceCollapsed?: boolean;
-}) => {
+    variant,
+}: NavbarItem & { variant: NavigationBarItemVariant }) => {
     const { t } = useLingui();
-    const location = useLocation();
-    const { isCollapsed: isCollapsedContext } = useNavBarContext();
-    const theme = useTheme();
+    const { pathname } = useLocation();
     const badgeInfo = useBadge?.();
 
-    const isCollapsed = forceCollapsed ?? isCollapsedContext;
-
-    const isActive = location.pathname.startsWith(path);
+    const isActive = pathname.startsWith(path);
     const Icon = isActive ? SelectedIconComponent : IconComponent;
+    const label = t(title);
 
-    const { listItemProps, listItemIconProps } = useMemo(
-        () => ({
-            listItemProps: isCollapsed ? { p: 0.5, display: 'flex', flexDirection: 'column' } : {},
-            listItemIconProps: isCollapsed ? { justifyContent: 'center' } : {},
-        }),
-        [isCollapsed],
+    const scrollToTopOnReselect = (e: MouseEvent) => {
+        if (pathname !== path) {
+            return;
+        }
+
+        // Mihon: selecting the active destination again scrolls it to the top without resetting its state
+        e.preventDefault();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const icon = (
+        <Badge badgeContent={badgeInfo?.count} color="error" max={99}>
+            <Icon />
+        </Badge>
     );
 
-    return (
-        <ListItemLink
-            {...slots?.listItemLink}
-            selected={!isCollapsed && isActive}
-            sx={{ p: 0, m: 0, ...slots?.listItemLink?.sx }}
-            to={path}
-        >
-            <CustomTooltip
-                title={
-                    <>
-                        {t(title)}
-                        <br />
-                        {badgeInfo?.title}
-                    </>
-                }
-                placement="right"
+    if (variant === 'drawer') {
+        return (
+            <ButtonBase
+                component={Link}
+                to={path}
+                onClick={scrollToTopOnReselect}
+                aria-current={isActive ? 'page' : undefined}
+                sx={{
+                    position: 'relative',
+                    width: '100%',
+                    minHeight: 56,
+                    px: 2,
+                    gap: 1.5,
+                    justifyContent: 'flex-start',
+                    borderRadius: M3_SHAPE.full,
+                    color: isActive ? 'm3.onSecondaryContainer' : 'm3.onSurfaceVariant',
+                    bgcolor: isActive ? 'm3.secondaryContainer' : undefined,
+                    ...m3StateLayerSx(),
+                }}
             >
-                <ListItem sx={listItemProps}>
-                    <ListItemIcon sx={listItemIconProps}>
-                        <Badge badgeContent={badgeInfo?.count} color="primary">
-                            <Icon
-                                sx={{
-                                    color: isActive ? 'primary.dark' : undefined,
-                                    ...theme.applyStyles('dark', {
-                                        color: isActive ? 'primary.light' : undefined,
-                                    }),
-                                }}
-                            />
-                        </Badge>
-                    </ListItemIcon>
+                {icon}
+                <Stack sx={{ flexGrow: 1, minWidth: 0, textAlign: 'start' }}>
+                    <Typography variant="labelLarge" noWrap>
+                        {label}
+                    </Typography>
+                    {badgeInfo?.title && (
+                        <Typography variant="bodySmall" noWrap sx={{ opacity: SECONDARY_ALPHA }}>
+                            {badgeInfo.title}
+                        </Typography>
+                    )}
+                </Stack>
+            </ButtonBase>
+        );
+    }
 
-                    <ListItemText
-                        primary={
-                            <TypographyMaxLines
-                                lines={1}
-                                variant={isCollapsed ? 'caption' : undefined}
-                                sx={{
-                                    color: isActive ? 'primary.dark' : undefined,
-                                    ...theme.applyStyles('dark', {
-                                        color: isActive ? 'primary.light' : undefined,
-                                    }),
-                                }}
-                            >
-                                {t(title)}
-                            </TypographyMaxLines>
-                        }
-                        secondary={
-                            !isCollapsed && (
-                                <Typography variant="caption" color="textSecondary">
-                                    {badgeInfo?.title}
-                                </Typography>
-                            )
-                        }
-                        sx={{ maxWidth: '100%', m: 0, display: 'flex', flexDirection: 'column' }}
-                    />
-                </ListItem>
-            </CustomTooltip>
-        </ListItemLink>
+    const isBar = variant === 'bar';
+
+    return (
+        <CustomTooltip
+            title={
+                <>
+                    {label}
+                    {badgeInfo?.title && (
+                        <>
+                            <br />
+                            {badgeInfo.title}
+                        </>
+                    )}
+                </>
+            }
+            placement="right"
+            disabled={isBar}
+        >
+            <ButtonBase
+                component={Link}
+                to={path}
+                onClick={scrollToTopOnReselect}
+                disableRipple
+                aria-current={isActive ? 'page' : undefined}
+                sx={{
+                    flex: isBar ? '1 1 0' : undefined,
+                    minWidth: 0,
+                    minHeight: isBar ? 80 : 56,
+                    pt: isBar ? 1.5 : 0,
+                    flexDirection: 'column',
+                    justifyContent: isBar ? 'flex-start' : 'center',
+                    gap: 0.5,
+                    color: isActive ? 'm3.onSurface' : 'm3.onSurfaceVariant',
+                    ...m3StateLayerInteractionsSx(`.${INDICATOR_CLASS_NAME}`),
+                }}
+            >
+                <Box
+                    className={INDICATOR_CLASS_NAME}
+                    sx={{
+                        ...INDICATOR_SIZE[variant],
+                        position: 'relative',
+                        isolation: 'isolate',
+                        display: 'grid',
+                        placeItems: 'center',
+                        flexShrink: 0,
+                        borderRadius: M3_SHAPE.full,
+                        color: isActive ? 'm3.onSecondaryContainer' : 'm3.onSurfaceVariant',
+                        '&::before': M3_STATE_LAYER_SX,
+                        // the pill grows from its center when its destination gets selected
+                        '&::after': {
+                            content: '""',
+                            position: 'absolute',
+                            inset: 0,
+                            zIndex: -1,
+                            borderRadius: 'inherit',
+                            bgcolor: 'm3.secondaryContainer',
+                            opacity: isActive ? 1 : 0,
+                            transform: isActive ? 'scaleX(1)' : 'scaleX(0.5)',
+                            transition: [
+                                m3Transition(['transform'], M3_SPRING.fastSpatial),
+                                m3Transition(['opacity'], M3_SPRING.fastEffects),
+                            ].join(', '),
+                        },
+                    }}
+                >
+                    {icon}
+                </Box>
+                <Typography variant={isBar ? 'labelLarge' : 'labelMedium'} noWrap sx={{ maxWidth: '100%', px: 0.5 }}>
+                    {label}
+                </Typography>
+            </ButtonBase>
+        </CustomTooltip>
     );
 };

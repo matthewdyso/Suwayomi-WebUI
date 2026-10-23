@@ -8,26 +8,22 @@
 
 import type { TabsProps } from '@mui/material/Tabs';
 import Tabs from '@mui/material/Tabs';
+import { tabClasses } from '@mui/material/Tab';
 import { styled } from '@mui/material/styles';
 
+/**
+ * Mihon's scrollable tab row: surface background, the theme's 1 px divider, tabs at least 90 px wide.
+ */
 const StyledTabsMenu = styled(Tabs)(({ theme }) => ({
     display: 'flex',
-    backgroundColor: theme.palette.background.default,
-    border: 0,
-    borderBottomWidth: 2,
-    borderStyle: 'solid',
-    borderColor: theme.palette.divider,
+    backgroundColor: theme.palette.m3.surface,
+    [`& .${tabClasses.root}`]: {
+        minWidth: 90,
+    },
 }));
 
 export const TabsMenu = ({ children, ...props }: TabsProps) => (
-    <StyledTabsMenu
-        indicatorColor="primary"
-        textColor="primary"
-        variant="scrollable"
-        scrollButtons="auto"
-        allowScrollButtonsMobile
-        {...props}
-    >
+    <StyledTabsMenu indicatorColor="primary" textColor="primary" variant="scrollable" scrollButtons="auto" {...props}>
         {children}
     </StyledTabsMenu>
 );

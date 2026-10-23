@@ -7,35 +7,35 @@
  */
 
 import Stack from '@mui/material/Stack';
-import Button from '@mui/material/Button';
-import AddCircleIcon from '@mui/icons-material/AddCircle';
+import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import { AwaitableComponent } from 'awaitable-component';
 import { useLingui } from '@lingui/react/macro';
-import { CustomTooltip } from '@/base/components/CustomTooltip.tsx';
 import { ThemeCreationDialog } from '@/features/theme/components/CreateThemeDialog.tsx';
-import { TypographyMaxLines } from '@/base/components/texts/TypographyMaxLines.tsx';
+import { ThemePreviewTile } from '@/features/theme/components/ThemePreview.tsx';
 
 export const CreateThemeButton = () => {
     const { t } = useLingui();
 
     return (
-        <Stack sx={{ alignItems: 'center', gap: 1, minWidth: '150px', maxWidth: '150px' }}>
-            <Button
+        <ThemePreviewTile
+            label={t`Create theme`}
+            isSelected={false}
+            onClick={() => {
+                AwaitableComponent.show(ThemeCreationDialog, { mode: 'create' });
+            }}
+        >
+            <Stack
                 sx={{
                     width: '100%',
-                    height: '225px',
-                }}
-                variant="contained"
-                size="large"
-                onClick={() => {
-                    AwaitableComponent.show(ThemeCreationDialog, { mode: 'create' });
+                    height: '100%',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    bgcolor: 'm3.surfaceContainerHigh',
+                    color: 'm3.primary',
                 }}
             >
-                <AddCircleIcon fontSize="large" />
-            </Button>
-            <CustomTooltip title={t`Create theme`} placement="top">
-                <TypographyMaxLines sx={{ maxWidth: '100%' }}>{t`Create theme`}</TypographyMaxLines>
-            </CustomTooltip>
-        </Stack>
+                <AddRoundedIcon fontSize="large" />
+            </Stack>
+        </ThemePreviewTile>
     );
 };

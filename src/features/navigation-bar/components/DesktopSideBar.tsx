@@ -7,34 +7,35 @@
  */
 
 import Drawer from '@mui/material/Drawer';
-import List from '@mui/material/List';
 import IconButton from '@mui/material/IconButton';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import Divider from '@mui/material/Divider';
+import ChevronLeftRoundedIcon from '@mui/icons-material/ChevronLeftRounded';
+import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
 import { styled } from '@mui/material/styles';
 import { useCallback, useRef } from 'react';
 import Box from '@mui/material/Box';
+import Stack from '@mui/material/Stack';
 import { useGetOptionForDirection } from '@/features/theme/services/ThemeCreator.ts';
 import { useNavBarContext } from '@/features/navigation-bar/NavbarContext.tsx';
 import { useResizeObserver } from '@/base/hooks/useResizeObserver.tsx';
 import type { NavbarItem } from '@/features/navigation-bar/NavigationBar.types.ts';
 import { NavigationBarItem } from '@/features/navigation-bar/components/NavigationBarItem.tsx';
+import { M3_LAYOUT } from '@/features/theme/m3/M3Layout.constants.ts';
 
 const DrawerHeader = styled('div')(({ theme }) => ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'flex-end',
-    padding: theme.spacing(0, 1),
+    padding: theme.spacing(0, 0.5),
     // necessary for content to be below app bar
     ...theme.mixins.toolbar,
 }));
 
-const MIN_WIDTH_COLLAPSED = undefined;
-const MAX_WIDTH_COLLAPSED = 120;
 const MIN_WIDTH_EXTENDED = 240;
 const MAX_WIDTH_EXTENDED = 400;
 
+/**
+ * Expanded: M3 navigation drawer. Collapsed: M3 navigation rail.
+ */
 export const DesktopSideBar = ({ navBarItems }: { navBarItems: NavbarItem[] }) => {
     const { isCollapsed, setIsCollapsed, navBarWidth, setNavBarWidth } = useNavBarContext();
     const getOptionForDirection = useGetOptionForDirection();
@@ -52,6 +53,8 @@ export const DesktopSideBar = ({ navBarItems }: { navBarItems: NavbarItem[] }) =
                 width: navBarWidth,
                 '& .MuiDrawer-paper': {
                     zIndex: (theme) => theme.zIndex.drawer - 1,
+                    border: 0,
+                    bgcolor: isCollapsed ? 'm3.surfaceContainer' : 'm3.surfaceContainerLow',
                 },
             }}
             slotProps={{
@@ -63,22 +66,32 @@ export const DesktopSideBar = ({ navBarItems }: { navBarItems: NavbarItem[] }) =
             <Box
                 sx={{
                     pt: 'env(safe-area-inset-top)',
+                    pb: 'env(safe-area-inset-bottom)',
                     pl: 'env(safe-area-inset-left)',
-                    minWidth: isCollapsed ? MIN_WIDTH_COLLAPSED : MIN_WIDTH_EXTENDED,
-                    maxWidth: isCollapsed ? MAX_WIDTH_COLLAPSED : MAX_WIDTH_EXTENDED,
+                    width: isCollapsed
+                        ? `calc(${M3_LAYOUT.navigationRailWidth}px + env(safe-area-inset-left))`
+                        : undefined,
+                    minWidth: isCollapsed ? undefined : MIN_WIDTH_EXTENDED,
+                    maxWidth: isCollapsed ? undefined : MAX_WIDTH_EXTENDED,
                 }}
             >
                 <DrawerHeader>
                     <IconButton onClick={() => setIsCollapsed(true)}>
-                        {getOptionForDirection(<ChevronLeftIcon />, <ChevronRightIcon />)}
+                        {getOptionForDirection(<ChevronLeftRoundedIcon />, <ChevronRightRoundedIcon />)}
                     </IconButton>
                 </DrawerHeader>
-                <Divider />
-                <List sx={{ p: 1 }} dense={isCollapsed}>
+                <Stack
+                    component="nav"
+                    sx={isCollapsed ? { alignItems: 'center', gap: 1.5, pt: 0.5 } : { p: 1.5, pt: 0.5 }}
+                >
                     {navBarItems.map((navBarItem) => (
-                        <NavigationBarItem key={navBarItem.path} {...navBarItem} />
+                        <NavigationBarItem
+                            key={navBarItem.path}
+                            {...navBarItem}
+                            variant={isCollapsed ? 'rail' : 'drawer'}
+                        />
                     ))}
-                </List>
+                </Stack>
             </Box>
         </Drawer>
     );

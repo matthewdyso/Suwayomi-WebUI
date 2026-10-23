@@ -6,35 +6,30 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import Checkbox from '@mui/material/Checkbox';
+import IconButton from '@mui/material/IconButton';
+import SelectAllRoundedIcon from '@mui/icons-material/SelectAllRounded';
+import DeselectRoundedIcon from '@mui/icons-material/DeselectRounded';
 import { useLingui } from '@lingui/react/macro';
 import { CustomTooltip } from '@/base/components/CustomTooltip.tsx';
 
+/**
+ * Mihon's "select all" action of a selection toolbar; once everything is selected it clears the selection instead.
+ */
 export const SelectableCollectionSelectAll = ({
     areAllItemsSelected,
-    areNoItemsSelected,
     onChange,
 }: {
     areAllItemsSelected: boolean;
-    areNoItemsSelected: boolean;
     onChange: (checked: boolean) => void;
 }) => {
     const { t } = useLingui();
+    const title = areAllItemsSelected ? t`Clear` : t`Select all`;
 
     return (
-        <CustomTooltip title={!areAllItemsSelected ? t`Select all` : t`Clear`}>
-            <Checkbox
-                sx={{
-                    padding: '8px',
-                    color: 'inherit',
-                    '&.Mui-checked, &.MuiCheckbox-indeterminate': {
-                        color: 'inherit',
-                    },
-                }}
-                checked={areAllItemsSelected}
-                indeterminate={!areNoItemsSelected && !areAllItemsSelected}
-                onChange={(_, checked) => onChange(checked)}
-            />
+        <CustomTooltip title={title}>
+            <IconButton aria-label={title} color="inherit" onClick={() => onChange(!areAllItemsSelected)}>
+                {areAllItemsSelected ? <DeselectRoundedIcon /> : <SelectAllRoundedIcon />}
+            </IconButton>
         </CustomTooltip>
     );
 };

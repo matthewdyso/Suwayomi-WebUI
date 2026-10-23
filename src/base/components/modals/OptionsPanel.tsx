@@ -6,33 +6,20 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import Drawer from '@mui/material/Drawer';
-import Box from '@mui/material/Box';
 import React from 'react';
+import type { AdaptiveSheetProps } from '@/base/components/modals/AdaptiveSheet.tsx';
+import { AdaptiveSheet } from '@/base/components/modals/AdaptiveSheet.tsx';
 
 interface IProps {
     open: boolean;
     onClose: () => void;
     children: React.ReactNode;
     minHeight?: number;
+    header?: AdaptiveSheetProps['header'];
 }
 
-export const OptionsPanel: React.FC<IProps> = ({ open, onClose, children, minHeight }) => (
-    <Drawer
-        anchor="bottom"
-        open={open}
-        onClose={onClose}
-        slotProps={{
-            paper: {
-                sx: {
-                    maxWidth: 600,
-                    marginLeft: 'auto',
-                    marginRight: 'auto',
-                    minHeight,
-                },
-            },
-        }}
-    >
-        <Box>{children}</Box>
-    </Drawer>
+export const OptionsPanel: React.FC<IProps> = ({ open, onClose, children, minHeight, header }) => (
+    <AdaptiveSheet open={open} onClose={onClose} minHeight={minHeight} header={header}>
+        {children}
+    </AdaptiveSheet>
 );

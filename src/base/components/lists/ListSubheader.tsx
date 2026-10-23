@@ -24,7 +24,7 @@ export const ListSubheader = ({
         return (
             <OffsetComponent
                 {...customOffsetProps}
-                sx={MUIUtil.mergeSx({ backgroundColor: 'background.paper' }, customOffsetProps?.sx)}
+                sx={MUIUtil.mergeSx({ backgroundColor: 'm3.surface' }, customOffsetProps?.sx)}
             >
                 <MuiListSubheader {...props} disableSticky>
                     {children}

@@ -8,21 +8,30 @@
 
 import { styled } from '@mui/material/styles';
 import type { TypographyProps } from '@mui/material/Typography';
+import { typographyClasses } from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import { shouldForwardProp } from '@/base/utils/ShouldForwardProp.ts';
+import { getListGroupHeaderStyle } from '@/base/components/lists/ListGroupHeader.tsx';
 
 type StyledGroupHeaderProps = {
-    isFirstItem: boolean;
+    /**
+     * Kept for compatibility, Mihon's group headers look the same at the top of the list.
+     */
+    isFirstItem?: boolean;
 };
+
+/**
+ * Sticky group header of the grouped virtuoso lists, in Mihon's "ListGroupHeader" style.
+ */
 export const StyledGroupHeader = styled(Stack, {
     shouldForwardProp: shouldForwardProp<StyledGroupHeaderProps>(['isFirstItem']),
-})<StyledGroupHeaderProps & TypographyProps>(({ theme, isFirstItem }) => ({
-    paddingLeft: theme.spacing(3),
-    paddingTop: theme.spacing(0.75),
-    paddingBottom: theme.spacing(2),
-    fontWeight: 'bold',
-    backgroundColor: theme.palette.background.default,
-    [theme.breakpoints.down('sm')]: {
-        paddingTop: isFirstItem ? theme.spacing(1) : theme.spacing(0.75),
+})<StyledGroupHeaderProps & TypographyProps>(({ theme }) => ({
+    ...getListGroupHeaderStyle(theme),
+    backgroundColor: theme.palette.m3.surface,
+    // the header text is passed as a heading Typography; it has to look like the header, not like a heading
+    [`& .${typographyClasses.root}`]: {
+        font: 'inherit',
+        letterSpacing: 'inherit',
+        color: 'inherit',
     },
 }));

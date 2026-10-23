@@ -62,7 +62,16 @@ export const ThemeList = () => {
 
     return (
         <Stack
-            sx={{ flexDirection: 'row', flexWrap: 'no-wrap', alignItems: 'start', overflowX: 'auto', gap: 1, mx: 2 }}
+            sx={{
+                flexDirection: 'row',
+                flexWrap: 'nowrap',
+                alignItems: 'start',
+                minWidth: 0,
+                maxWidth: '100%',
+                overflowX: 'auto',
+                gap: 1,
+                px: 2,
+            }}
         >
             <CreateThemeButton />
             {allThemes.map((theme) => (

@@ -27,6 +27,10 @@ export type TAppThemeContext = {
     setDynamicColor: React.Dispatch<
         React.SetStateAction<(NonNullableProperties<Palette> & { average: FastAverageColorResult }) | null>
     >;
+    /**
+     * Replaces the theme's color of the browser and pwa ui (e.g. the status bar), "null" restores it.
+     */
+    setThemeColorOverride: (color: string | null) => void;
 };
 export type MetadataThemeSettings = {
     locale: string;

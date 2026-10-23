@@ -41,9 +41,24 @@ export const AppThemeContext = React.createContext<TAppThemeContext>({
     setShouldUsePureBlackMode: (): void => {},
     dynamicColor: null,
     setDynamicColor: (): void => {},
+    setThemeColorOverride: (): void => {},
 });
 
 export const useAppThemeContext = () => useContext(AppThemeContext);
+
+/**
+ * Gives the browser and pwa ui (e.g. Safari's status bar) this color instead of the theme's while mounted, e.g. the
+ * reader's background.
+ */
+export const useThemeColorOverride = (color: string | undefined) => {
+    const { setThemeColorOverride } = useAppThemeContext();
+
+    useEffect(() => {
+        setThemeColorOverride(color ?? null);
+
+        return () => setThemeColorOverride(null);
+    }, [color]);
+};
 
 export const AppThemeContextProvider = ({ children }: { children: ReactNode }) => {
     const { t } = useLingui();
@@ -61,6 +76,7 @@ export const AppThemeContextProvider = ({ children }: { children: ReactNode }) =
 
     const [systemThemeMode, setSystemThemeMode] = useState<ThemeMode>(MediaQuery.getSystemThemeMode());
     const [dynamicColor, setDynamicColor] = useState<TAppThemeContext['dynamicColor']>(null);
+    const [themeColorOverride, setThemeColorOverride] = useState<string | null>(null);
 
     const areMetadataServerSettingsReady =
         !metadataServerSettingsRequest.loading && !metadataServerSettingsRequest.error;
@@ -84,6 +100,7 @@ export const AppThemeContextProvider = ({ children }: { children: ReactNode }) =
                 setShouldUsePureBlackMode: (value) => updateSetting('shouldUsePureBlackMode', value),
                 dynamicColor,
                 setDynamicColor,
+                setThemeColorOverride,
             }) satisfies TAppThemeContext,
         [themeMode, shouldUsePureBlackMode, appTheme, dynamicColor],
     );
@@ -139,20 +156,28 @@ export const AppThemeContextProvider = ({ children }: { children: ReactNode }) =
     useEffect(() => {
         // The set background color is not necessary anymore, since the theme has been loaded
         document.documentElement.style.backgroundColor = '';
-        const themeBackgroundColor = theme.palette.background.default;
+        AppStorage.local.setItem('theme_background', theme.palette.m3.surface);
+    }, [theme.palette.m3.surface]);
 
-        AppStorage.local.setItem('theme_background', themeBackgroundColor);
-        // android chromium-based browser/pwa background color (e.g. top status bar and navigation bar) will change dynamically based on meta theme-color
-        let themeColorMeta = document.querySelector('meta[name="theme-color"]');
-        if (!themeColorMeta) {
-            themeColorMeta = document.createElement('meta');
+    useEffect(() => {
+        const themeColor = themeColorOverride ?? theme.palette.m3.surface;
+
+        // the browser and pwa ui (e.g. status bar) takes the color of the top app bar; index.html defines one meta per
+        // color scheme for the first paint
+        const themeColorMetas = Array.from(document.querySelectorAll('meta[name="theme-color"]'));
+        if (!themeColorMetas.length) {
+            const themeColorMeta = document.createElement('meta');
             themeColorMeta.setAttribute('name', 'theme-color');
             document.head.appendChild(themeColorMeta);
+            themeColorMetas.push(themeColorMeta);
         }
-        if (themeColorMeta.getAttribute('content') !== themeBackgroundColor) {
-            themeColorMeta.setAttribute('content', themeBackgroundColor);
-        }
-    }, [theme.palette.background.default]);
+
+        themeColorMetas.forEach((themeColorMeta) => {
+            if (themeColorMeta.getAttribute('content') !== themeColor) {
+                themeColorMeta.setAttribute('content', themeColor);
+            }
+        });
+    }, [theme.palette.m3.surface, themeColorOverride]);
 
     if (directionRef.current !== currentDirection) {
         document.dir = currentDirection;

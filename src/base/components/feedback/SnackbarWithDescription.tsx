@@ -11,16 +11,17 @@ import type { CustomContentProps, VariantType } from 'notistack';
 import { closeSnackbar, SnackbarContent } from 'notistack';
 import type { ForwardedRef } from 'react';
 import { Fragment, memo } from 'react';
-import Alert from '@mui/material/Alert';
-import AlertTitle from '@mui/material/AlertTitle';
-import Button from '@mui/material/Button';
-import { useTheme } from '@mui/material/styles';
+import Alert, { alertClasses } from '@mui/material/Alert';
+import AlertTitle, { alertTitleClasses } from '@mui/material/AlertTitle';
+import Button, { buttonClasses } from '@mui/material/Button';
+import { iconButtonClasses } from '@mui/material/IconButton';
 import { useLingui } from '@lingui/react/macro';
 import { msg } from '@lingui/core/macro';
 import { defaultPromiseErrorHandler } from '@/lib/DefaultPromiseErrorHandler.ts';
-import { MediaQuery } from '@/base/utils/MediaQuery.tsx';
 import { extractGraphqlExceptionInfo } from '@/lib/HelperFunctions.ts';
 import { Confirmation } from '@/base/AppAwaitableComponent.ts';
+import { M3_SHAPE } from '@/features/theme/m3/M3Shape.constants.ts';
+import { M3_ELEVATION } from '@/features/theme/m3/M3Elevation.constants.ts';
 
 const MAX_DESCRIPTION_LENGTH = 200;
 
@@ -45,7 +46,6 @@ export const SnackbarWithDescription = memo(
         ref?: ForwardedRef<HTMLDivElement>;
     }) => {
         const { t } = useLingui();
-        const theme = useTheme();
 
         const severity = variant === 'default' ? 'info' : variant;
         const finalAction = typeof action === 'function' ? action(id) : action;
@@ -62,22 +62,32 @@ export const SnackbarWithDescription = memo(
 
         return (
             <SnackbarContent ref={ref}>
+                {/* M3 snackbar look; the severity icon stays, so errors remain distinguishable at a glance */}
                 <Alert
-                    elevation={1}
                     severity={severity}
                     action={finalAction}
                     sx={{
+                        width: '100%',
+                        minHeight: 48,
+                        alignItems: 'center',
+                        py: 0.5,
+                        pl: 2,
+                        pr: 1,
                         wordBreak: 'break-word',
-                        minWidth: '300px',
-                        [theme.breakpoints.down(MediaQuery.MOBILE_WIDTH)]: {
-                            maxWidth: '100vw',
+                        borderRadius: M3_SHAPE.extraSmall,
+                        bgcolor: 'm3.inverseSurface',
+                        color: 'm3.inverseOnSurface',
+                        boxShadow: M3_ELEVATION.level3,
+                        [`& .${alertClasses.icon}`]: {
+                            py: 0,
+                            mr: 1.5,
+                            color: severity === 'error' ? 'm3.inverseError' : 'm3.inversePrimary',
                         },
-                        [theme.breakpoints.between(MediaQuery.MOBILE_WIDTH, MediaQuery.TABLET_WIDTH)]: {
-                            maxWidth: '75vw',
-                        },
-                        [theme.breakpoints.up(MediaQuery.TABLET_WIDTH)]: {
-                            maxWidth: '50vw',
-                        },
+                        [`& .${alertClasses.message}`]: { py: 1.25 },
+                        [`& .${alertClasses.action}`]: { py: 0, mr: 0, alignItems: 'center' },
+                        [`& .${alertTitleClasses.root}`]: { typography: 'titleSmall', mt: 0, mb: 0.5 },
+                        [`& .${buttonClasses.root}`]: { color: 'm3.inversePrimary' },
+                        [`& .${iconButtonClasses.root}`]: { color: 'm3.inverseOnSurface' },
                     }}
                     onClose={() => closeSnackbar(id)}
                 >

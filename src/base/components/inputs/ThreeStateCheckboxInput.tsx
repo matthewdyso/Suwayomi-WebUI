@@ -10,11 +10,17 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import React from 'react';
 import type { ThreeStateCheckboxProps } from '@/base/components/inputs/ThreeStateCheckbox.tsx';
 import { ThreeStateCheckbox } from '@/base/components/inputs/ThreeStateCheckbox.tsx';
+import { MUIUtil } from '@/lib/mui/MUI.util.ts';
+import { CONTROL_LABEL_SX } from '@/base/components/inputs/FormControlLabel.styles.ts';
 
 interface IProps extends ThreeStateCheckboxProps {
     label?: string;
 }
 
 export const ThreeStateCheckboxInput: React.FC<IProps> = ({ label, sx, ...rest }) => (
-    <FormControlLabel control={<ThreeStateCheckbox {...rest} />} label={label} sx={sx} />
+    <FormControlLabel
+        control={<ThreeStateCheckbox {...rest} />}
+        label={label}
+        sx={MUIUtil.mergeSx(CONTROL_LABEL_SX, sx)}
+    />
 );

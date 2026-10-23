@@ -12,6 +12,8 @@ import type { FormControlLabelProps } from '@mui/material/FormControlLabel';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
+import { MUIUtil } from '@/lib/mui/MUI.util.ts';
+import { CONTROL_LABEL_SX } from '@/base/components/inputs/FormControlLabel.styles.ts';
 
 type BaseProps = CheckboxProps;
 type LabelProps = { label?: FormControlLabelProps['label'] };
@@ -53,6 +55,6 @@ export const CheckboxInput = ({ label, primaryText, secondaryText, sx, ...rest }
                 </Stack>
             );
         })()}
-        sx={sx}
+        sx={MUIUtil.mergeSx(CONTROL_LABEL_SX, sx)}
     />
 );

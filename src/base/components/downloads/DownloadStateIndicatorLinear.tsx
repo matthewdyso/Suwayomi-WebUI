@@ -8,9 +8,12 @@
 
 import { Chapters } from '@/features/chapter/services/Chapters.ts';
 import type { ChapterIdInfo } from '@/features/chapter/Chapter.types.ts';
-import LinearProgress from '@mui/material/LinearProgress';
-import Box from '@mui/material/Box';
+import { DownloadState } from '@/lib/graphql/generated/graphql-base.types.ts';
+import { WavyLinearProgress } from '@/base/components/feedback/WavyProgress.tsx';
 
+/**
+ * Wavy while the chapter downloads, flat while it waits in the queue or failed.
+ */
 export const DownloadStateIndicatorLinear = ({ chapterId }: { chapterId: ChapterIdInfo['id'] }) => {
     const download = Chapters.useDownloadStatusFromCache(chapterId);
 
@@ -19,8 +22,10 @@ export const DownloadStateIndicatorLinear = ({ chapterId }: { chapterId: Chapter
     }
 
     return (
-        <Box sx={{ width: '100%' }}>
-            <LinearProgress variant="determinate" value={download.progress * 100} />
-        </Box>
+        <WavyLinearProgress
+            value={download.progress * 100}
+            amplitude={download.state === DownloadState.Downloading ? undefined : 0}
+            sx={download.state === DownloadState.Error ? { color: 'm3.error' } : undefined}
+        />
     );
 };

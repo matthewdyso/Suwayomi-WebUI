@@ -7,8 +7,8 @@
  */
 
 import React, { type JSX } from 'react';
-import CircularProgress from '@mui/material/CircularProgress';
 import Box from '@mui/material/Box';
+import { WavyCircularProgress } from '@/base/components/feedback/WavyProgress.tsx';
 
 export function LoadingPlaceholder({
     children,
@@ -51,7 +51,7 @@ export function LoadingPlaceholder({
                 justifyContent: 'center',
             }}
         >
-            <CircularProgress thickness={5} size={size} />
+            <WavyCircularProgress size={size} />
         </Box>
     );
 }

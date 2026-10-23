@@ -21,6 +21,7 @@ import { assertIsDefined } from '@/base/Asserts.ts';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import { useElementSize } from '@mantine/hooks';
 import { MUIUtil } from '@/lib/mui/MUI.util.ts';
+import { connectedButtonGroupSx } from '@/features/theme/m3/M3ConnectedButtonGroup.ts';
 
 export interface SelectButtonBaseProps<Value extends string | number, MultiValue extends Value | Value[] = Value> {
     value: MultiValue;
@@ -45,6 +46,12 @@ export type SelectButtonProps<Value extends string | number, MultiValue extends 
     | (SelectButtonBaseProps<Value, MultiValue> & PropertiesNever<SelectButtonDefaultableProps<Value, MultiValue>>)
     | SelectButtonDefaultableProps<Value, MultiValue>;
 
+export type SelectButtonSlotProps = {
+    stack?: StackProps;
+    defaultButton?: ButtonProps & { hideText?: boolean };
+    button?: ButtonProps & { hideText?: boolean; tooltip?: (isDefault: boolean, title: string) => ReactNode };
+};
+
 const SelectButtonBase = <Value extends string | number, MultiValue extends Value | Value[] = Value>({
     ref,
     value,
@@ -57,11 +64,7 @@ const SelectButtonBase = <Value extends string | number, MultiValue extends Valu
     slotProps,
 }: SelectButtonProps<Value, MultiValue> & {
     ref?: RefObject<HTMLDivElement>;
-    slotProps?: {
-        stack?: StackProps;
-        defaultButton?: ButtonProps & { hideText?: boolean };
-        button?: ButtonProps & { hideText?: boolean; tooltip?: (isDefault: boolean, title: string) => ReactNode };
-    };
+    slotProps?: SelectButtonSlotProps;
 }) => {
     const { t } = useLingui();
 
@@ -69,13 +72,18 @@ const SelectButtonBase = <Value extends string | number, MultiValue extends Valu
         <Stack
             {...slotProps?.stack}
             ref={ref}
-            sx={MUIUtil.mergeSx({ flexDirection: 'row', flexWrap: 'wrap', gap: 1 }, slotProps?.stack?.sx)}
+            sx={MUIUtil.mergeSx(
+                { flexDirection: 'row', flexWrap: 'wrap' },
+                connectedButtonGroupSx,
+                slotProps?.stack?.sx,
+            )}
         >
             {isDefaultable && (
                 <CustomTooltip title={slotProps?.defaultButton?.hideText ? t`Default` : null}>
                     <Button
                         onClick={onDefault}
                         variant={value === undefined ? 'contained' : 'outlined'}
+                        aria-pressed={value === undefined}
                         {...slotProps?.defaultButton}
                         startIcon={!slotProps?.defaultButton?.hideText && slotProps?.defaultButton?.startIcon}
                         endIcon={!slotProps?.defaultButton?.hideText && slotProps?.defaultButton?.endIcon}
@@ -115,6 +123,7 @@ const SelectButtonBase = <Value extends string | number, MultiValue extends Valu
                     >
                         <Button
                             variant={isSelected ? 'contained' : 'outlined'}
+                            aria-pressed={isSelected}
                             startIcon={!slotProps?.button?.hideText && valueToDisplayData[displayValue].icon}
                             {...slotProps?.button}
                             onClick={() => setValue(newValue)}
@@ -167,7 +176,7 @@ const SelectButtonCollapsible = <Value extends string | number, MultiValue exten
                 <Button
                     ref={ref}
                     onClick={() => setIsExpanded(true)}
-                    variant="contained"
+                    variant="tonal"
                     size="large"
                     startIcon={defaultIcon}
                     sx={{ justifyContent: 'start', textTransform: 'unset', flexGrow: 1 }}
@@ -236,14 +245,20 @@ const SelectButtonCollapsible = <Value extends string | number, MultiValue exten
     );
 };
 
-export const SelectButton = <Value extends string | number, MultiValue extends Value | Value[] = Value>(
-    props: SelectButtonProps<Value, MultiValue>,
-) => {
+/**
+ * An M3 connected button group to pick one value (or several, with an array value).
+ *
+ * "slotProps" style the group of a non-collapsible select button; a collapsible one lays out its group itself.
+ */
+export const SelectButton = <Value extends string | number, MultiValue extends Value | Value[] = Value>({
+    slotProps,
+    ...props
+}: SelectButtonProps<Value, MultiValue> & { slotProps?: SelectButtonSlotProps }) => {
     const { isCollapsible } = props;
 
     if (isCollapsible) {
         return <SelectButtonCollapsible {...props} />;
     }
 
-    return <SelectButtonBase {...props} />;
+    return <SelectButtonBase {...props} slotProps={slotProps} />;
 };

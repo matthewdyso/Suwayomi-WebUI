@@ -229,7 +229,6 @@ export function Library() {
                 <SelectableCollectionSelectMode
                     isActive={isSelectModeActive}
                     areAllItemsSelected={areAllItemsSelected}
-                    areNoItemsSelected={areNoItemsSelected}
                     onSelectAll={(selectAll) =>
                         handleSelectAll(selectAll, [...new Set(mangas.map((manga) => manga.id))])
                     }

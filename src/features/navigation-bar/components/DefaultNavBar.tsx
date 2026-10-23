@@ -11,12 +11,14 @@ import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
-import ArrowBack from '@mui/icons-material/ArrowBack';
-import { useLocation } from 'react-router-dom';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import MenuIcon from '@mui/icons-material/Menu';
+import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
+import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded';
+import MenuRoundedIcon from '@mui/icons-material/MenuRounded';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import Stack from '@mui/material/Stack';
-import { useTheme } from '@mui/material/styles';
+import GlobalStyles from '@mui/material/GlobalStyles';
+import useScrollTrigger from '@mui/material/useScrollTrigger';
+import { useLingui } from '@lingui/react/macro';
 import { useBackButton } from '@/base/hooks/useBackButton.ts';
 import { useGetOptionForDirection } from '@/features/theme/services/ThemeCreator.ts';
 import { MediaQuery } from '@/base/utils/MediaQuery.tsx';
@@ -27,25 +29,47 @@ import { useNavBarContext } from '@/features/navigation-bar/NavbarContext.tsx';
 import { useMetadataServerSettings } from '@/features/settings/services/ServerSettingsMetadata.ts';
 import { NAVIGATION_BAR_ITEMS } from '@/features/navigation-bar/NavigationBar.constants.ts';
 import { NavigationBarUtil } from '@/features/navigation-bar/NavigationBar.util.ts';
+import { useMainRoutePath } from '@/features/navigation-bar/hooks/useMainRoutePath.ts';
+import { M3_CSS_VARIABLE } from '@/features/theme/m3/M3Layout.constants.ts';
+import { M3_SPRING } from '@/features/theme/m3/M3Motion.constants.ts';
+import { m3Transition } from '@/features/theme/m3/M3Motion.utils.ts';
+import { WavyLinearProgress } from '@/base/components/feedback/WavyProgress.tsx';
+import { CustomTooltip } from '@/base/components/CustomTooltip.tsx';
 
+/**
+ * Mihon's pinned top app bar: "surface" at rest, "surfaceContainer" once the content scrolled under it.
+ */
 export function DefaultNavBar() {
     const {
         title,
         hideTitle,
         action,
+        appBarProgress,
         override,
         isCollapsed,
         setIsCollapsed,
+        appBarHeight,
         setAppBarHeight,
+        bottomBarHeight,
         navBarWidth,
         setNavBarWidth,
+        isAppBarOverlay,
+        appBarOverlayRevealAfterPx,
+        isAppBarFlat,
+        isAppBarHidden,
+        appBarActionMode,
+        bottomActionMenu,
     } = useNavBarContext();
 
-    const theme = useTheme();
+    const { t } = useLingui();
     const getOptionForDirection = useGetOptionForDirection();
-    const { pathname } = useLocation();
     const handleBack = useBackButton();
     const isMobileWidth = MediaQuery.useIsMobileWidth();
+    const isScrolled = useScrollTrigger({ disableHysteresis: true, threshold: 0 });
+    const isScrolledPastTitleReveal = useScrollTrigger({
+        disableHysteresis: true,
+        threshold: appBarOverlayRevealAfterPx,
+    });
 
     const {
         settings: { hideHistory },
@@ -53,18 +77,10 @@ export function DefaultNavBar() {
 
     const appBarRef = useRef<HTMLDivElement | null>(null);
 
-    const isMainRoute = NAVIGATION_BAR_ITEMS.some(({ path, show }) => {
-        if (isMobileWidth && show === 'desktop') {
-            return false;
-        }
-
-        if (!isMobileWidth && show === 'mobile') {
-            return false;
-        }
-
-        return path === pathname;
-    });
+    const isMainRoute = useMainRoutePath() !== null;
     const actualNavBarWidth = isMobileWidth || isCollapsed ? 0 : navBarWidth;
+    const isTransparent = isAppBarOverlay && !isScrolled && !appBarActionMode;
+    const isTitleHidden = isAppBarOverlay && !isScrolledPastTitleReveal && !appBarActionMode;
 
     const visibleNavBarItems = useMemo(
         () =>
@@ -118,14 +134,37 @@ export function DefaultNavBar() {
 
     return (
         <>
+            <GlobalStyles
+                styles={{
+                    ':root': {
+                        [M3_CSS_VARIABLE.appBarHeight]: `${appBarHeight}px`,
+                        [M3_CSS_VARIABLE.bottomBarHeight]: `${bottomBarHeight}px`,
+                    },
+                }}
+            />
             <AppBar
                 ref={appBarRef}
                 sx={{
                     position: 'fixed',
-                    marginLeft: actualNavBarWidth,
+                    marginLeft: `${actualNavBarWidth}px`,
                     pt: 'env(safe-area-inset-top)',
+                    pl: isMobileWidth ? 'env(safe-area-inset-left)' : undefined,
+                    pr: 'env(safe-area-inset-right)',
                     width: `calc(100% - ${actualNavBarWidth}px)`,
-                    zIndex: theme.zIndex.drawer,
+                    zIndex: (theme) => theme.zIndex.drawer,
+                    // hidden, not unmounted: the resize observer then reports the height as 0
+                    display: isAppBarHidden ? 'none' : undefined,
+                    bgcolor: (() => {
+                        if (appBarActionMode) {
+                            return 'm3.surfaceAtElevation3';
+                        }
+
+                        if (isTransparent) {
+                            return 'transparent';
+                        }
+
+                        return isScrolled && !isAppBarFlat ? 'm3.surfaceContainer' : 'm3.surface';
+                    })(),
                 }}
             >
                 <Toolbar sx={{ position: 'relative' }}>
@@ -140,48 +179,69 @@ export function DefaultNavBar() {
                             }}
                         >
                             <IconButton aria-label="open drawer" onClick={() => setIsCollapsed(false)} color="inherit">
-                                <MenuIcon />
+                                <MenuRoundedIcon />
                             </IconButton>
                         </Stack>
                     )}
                     <Stack
                         sx={{
-                            ml: `${isCollapsed ? navBarWidth : 0}px`,
-                            width: `calc(100% - (${isCollapsed ? navBarWidth : 0}px + env(safe-area-inset-left)))`,
+                            ml: `${isCollapsed && !isMobileWidth ? navBarWidth : 0}px`,
+                            width: `calc(100% - (${isCollapsed && !isMobileWidth ? navBarWidth : 0}px + env(safe-area-inset-left)))`,
+                            minWidth: 0,
                             flexDirection: 'row',
                             alignItems: 'center',
                         }}
                     >
-                        {!isMainRoute && (
+                        {appBarActionMode && (
+                            <CustomTooltip title={t`Cancel`}>
+                                <IconButton aria-label={t`Cancel`} onClick={appBarActionMode.onCancel} color="inherit">
+                                    <CloseRoundedIcon />
+                                </IconButton>
+                            </CustomTooltip>
+                        )}
+                        {!appBarActionMode && !isMainRoute && (
                             <IconButton
-                                edge="start"
                                 component="button"
-                                sx={{ marginRight: 2 }}
-                                aria-label="menu"
+                                aria-label={t`Exit to previous page`}
                                 onClick={handleBack}
                                 color="inherit"
                             >
-                                {getOptionForDirection(<ArrowBack />, <ArrowForwardIcon />)}
+                                {getOptionForDirection(<ArrowBackRoundedIcon />, <ArrowForwardRoundedIcon />)}
                             </IconButton>
                         )}
-                        {!hideTitle && (
+                        {(!hideTitle || appBarActionMode) && (
                             <Typography
-                                variant="h5"
+                                variant="titleLarge"
                                 component="h1"
                                 noWrap
                                 sx={{
-                                    textOverflow: 'ellipsis',
                                     flexGrow: 1,
+                                    minWidth: 0,
+                                    mx: isMainRoute && !appBarActionMode ? 1.5 : 0.5,
+                                    opacity: isTitleHidden ? 0 : 1,
+                                    transition: m3Transition(['opacity'], M3_SPRING.defaultEffects),
                                 }}
                             >
-                                {title}
+                                {appBarActionMode ? appBarActionMode.title : title}
                             </Typography>
                         )}
-                        {action}
+                        {appBarActionMode ? appBarActionMode.actions : action}
                     </Stack>
                 </Toolbar>
+                {appBarProgress && (
+                    <WavyLinearProgress
+                        {...appBarProgress}
+                        sx={{ position: 'absolute', bottom: 0, left: 0, right: 0 }}
+                    />
+                )}
             </AppBar>
-            {!isMobileWidth || isMainRoute ? navBar : null}
+            {(() => {
+                if (isMobileWidth && bottomActionMenu) {
+                    return bottomActionMenu;
+                }
+
+                return !isMobileWidth || isMainRoute ? navBar : null;
+            })()}
         </>
     );
 }

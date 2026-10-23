@@ -36,7 +36,6 @@ import type { MetadataThemeSettings } from '@/features/theme/AppTheme.types.ts';
 import { CheckboxInput } from '@/base/components/inputs/CheckboxInput.tsx';
 import { useAppThemeContext } from '@/features/theme/AppThemeContext.tsx';
 import { createAppColorTheme } from '@/features/theme/services/ThemeCreator.ts';
-import { MediaQuery } from '@/base/utils/MediaQuery.tsx';
 
 type DialogMode = 'create' | 'edit' | 'save_dynamic';
 
@@ -90,27 +89,16 @@ export const ThemeCreationDialog = ({
         settings: { customThemes },
         request: { loading, error, refetch },
     } = useMetadataServerSettings();
-    const {
-        setAppTheme,
-        dynamicColor,
-        appTheme: activeAppTheme,
-        shouldUsePureBlackMode,
-        themeMode,
-    } = useAppThemeContext();
+    const { setAppTheme, dynamicColor, appTheme: activeAppTheme } = useAppThemeContext();
 
     const defaultAppTheme = useMemo(
         () => ({
             id: '',
             getName: () => '',
             isCustom: true,
-            muiTheme: createAppColorTheme(
-                getTheme(activeAppTheme, customThemes).muiTheme,
-                dynamicColor,
-                shouldUsePureBlackMode,
-                MediaQuery.getThemeMode(themeMode),
-            ),
+            muiTheme: createAppColorTheme(getTheme(activeAppTheme, customThemes).muiTheme, dynamicColor),
         }),
-        [activeAppTheme, customThemes, dynamicColor, shouldUsePureBlackMode, themeMode],
+        [activeAppTheme, customThemes, dynamicColor],
     );
     const appTheme = passedAppTheme ?? defaultAppTheme;
 

@@ -223,7 +223,6 @@ export const ChapterList = ({
                         {!!visibleChapterIds.length && (
                             <SelectableCollectionSelectAll
                                 areAllItemsSelected={areAllItemsSelected}
-                                areNoItemsSelected={areNoItemsSelected}
                                 onChange={(checked) => handleSelectAll(checked, checked ? visibleChapterIds : [])}
                             />
                         )}

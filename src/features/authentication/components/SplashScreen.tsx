@@ -13,6 +13,7 @@ import type { ComponentProps } from 'react';
 import { SuwayomiLogo } from '@/assets/SuwayomiLogo.tsx';
 import { ServerAddressSetting } from '@/features/settings/components/ServerAddressSetting.tsx';
 import { MUIUtil } from '@/lib/mui/MUI.util.ts';
+import { WavyCircularProgress } from '@/base/components/feedback/WavyProgress.tsx';
 
 export const SplashScreen = ({
     slots,
@@ -33,34 +34,32 @@ export const SplashScreen = ({
                     position: 'relative',
                     minWidth: '100vw',
                     minHeight: '100vh',
+                    '@supports (min-height: 100dvh)': {
+                        minHeight: '100dvh',
+                    },
+                    gap: 4,
                     justifyContent: 'center',
                     alignItems: 'center',
-                    backgroundColor: 'background.paper',
+                    pt: 'env(safe-area-inset-top)',
+                    pb: 'env(safe-area-inset-bottom)',
+                    bgcolor: 'm3.surface',
                 },
                 slots?.stackProps?.sx,
             )}
         >
             <SuwayomiLogo
-                circleRingColor={theme.palette.primary.light}
-                circleFillColor={theme.palette.primary.dark}
+                circleRingColor={theme.palette.m3.primary}
                 {...slots?.logoProps}
-                sx={MUIUtil.mergeSx(
-                    {
-                        fontSize: 250,
-                        [theme.breakpoints.up('lg')]: {
-                            fontSize: 350,
-                        },
-                    },
-                    slots?.logoProps?.sx,
-                )}
+                sx={MUIUtil.mergeSx({ fontSize: 160 }, slots?.logoProps?.sx)}
             />
+            <WavyCircularProgress />
             <Stack
                 {...slots?.serverAddressProps}
                 sx={MUIUtil.mergeSx(
                     {
                         position: 'absolute',
-                        left: 0,
-                        bottom: 0,
+                        left: 'env(safe-area-inset-left)',
+                        bottom: 'env(safe-area-inset-bottom)',
                     },
                     slots?.serverAddressProps?.sx,
                 )}

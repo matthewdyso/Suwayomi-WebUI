@@ -9,7 +9,11 @@
 
         <meta name="viewport" content="minimum-scale=1, initial-scale=1, viewport-fit=cover, width=device-width" />
         <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <!-- the surface colors of the default theme for the first paint; the app updates both to the active theme -->
+        <meta name="theme-color" media="(prefers-color-scheme: light)" content="#FEFBFF" />
+        <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1B1B1F" />
 
         <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -51,16 +55,10 @@
 
             if (backgroundColor) {
                 document.documentElement.style.backgroundColor = backgroundColor;
-                // android chromium-based browser/pwa background color (e.g. top status bar and navigation bar) will change dynamically based on meta theme-color
-                let themeColorMeta = document.querySelector('meta[name="theme-color"]');
-                if (!themeColorMeta) {
-                    themeColorMeta = document.createElement('meta');
-                    themeColorMeta.setAttribute('name', 'theme-color');
-                    document.head.appendChild(themeColorMeta);
-                }
-                if (themeColorMeta.getAttribute('content') !== backgroundColor) {
+                // the browser and pwa ui (e.g. status bar) takes the color of the top app bar
+                document.querySelectorAll('meta[name="theme-color"]').forEach((themeColorMeta) => {
                     themeColorMeta.setAttribute('content', backgroundColor);
-                }
+                });
             }
         </script>
         <!--

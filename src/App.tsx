@@ -8,7 +8,7 @@
 
 import CssBaseline from '@mui/material/CssBaseline';
 import type { PropsWithChildren, ReactNode } from 'react';
-import React, { useEffect, useLayoutEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Navigate, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { loadErrorMessages, loadDevMessages } from '@apollo/client/dev';
 import { loadable } from 'react-lazily/loadable';
@@ -38,6 +38,8 @@ import { MigrationManager } from '@/features/migration/MigrationManager.ts';
 import { SplashScreen } from '@/features/authentication/components/SplashScreen.tsx';
 import { d } from 'koration';
 import { OffsetContainer } from '@/base/OffsetComponent.tsx';
+import { useHomeTabFadeThrough } from '@/features/navigation-bar/hooks/useHomeTabFadeThrough.ts';
+import { useRouteSharedAxisTransition } from '@/features/navigation-bar/hooks/useRouteSharedAxisTransition.ts';
 
 const { Browse } = loadable(() => import('@/features/browse/screens/Browse.tsx'), lazyLoadFallback);
 const { DownloadQueue } = loadable(() => import('@/features/downloads/screens/DownloadQueue.tsx'), lazyLoadFallback);
@@ -251,8 +253,13 @@ const PrivateRoutes = () => {
 };
 
 const MainApp = () => {
-    const { navBarWidth, appBarHeight, bottomBarHeight } = useNavBarContext();
+    const { navBarWidth, appBarHeight, bottomBarHeight, isAppBarOverlay } = useNavBarContext();
     const isMobileWidth = MediaQuery.useIsMobileWidth();
+    const homeTabFadeThrough = useHomeTabFadeThrough();
+    const mainContainerRef = useRef<HTMLElement | null>(null);
+    useRouteSharedAxisTransition(mainContainerRef, homeTabFadeThrough.key);
+    // with the app bar overlay, the screen starts under the app bar and pads itself
+    const contentOffsetTop = isAppBarOverlay ? 0 : appBarHeight;
 
     const {
         settings: { hideHistory },
@@ -260,17 +267,23 @@ const MainApp = () => {
 
     return (
         <Box
+            key={homeTabFadeThrough.key}
+            ref={mainContainerRef}
             id="appMainContainer"
             component="main"
             sx={{
-                minHeight: `calc(100vh - ${appBarHeight + bottomBarHeight}px)`,
+                minHeight: `calc(100vh - ${contentOffsetTop + bottomBarHeight}px)`,
+                '@supports (min-height: 100dvh)': {
+                    minHeight: `calc(100dvh - ${contentOffsetTop + bottomBarHeight}px)`,
+                },
                 width: `calc(100vw - (100vw - 100%) - ${navBarWidth}px)`,
                 minWidth: `calc(100vw - (100vw - 100%) - ${navBarWidth}px)`,
                 maxWidth: `calc(100vw - (100vw - 100%) - ${navBarWidth}px)`,
                 position: 'relative',
-                mt: `${appBarHeight}px`,
+                mt: `${contentOffsetTop}px`,
                 pb: `calc(${bottomBarHeight}px + ${!bottomBarHeight ? 'env(safe-area-inset-bottom)' : '0px'})`,
                 pr: 'env(safe-area-inset-right)',
+                ...homeTabFadeThrough.sx,
             }}
         >
             <ErrorBoundary>
@@ -418,9 +431,17 @@ export const App: React.FC = () => (
                 <BackgroundSubscriptions />
                 <ResumeMigration />
 
-                <Box sx={{ display: 'flex' }}>
+                {/* clips the screens' shared axis transition, which slides them in from beside the viewport */}
+                <Box sx={{ display: 'flex', overflowX: 'clip' }}>
                     <OffsetContainerRoot>
-                        <Box sx={{ flexShrink: 0, position: 'relative', height: '100vh' }}>
+                        <Box
+                            sx={{
+                                flexShrink: 0,
+                                position: 'relative',
+                                height: '100vh',
+                                '@supports (height: 100dvh)': { height: '100dvh' },
+                            }}
+                        >
                             <DefaultNavBar />
                         </Box>
                         <Routes>

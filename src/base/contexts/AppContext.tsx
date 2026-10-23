@@ -36,6 +36,7 @@ export const AppContext: React.FC<Props> = ({ children }) => (
                             <AppPageHistoryContextProvider>
                                 <ActiveDeviceContextProvider>
                                     <SnackbarProvider
+                                        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
                                         Components={{
                                             default: SnackbarWithDescription,
                                             info: SnackbarWithDescription,

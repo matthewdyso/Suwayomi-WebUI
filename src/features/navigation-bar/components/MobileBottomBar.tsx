@@ -6,22 +6,21 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import Paper from '@mui/material/Paper';
-import type { CSSProperties } from 'react';
 import { useCallback, useLayoutEffect, useRef } from 'react';
-import {} from 'react-router-dom';
-import { useTheme } from '@mui/material/styles';
+import Box from '@mui/material/Box';
 import { useResizeObserver } from '@/base/hooks/useResizeObserver.tsx';
 import { useNavBarContext } from '@/features/navigation-bar/NavbarContext.tsx';
 import type { NavbarItem } from '@/features/navigation-bar/NavigationBar.types.ts';
 import { NavigationBarItem } from '@/features/navigation-bar/components/NavigationBarItem.tsx';
-import Stack from '@mui/material/Stack';
+import { M3_LAYOUT } from '@/features/theme/m3/M3Layout.constants.ts';
 
+/**
+ * The M3 navigation bar of Mihon's home screen.
+ */
 export const MobileBottomBar = ({ navBarItems }: { navBarItems: NavbarItem[] }) => {
-    const theme = useTheme();
     const { setBottomBarHeight } = useNavBarContext();
 
-    const ref = useRef<HTMLDivElement | null>(null);
+    const ref = useRef<HTMLElement | null>(null);
     useResizeObserver(
         ref,
         useCallback(() => setBottomBarHeight(ref.current?.clientHeight ?? 0), [ref.current]),
@@ -29,41 +28,26 @@ export const MobileBottomBar = ({ navBarItems }: { navBarItems: NavbarItem[] }) 
     useLayoutEffect(() => () => setBottomBarHeight(0), []);
 
     return (
-        <Paper
+        <Box
             ref={ref}
+            component="nav"
             sx={{
                 position: 'fixed',
                 bottom: 0,
                 left: 0,
                 right: 0,
+                zIndex: (theme) => theme.zIndex.drawer - 1,
+                display: 'flex',
+                minHeight: `calc(${M3_LAYOUT.navigationBarHeight}px + env(safe-area-inset-bottom))`,
                 pb: 'env(safe-area-inset-bottom)',
                 pl: 'env(safe-area-inset-left)',
                 pr: 'env(safe-area-inset-right)',
-                zIndex: theme.zIndex.drawer - 1,
+                bgcolor: 'm3.surfaceContainer',
             }}
-            style={{
-                ...(theme.applyStyles('dark', {
-                    '--Paper-overlay': 'unset',
-                }) as CSSProperties),
-            }}
-            elevation={3}
         >
-            <Stack sx={{ flexDirection: 'row' }}>
-                {navBarItems.map((item) => (
-                    <NavigationBarItem
-                        key={item.path}
-                        {...item}
-                        slots={{
-                            listItemLink: {
-                                sx: {
-                                    py: 1,
-                                },
-                            },
-                        }}
-                        forceCollapsed
-                    />
-                ))}
-            </Stack>
-        </Paper>
+            {navBarItems.map((item) => (
+                <NavigationBarItem key={item.path} {...item} variant="bar" />
+            ))}
+        </Box>
     );
 };

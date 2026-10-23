@@ -11,7 +11,7 @@ import TextField from '@mui/material/TextField';
 import type { IconButtonProps } from '@mui/material/IconButton';
 import IconButton from '@mui/material/IconButton';
 import InputAdornment from '@mui/material/InputAdornment';
-import CancelIcon from '@mui/icons-material/Cancel';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 
 export const SearchTextField = ({
     onCancel,
@@ -31,7 +31,7 @@ export const SearchTextField = ({
                 endAdornment: textFieldProps.slotProps?.input?.endAdornment ?? (
                     <InputAdornment position="end">
                         <IconButton {...cancelButtonProps} onClick={() => onCancel()}>
-                            <CancelIcon />
+                            <CloseRoundedIcon />
                         </IconButton>
                     </InputAdornment>
                 ),

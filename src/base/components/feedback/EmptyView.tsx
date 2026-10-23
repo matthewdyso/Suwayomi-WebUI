@@ -14,11 +14,27 @@ import type { SxProps, Theme } from '@mui/material/styles';
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
 import Collapse from '@mui/material/Collapse';
+import RefreshRoundedIcon from '@mui/icons-material/RefreshRounded';
 import { useLingui } from '@lingui/react/macro';
 import { extractGraphqlExceptionInfo } from '@/lib/HelperFunctions.ts';
 import { MUIUtil } from '@/lib/mui/MUI.util.ts';
+import { SECONDARY_ALPHA } from '@/features/theme/m3/M3Color.constants.ts';
 
-const ERROR_FACES = ['(･o･;)', 'Σ(ಠ_ಠ)', 'ಥ_ಥ', '(˘･_･˘)', '(；￣Д￣)', '(･Д･。'];
+// Mihon's list (EmptyScreen.kt)
+const ERROR_FACES = [
+    '(･o･;)',
+    'Σ(ಠ_ಠ)',
+    'ಥ_ಥ',
+    '(˘･_･˘)',
+    '(；￣Д￣)',
+    '(･Д･。',
+    '(╬ಠ益ಠ)',
+    '(╥﹏╥)',
+    '(⋟﹏⋞)',
+    'Ò︵Ó',
+    ' ˙ᯅ˙)',
+    '(¬_¬)',
+];
 
 function getRandomErrorFace() {
     const randIndex = Math.floor(Math.random() * ERROR_FACES.length);
@@ -43,7 +59,7 @@ const ExtraMessage = ({ messageExtra }: Pick<EmptyViewProps, 'messageExtra'>) =>
     if (!isGraphqlException) {
         return (
             <Typography
-                variant="body1"
+                variant="bodyMedium"
                 sx={{ wordBreak: 'break-word', whiteSpace: 'pre-line', pointerEvents: 'all' }}
                 color="textSecondary"
             >
@@ -64,7 +80,7 @@ const ExtraMessage = ({ messageExtra }: Pick<EmptyViewProps, 'messageExtra'>) =>
                 }}
             >
                 <Typography
-                    variant="body1"
+                    variant="bodyMedium"
                     sx={{ wordBreak: 'break-word', whiteSpace: 'pre-line', pointerEvents: 'all' }}
                 >
                     {graphqlError}…
@@ -75,7 +91,7 @@ const ExtraMessage = ({ messageExtra }: Pick<EmptyViewProps, 'messageExtra'>) =>
             </Stack>
             <Collapse in={showFullError}>
                 <Typography
-                    variant="body1"
+                    variant="bodySmall"
                     color="textSecondary"
                     sx={{ wordBreak: 'break-word', whiteSpace: 'pre-line', pointerEvents: 'all' }}
                 >
@@ -95,7 +111,9 @@ export function EmptyView({ message, messageExtra, retry, noFaces, sx }: EmptyVi
         <Stack
             sx={MUIUtil.mergeSx(
                 {
-                    p: 2,
+                    px: 3,
+                    py: 2,
+                    gap: 1,
                     textAlign: 'center',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -108,16 +126,24 @@ export function EmptyView({ message, messageExtra, retry, noFaces, sx }: EmptyVi
             )}
         >
             {!noFaces && (
-                <Typography variant="h3" gutterBottom sx={{ pointerEvents: 'all' }}>
+                <Typography variant="displayMedium" dir="ltr" sx={{ opacity: SECONDARY_ALPHA, pointerEvents: 'all' }}>
                     {errorFace}
                 </Typography>
             )}
-            <Typography variant="h5" sx={{ wordBreak: 'break-word', whiteSpace: 'pre-line', pointerEvents: 'all' }}>
+            <Typography
+                variant="bodyMedium"
+                sx={{ opacity: SECONDARY_ALPHA, wordBreak: 'break-word', whiteSpace: 'pre-line', pointerEvents: 'all' }}
+            >
                 {message}
             </Typography>
             <ExtraMessage messageExtra={messageExtra} />
             {retry && (
-                <Button onClick={retry} sx={{ pointerEvents: 'all' }}>
+                <Button
+                    variant="tonal"
+                    startIcon={<RefreshRoundedIcon />}
+                    onClick={retry}
+                    sx={{ mt: 2, pointerEvents: 'all' }}
+                >
                     {t`Retry`}
                 </Button>
             )}
