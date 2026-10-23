@@ -11,8 +11,6 @@ import Stack from '@mui/material/Stack';
 import { useLingui } from '@lingui/react/macro';
 import { msg } from '@lingui/core/macro';
 import type { IReaderSettings } from '@/features/reader/Reader.types.ts';
-import { CheckboxInput } from '@/base/components/inputs/CheckboxInput.tsx';
-import { SliderInput } from '@/base/components/inputs/SliderInput.tsx';
 import {
     CUSTOM_FILTER,
     DEFAULT_READER_SETTINGS,
@@ -20,7 +18,8 @@ import {
     READER_BLEND_MODE_VALUES,
 } from '@/features/reader/settings/ReaderSettings.constants.tsx';
 
-import { ButtonSelectInput } from '@/base/components/inputs/ButtonSelectInput.tsx';
+import { ReaderSettingChipSelect } from '@/features/reader/settings/components/ReaderSettingChipSelect.tsx';
+import { CheckboxItem, SliderItem } from '@/base/components/settings/SheetRows.tsx';
 
 type RGBAType = Exclude<keyof IReaderSettings['customFilter']['rgba']['value'], 'blendMode'>;
 
@@ -45,20 +44,20 @@ export const ReaderSettingRGBA = ({
 
     return (
         <Stack>
-            <CheckboxInput
+            <CheckboxItem
                 label={t`Custom color filters`}
                 checked={rgba.enabled}
                 onChange={(_, checked) => updateSetting('rgba', { ...rgba, enabled: checked }, true)}
             />
             {rgba.enabled && (
-                <Stack sx={{ gap: 1 }}>
+                <Stack>
                     {Object.entries(rgba.value).map(([key, value]) => {
                         if (key === 'blendMode') {
                             return null;
                         }
 
                         return (
-                            <SliderInput
+                            <SliderItem
                                 key={key}
                                 label={t(RGBA_TYPE_TO_TRANSLATION[key as RGBAType])}
                                 value={value}
@@ -101,7 +100,7 @@ export const ReaderSettingRGBA = ({
                             />
                         );
                     })}
-                    <ButtonSelectInput
+                    <ReaderSettingChipSelect
                         label={t`Color filter blend mode`}
                         value={rgba.value.blendMode}
                         values={READER_BLEND_MODE_VALUES}

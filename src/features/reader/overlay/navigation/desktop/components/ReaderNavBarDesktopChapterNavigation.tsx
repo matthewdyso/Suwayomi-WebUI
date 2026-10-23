@@ -53,7 +53,7 @@ const BaseReaderNavBarDesktopChapterNavigation = ({
     }, [currentChapterId]);
 
     return (
-        <Stack sx={{ flexDirection: 'row', gap: 1 }} dir="ltr">
+        <Stack sx={{ flexDirection: 'row', alignItems: 'center', gap: 1 }} dir="ltr">
             <ReaderNavBarDesktopNextPreviousButton
                 type="previous"
                 title={getOptionForDirection(t`Previous chapter`, t`Next chapter`, readerThemeDirection)}
@@ -64,7 +64,7 @@ const BaseReaderNavBarDesktopChapterNavigation = ({
                 }}
                 disabled={getOptionForDirection(!previousChapter, !nextChapter, readerThemeDirection)}
             />
-            <FormControl sx={{ flexBasis: '70%', flexGrow: 0, flexShrink: 0 }} dir={theme.direction}>
+            <FormControl sx={{ flexGrow: 1, minWidth: 0 }} dir={theme.direction}>
                 <InputLabel id="reader-nav-bar-desktop-chapter-select">{t`Chapter`}</InputLabel>
                 <Select
                     {...bindTrigger(popupState)}
@@ -100,11 +100,11 @@ const BaseReaderNavBarDesktopChapterNavigation = ({
             >
                 <Box sx={{ mb: 1 }}>
                     <ReaderChapterList
-                        style={{
-                            width: '500px',
+                        sx={{
+                            width: 500,
                             maxWidth: '90vw',
-                            minHeight: '150px',
-                            maxHeight: '300px',
+                            minHeight: 150,
+                            maxHeight: 300,
                         }}
                         currentChapterId={currentChapterId}
                         chapters={chapters}

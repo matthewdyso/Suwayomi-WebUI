@@ -13,7 +13,7 @@ import { ProgressBarType, ReaderOverlayMode } from '@/features/reader/Reader.typ
 import type { ValueToDisplayData } from '@/base/Base.types.ts';
 import { HiddenProgressBarIcon } from '@/assets/icons/svg/HiddenProgressBarIcon.tsx';
 import { StandardProgressBarIcon } from '@/assets/icons/svg/StandardProgressBarIcon.tsx';
-import { ButtonSelectInput } from '@/base/components/inputs/ButtonSelectInput.tsx';
+import { ReaderSettingChipSelect } from '@/features/reader/settings/components/ReaderSettingChipSelect.tsx';
 
 const VALUE_TO_DISPLAY_DATA: ValueToDisplayData<ProgressBarType> = {
     [ProgressBarType.HIDDEN]: {
@@ -42,7 +42,7 @@ export const ReaderSettingProgressBarType = ({
     }
 
     return (
-        <ButtonSelectInput
+        <ReaderSettingChipSelect
             label={t`Progress bar style`}
             value={progressBarType}
             values={PROGRESS_BAR_TYPE_VALUES}

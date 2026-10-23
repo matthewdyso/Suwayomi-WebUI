@@ -8,8 +8,8 @@
 
 import IconButton from '@mui/material/IconButton';
 import { memo } from 'react';
-import BookmarkIcon from '@mui/icons-material/Bookmark';
-import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
+import BookmarkRoundedIcon from '@mui/icons-material/BookmarkRounded';
+import BookmarkBorderRoundedIcon from '@mui/icons-material/BookmarkBorderRounded';
 import { useLingui } from '@lingui/react/macro';
 import { CustomTooltip } from '@/base/components/CustomTooltip.tsx';
 import { Chapters } from '@/features/chapter/services/Chapters.ts';
@@ -24,7 +24,7 @@ const BaseReaderBookmarkButton = ({ id, isBookmarked }: Pick<TChapterReader, 'id
     return (
         <CustomTooltip title={t(CHAPTER_ACTION_TO_TRANSLATION[bookmarkAction].action.single)}>
             <IconButton onClick={() => Chapters.performAction(bookmarkAction, [id], {})} color="inherit">
-                {isBookmarked ? <BookmarkIcon /> : <BookmarkBorderIcon />}
+                {isBookmarked ? <BookmarkRoundedIcon /> : <BookmarkBorderRoundedIcon />}
             </IconButton>
         </CustomTooltip>
     );

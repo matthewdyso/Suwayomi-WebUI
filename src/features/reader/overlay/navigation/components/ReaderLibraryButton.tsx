@@ -7,8 +7,8 @@
  */
 
 import IconButton from '@mui/material/IconButton';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import FavoriteRoundedIcon from '@mui/icons-material/FavoriteRounded';
+import FavoriteBorderRoundedIcon from '@mui/icons-material/FavoriteBorderRounded';
 import { memo } from 'react';
 import { useLingui } from '@lingui/react/macro';
 import { CustomTooltip } from '@/base/components/CustomTooltip.tsx';
@@ -33,7 +33,7 @@ export const ReaderLibraryButton = memo(() => {
     return (
         <CustomTooltip title={inLibrary ? t`Remove from the library` : t`Add To Library`}>
             <IconButton onClick={updateLibraryState} color="inherit">
-                {inLibrary ? <FavoriteIcon /> : <FavoriteBorderIcon />}
+                {inLibrary ? <FavoriteRoundedIcon /> : <FavoriteBorderRoundedIcon />}
             </IconButton>
         </CustomTooltip>
     );

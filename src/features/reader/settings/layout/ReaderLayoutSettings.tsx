@@ -7,7 +7,6 @@
  */
 
 import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
 import { useLingui } from '@lingui/react/macro';
 import { ReaderSettingReadingMode } from '@/features/reader/settings/layout/components/ReaderSettingReadingMode.tsx';
@@ -22,6 +21,7 @@ import { ReaderSettingWidth } from '@/features/reader/settings/layout/components
 import { DefaultSettingFootnote } from '@/features/reader/settings/components/DefaultSettingFootnote.tsx';
 import { getReaderTapZoneStore } from '@/features/reader/stores/ReaderStore.ts';
 import { ReaderDefaultLayoutSettings } from '@/features/reader/settings/layout/ReaderDefaultLayoutSettings.tsx';
+import { HeadingItem } from '@/base/components/settings/SheetRows.tsx';
 
 export const ReaderLayoutSettings = ({
     settings,
@@ -36,11 +36,11 @@ export const ReaderLayoutSettings = ({
     const { t } = useLingui();
 
     return (
-        <Stack sx={{ gap: 2 }}>
+        <Stack>
             <DefaultSettingFootnote areDefaultSettings={!isDefaultable} />
             {isSeriesMode && (
                 <>
-                    <Typography>{t`Series settings`}</Typography>
+                    <HeadingItem>{t`Series settings`}</HeadingItem>
                     <ReaderSettingReadingMode
                         readingMode={settings.readingMode}
                         setReadingMode={(value) => updateSetting('readingMode', value)}
@@ -107,7 +107,7 @@ export const ReaderLayoutSettings = ({
             />
             {isSeriesMode && (
                 <>
-                    <Divider />
+                    <Divider sx={{ my: 1 }} />
                     <ReaderDefaultLayoutSettings
                         profiles={[settings.readingMode.value]}
                         updateSetting={updateSetting}

@@ -14,7 +14,7 @@ import { msg } from '@lingui/core/macro';
 import type { IReaderSettings } from '@/features/reader/Reader.types.ts';
 import { ReaderOverlayMode } from '@/features/reader/Reader.types.ts';
 import type { ValueToDisplayData } from '@/base/Base.types.ts';
-import { ButtonSelectInput } from '@/base/components/inputs/ButtonSelectInput.tsx';
+import { ReaderSettingChipSelect } from '@/features/reader/settings/components/ReaderSettingChipSelect.tsx';
 
 const VALUE_TO_DISPLAY_DATA: ValueToDisplayData<ReaderOverlayMode> = {
     [ReaderOverlayMode.AUTO]: {
@@ -42,7 +42,7 @@ export const ReaderSettingOverlayMode = ({
     const { t } = useLingui();
 
     return (
-        <ButtonSelectInput
+        <ReaderSettingChipSelect
             label={t`Overlay mode`}
             value={overlayMode}
             values={READING_MODE_VALUES}

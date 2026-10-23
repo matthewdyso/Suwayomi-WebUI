@@ -8,10 +8,9 @@
 
 import { useLingui } from '@lingui/react/macro';
 import { plural } from '@lingui/core/macro';
-import { CheckboxInput } from '@/base/components/inputs/CheckboxInput.tsx';
 import type { IReaderSettings } from '@/features/reader/Reader.types.ts';
-import { SliderInput } from '@/base/components/inputs/SliderInput.tsx';
 import { AUTO_SCROLL_SPEED, DEFAULT_READER_SETTINGS } from '@/features/reader/settings/ReaderSettings.constants.tsx';
+import { CheckboxItem, SliderItem } from '@/base/components/settings/SheetRows.tsx';
 
 export const ReaderSettingAutoScroll = ({
     autoScroll,
@@ -23,12 +22,12 @@ export const ReaderSettingAutoScroll = ({
 
     return (
         <>
-            <CheckboxInput
+            <CheckboxItem
                 label={t`Smooth auto scrolling`}
                 checked={autoScroll.smooth}
                 onChange={(_, checked) => setAutoScroll({ ...autoScroll, smooth: checked }, true)}
             />
-            <SliderInput
+            <SliderItem
                 label={t`Auto scroll speed`}
                 value={plural(autoScroll.value, {
                     one: '# second',

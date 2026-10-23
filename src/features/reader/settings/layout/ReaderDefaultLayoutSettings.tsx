@@ -26,19 +26,17 @@ export const ReaderDefaultLayoutSettings = ({
     profiles?: ReadingMode[];
     readingMode?: IReaderSettingsWithDefaultFlag['readingMode'];
 }) => {
-    const { updateSetting, isSeriesMode } = props;
+    const { updateSetting } = props;
 
     const { t } = useLingui();
 
     return (
-        <Stack sx={{ gap: 2, pb: Number(!isSeriesMode) * 2 }}>
+        <Stack>
             {readingMode !== undefined && (
-                <Stack sx={{ pt: 2, px: 2 }}>
-                    <ReaderSettingReadingMode
-                        readingMode={readingMode}
-                        setReadingMode={(value) => updateSetting('readingMode', value)}
-                    />
-                </Stack>
+                <ReaderSettingReadingMode
+                    readingMode={readingMode}
+                    setReadingMode={(value) => updateSetting('readingMode', value)}
+                />
             )}
             {profiles.map((profile) => (
                 <ReaderSettingProfileSettings

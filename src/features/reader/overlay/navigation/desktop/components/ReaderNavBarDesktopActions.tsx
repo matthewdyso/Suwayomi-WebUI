@@ -8,10 +8,10 @@
 
 import Stack from '@mui/material/Stack';
 import IconButton from '@mui/material/IconButton';
-import DownloadIcon from '@mui/icons-material/Download';
-import ReplayIcon from '@mui/icons-material/Replay';
+import DownloadRoundedIcon from '@mui/icons-material/DownloadRounded';
+import ReplayRoundedIcon from '@mui/icons-material/ReplayRounded';
 import { memo, useMemo, useRef } from 'react';
-import DeleteIcon from '@mui/icons-material/Delete';
+import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
 import { useLingui } from '@lingui/react/macro';
 import { CustomTooltip } from '@/base/components/CustomTooltip.tsx';
 import { Chapters } from '@/features/chapter/services/Chapters.ts';
@@ -30,7 +30,7 @@ import {
 } from '@/features/reader/stores/ReaderStore.ts';
 import type { ChapterDownloadInfo, ChapterIdInfo } from '@/features/chapter/Chapter.types.ts';
 import { defaultPromiseErrorHandler } from '@/lib/DefaultPromiseErrorHandler.ts';
-import ShareIcon from '@mui/icons-material/Share';
+import ShareRoundedIcon from '@mui/icons-material/ShareRounded';
 import { ShareGuard } from '@/base/components/guard/ShareGuard.tsx';
 
 const DownloadButton = ({ id = -1, isDownloaded }: ChapterIdInfo & ChapterDownloadInfo) => {
@@ -44,7 +44,7 @@ const DownloadButton = ({ id = -1, isDownloaded }: ChapterIdInfo & ChapterDownlo
         return (
             <CustomTooltip title={t(CHAPTER_ACTION_TO_TRANSLATION.delete.action.single)}>
                 <IconButton onClick={() => Chapters.performAction('delete', [id], {})} color="inherit">
-                    <DeleteIcon />
+                    <DeleteRoundedIcon />
                 </IconButton>
             </CustomTooltip>
         );
@@ -61,7 +61,7 @@ const DownloadButton = ({ id = -1, isDownloaded }: ChapterIdInfo & ChapterDownlo
                 onClick={() => Chapters.performAction('download', [id], {})}
                 color="inherit"
             >
-                <DownloadIcon />
+                <DownloadRoundedIcon />
             </IconButton>
         </CustomTooltip>
     );
@@ -88,7 +88,7 @@ export const ReaderNavBarDesktopActions = memo(() => {
     );
 
     return (
-        <Stack sx={{ flexDirection: 'row', justifyContent: 'center', gap: 1 }}>
+        <Stack sx={{ flexDirection: 'row', justifyContent: 'center' }}>
             <ReaderLibraryButton />
             <ReaderBookmarkButton id={id} isBookmarked={isBookmarked} />
             <CustomTooltip title={t`Retry errored pages`} disabled={!haveSomePagesFailedToLoad}>
@@ -106,7 +106,7 @@ export const ReaderNavBarDesktopActions = memo(() => {
                     disabled={!haveSomePagesFailedToLoad}
                     color="inherit"
                 >
-                    <ReplayIcon />
+                    <ReplayRoundedIcon />
                 </IconButton>
             </CustomTooltip>
             <DownloadButton id={id} isDownloaded={isDownloaded} />
@@ -140,7 +140,7 @@ export const ReaderNavBarDesktopActions = memo(() => {
                                 .catch(defaultPromiseErrorHandler('MangaToolbarMenu::share'))
                         }
                     >
-                        <ShareIcon />
+                        <ShareRoundedIcon />
                     </IconButton>
                 </CustomTooltip>
             </ShareGuard>

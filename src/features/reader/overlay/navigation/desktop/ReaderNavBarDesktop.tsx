@@ -8,7 +8,7 @@
 
 import Stack from '@mui/material/Stack';
 import IconButton from '@mui/material/IconButton';
-import PushPinIcon from '@mui/icons-material/PushPin';
+import PushPinRoundedIcon from '@mui/icons-material/PushPinRounded';
 import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
 import Divider from '@mui/material/Divider';
 import { memo, useCallback, useLayoutEffect, useRef, useState } from 'react';
@@ -110,8 +110,8 @@ const BaseReaderNavBarDesktop = ({
                 },
             }}
         >
-            <ReaderNavContainer sx={{ backgroundColor: 'background.paper', pointerEvents: 'all' }}>
-                <Stack sx={{ p: 2, gap: 2, backgroundColor: 'action.hover' }}>
+            <ReaderNavContainer sx={{ bgcolor: 'm3.surfaceContainer', color: 'm3.onSurface', pointerEvents: 'all' }}>
+                <Stack sx={{ p: 2, gap: 2, bgcolor: 'm3.surfaceContainerHigh' }}>
                     <Stack sx={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                         <ReaderExitButton />
                         <CustomTooltip title={t`Static navigation`}>
@@ -122,7 +122,7 @@ const BaseReaderNavBarDesktop = ({
                                 }}
                                 color={isStaticNav ? 'primary' : 'inherit'}
                             >
-                                {isStaticNav ? <PushPinIcon /> : <PushPinOutlinedIcon />}
+                                {isStaticNav ? <PushPinRoundedIcon /> : <PushPinOutlinedIcon />}
                             </IconButton>
                         </CustomTooltip>
                     </Stack>

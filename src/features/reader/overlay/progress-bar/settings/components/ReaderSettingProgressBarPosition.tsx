@@ -14,7 +14,7 @@ import { msg } from '@lingui/core/macro';
 import type { IReaderSettings } from '@/features/reader/Reader.types.ts';
 import { ProgressBarPosition, ProgressBarPositionAutoVertical } from '@/features/reader/Reader.types.ts';
 import type { ValueToDisplayData } from '@/base/Base.types.ts';
-import { ButtonSelectInput } from '@/base/components/inputs/ButtonSelectInput.tsx';
+import { ReaderSettingChipSelect } from '@/features/reader/settings/components/ReaderSettingChipSelect.tsx';
 
 const VALUE_TO_DISPLAY_DATA: ValueToDisplayData<ProgressBarPosition> = {
     [ProgressBarPosition.AUTO]: {
@@ -59,7 +59,7 @@ export const ReaderSettingProgressBarPosition = ({
 
     return (
         <>
-            <ButtonSelectInput
+            <ReaderSettingChipSelect
                 label={t`Progress bar position`}
                 value={progressBarPosition}
                 values={PROGRESS_BAR_POSITION_VALUES}
@@ -67,7 +67,7 @@ export const ReaderSettingProgressBarPosition = ({
                 valueToDisplayData={VALUE_TO_DISPLAY_DATA}
             />
             {isAutoPosition && (
-                <ButtonSelectInput
+                <ReaderSettingChipSelect
                     label={t`Automatic progress bar vertical position`}
                     value={progressBarPositionAutoVertical}
                     values={PROGRESS_BAR_AUTO_VERTICAL_POSITION_VALUES}

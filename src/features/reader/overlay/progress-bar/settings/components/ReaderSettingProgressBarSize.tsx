@@ -9,8 +9,8 @@
 import { useLingui } from '@lingui/react/macro';
 import type { IReaderSettings } from '@/features/reader/Reader.types.ts';
 import { ProgressBarType, ReaderOverlayMode } from '@/features/reader/Reader.types.ts';
-import { SliderInput } from '@/base/components/inputs/SliderInput.tsx';
 import { DEFAULT_READER_SETTINGS, PROGRESS_BAR_SIZE } from '@/features/reader/settings/ReaderSettings.constants.tsx';
+import { SliderItem } from '@/base/components/settings/SheetRows.tsx';
 
 export const ReaderSettingProgressBarSize = ({
     overlayMode,
@@ -30,7 +30,7 @@ export const ReaderSettingProgressBarSize = ({
     }
 
     return (
-        <SliderInput
+        <SliderItem
             label={t`Progress bar size`}
             value={`${progressBarSize}${t`px`}`}
             onDefault={onDefault}

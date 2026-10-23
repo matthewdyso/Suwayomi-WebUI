@@ -9,13 +9,12 @@
 import Stack from '@mui/material/Stack';
 import { useLingui } from '@lingui/react/macro';
 import type { IReaderSettings } from '@/features/reader/Reader.types.ts';
-import { CheckboxInput } from '@/base/components/inputs/CheckboxInput.tsx';
 import type { ReaderService } from '@/features/reader/services/ReaderService.ts';
-import { SliderInput } from '@/base/components/inputs/SliderInput.tsx';
 import { DEFAULT_READER_SETTINGS } from '@/features/reader/settings/ReaderSettings.constants.tsx';
 import { isReaderWidthEditable } from '@/features/reader/settings/ReaderSettings.utils.tsx';
 import { ResetButton } from '@/base/components/buttons/ResetButton.tsx';
 import type { SelectButtonDefaultableProps } from '@/base/components/buttons/SelectButton.tsx';
+import { CheckboxItem, SliderItem } from '@/base/components/settings/SheetRows.tsx';
 
 export const ReaderSettingWidth = ({
     readerWidth,
@@ -37,16 +36,16 @@ export const ReaderSettingWidth = ({
 
     return (
         <Stack>
-            <Stack sx={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                <CheckboxInput
+            <Stack sx={{ flexDirection: 'row', alignItems: 'center' }}>
+                <CheckboxItem
                     label={t`Limit reader width`}
                     checked={readerWidth.enabled}
                     onChange={(_, checked) => updateSetting('readerWidth', { ...readerWidth, enabled: checked }, true)}
                 />
-                {isDefaultable && <ResetButton onClick={onDefault} variant="outlined" />}
+                {isDefaultable && <ResetButton asIconButton onClick={onDefault} sx={{ mr: 1.5 }} />}
             </Stack>
             {readerWidth.enabled && (
-                <SliderInput
+                <SliderItem
                     label={t`Reader width`}
                     value={`${readerWidth.value}%`}
                     slotProps={{

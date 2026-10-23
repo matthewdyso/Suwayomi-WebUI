@@ -12,22 +12,25 @@ import {
     READING_MODE_VALUE_TO_DISPLAY_DATA,
     READING_MODE_VALUES,
 } from '@/features/reader/settings/ReaderSettings.constants.tsx';
-import { ButtonSelectInput } from '@/base/components/inputs/ButtonSelectInput.tsx';
-
 import type { SelectButtonDefaultableProps } from '@/base/components/buttons/SelectButton.tsx';
+import { ReaderSettingChipSelect } from '@/features/reader/settings/components/ReaderSettingChipSelect.tsx';
+import { ReaderSettingIconGrid } from '@/features/reader/settings/components/ReaderSettingIconGrid.tsx';
 
 export const ReaderSettingReadingMode = ({
     readingMode,
     setReadingMode,
+    asIconGrid = false,
     ...buttonSelectInputProps
 }: Pick<IReaderSettingsWithDefaultFlag, 'readingMode'> &
     Pick<SelectButtonDefaultableProps<ReadingMode>, 'isDefaultable' | 'onDefault'> & {
         setReadingMode: (mode: ReadingMode) => void;
+        asIconGrid?: boolean;
     }) => {
     const { t } = useLingui();
+    const Select = asIconGrid ? ReaderSettingIconGrid : ReaderSettingChipSelect;
 
     return (
-        <ButtonSelectInput
+        <Select
             {...buttonSelectInputProps}
             label={t`Reading mode`}
             value={readingMode.isDefault ? undefined : readingMode.value}

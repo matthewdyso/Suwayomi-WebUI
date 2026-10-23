@@ -8,7 +8,7 @@
 
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
-import SettingsIcon from '@mui/icons-material/Settings';
+import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
 import { memo } from 'react';
 import { useLingui } from '@lingui/react/macro';
 import { ReaderNavBarDesktopPageScale } from '@/features/reader/overlay/navigation/desktop/quick-settings/components/ReaderNavBarDesktopPageScale.tsx';
@@ -66,8 +66,8 @@ const BaseReaderNavBarDesktopQuickSettings = ({ openSettings }: Pick<ReaderNavBa
                 onClick={() => openSettings()}
                 size="large"
                 sx={{ justifyContent: 'start', textTransform: 'none' }}
-                variant="contained"
-                startIcon={<SettingsIcon />}
+                variant="tonal"
+                startIcon={<SettingsRoundedIcon />}
             >
                 {t`Settings`}
             </Button>

@@ -14,13 +14,16 @@ import { ReaderSettingReadingDirection } from '@/features/reader/settings/layout
 import { ReaderService } from '@/features/reader/services/ReaderService.ts';
 import { DefaultSettingFootnote } from '@/features/reader/settings/components/DefaultSettingFootnote.tsx';
 import { ReaderSettingAutoScroll } from '@/features/reader/auto-scroll/settings/ReaderSettingAutoScroll.tsx';
-import { CheckboxInput } from '@/base/components/inputs/CheckboxInput.tsx';
 import {
     getReaderAutoScrollStore,
     useReaderAutoScrollStore,
     useReaderSettingsStore,
 } from '@/features/reader/stores/ReaderStore.ts';
+import { CheckboxItem } from '@/base/components/settings/SheetRows.tsx';
 
+/**
+ * Mihon's "ReadingModeSelectDialog": the reading mode and direction as icon grids, plus the auto scroll settings.
+ */
 const BaseReaderBottomBarMobileQuickSettings = () => {
     const { t } = useLingui();
     const isActive = useReaderAutoScrollStore('isActive');
@@ -31,21 +34,23 @@ const BaseReaderBottomBarMobileQuickSettings = () => {
     );
 
     return (
-        <Stack sx={{ gap: 2 }}>
+        <Stack sx={{ py: 1 }}>
             <DefaultSettingFootnote />
             <ReaderSettingReadingMode
+                asIconGrid
                 readingMode={readingMode}
                 setReadingMode={(value) => ReaderService.updateSetting('readingMode', value)}
                 isDefaultable
                 onDefault={() => ReaderService.deleteSetting('readingMode')}
             />
             <ReaderSettingReadingDirection
+                asIconGrid
                 readingDirection={readingDirection}
                 setReadingDirection={(value) => ReaderService.updateSetting('readingDirection', value)}
                 isDefaultable
                 onDefault={() => ReaderService.deleteSetting('readingDirection')}
             />
-            <CheckboxInput
+            <CheckboxItem
                 label={t`Auto scroll`}
                 checked={isActive}
                 onChange={() => getReaderAutoScrollStore().toggleActive()}

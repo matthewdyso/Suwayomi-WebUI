@@ -9,7 +9,7 @@
 import Stack from '@mui/material/Stack';
 import { useLingui } from '@lingui/react/macro';
 import type { IReaderSettings } from '@/features/reader/Reader.types.ts';
-import { CheckboxInput } from '@/base/components/inputs/CheckboxInput.tsx';
+import { CheckboxItem } from '@/base/components/settings/SheetRows.tsx';
 
 export const ReaderSettingSepia = ({
     sepia,
@@ -21,7 +21,7 @@ export const ReaderSettingSepia = ({
 
     return (
         <Stack>
-            <CheckboxInput label={t`Sepia`} checked={sepia} onChange={(_, checked) => updateSetting(checked)} />
+            <CheckboxItem label={t`Sepia`} checked={sepia} onChange={(_, checked) => updateSetting(checked)} />
         </Stack>
     );
 };

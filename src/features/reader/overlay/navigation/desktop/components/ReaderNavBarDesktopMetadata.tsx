@@ -29,7 +29,7 @@ export const ReaderNavBarDesktopMetadata = memo(
     }) => (
         <Stack>
             <CustomTooltip title={mangaTitle} placement="right">
-                <TypographyMaxLines lines={3} variant="h6" component="h1" sx={{ textAlign: 'center' }}>
+                <TypographyMaxLines lines={3} variant="titleLarge" component="h1" sx={{ textAlign: 'center' }}>
                     <Link
                         component={RouterLink}
                         to={AppRoutes.manga.path(mangaId)}
@@ -40,7 +40,12 @@ export const ReaderNavBarDesktopMetadata = memo(
                 </TypographyMaxLines>
             </CustomTooltip>
             <CustomTooltip title={chapterTitle} placement="right">
-                <TypographyMaxLines lines={4} variant="body1" component="h2" sx={{ textAlign: 'center' }}>
+                <TypographyMaxLines
+                    lines={4}
+                    variant="bodyMedium"
+                    component="h2"
+                    sx={{ textAlign: 'center', color: 'text.secondary' }}
+                >
                     {chapterTitle}
                 </TypographyMaxLines>
             </CustomTooltip>
@@ -48,9 +53,9 @@ export const ReaderNavBarDesktopMetadata = memo(
                 <CustomTooltip title={scanlator} placement="right">
                     <TypographyMaxLines
                         lines={4}
-                        variant="body2"
+                        variant="bodySmall"
                         component="h3"
-                        color="textDisabled"
+                        color="textSecondary"
                         sx={{ textAlign: 'center' }}
                     >
                         {scanlator}

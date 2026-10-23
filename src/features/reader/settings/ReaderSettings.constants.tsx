@@ -170,7 +170,7 @@ export const DEFAULT_READER_SETTINGS: IReaderSettings = {
     tapZoneInvertMode: { vertical: false, horizontal: false },
     progressBarType: ProgressBarType.STANDARD,
     progressBarSize: PROGRESS_BAR_SIZE.default,
-    progressBarPosition: ProgressBarPosition.AUTO,
+    progressBarPosition: ProgressBarPosition.BOTTOM,
     progressBarPositionAutoVertical: ProgressBarPosition.RIGHT,
     pageScaleMode: ReaderPageScaleMode.ORIGINAL,
     shouldStretchPage: false,
@@ -248,11 +248,12 @@ export const DEFAULT_READER_SETTINGS: IReaderSettings = {
     scrollAmount: ReaderScrollAmount.LARGE,
     shouldUseInfiniteScroll: true,
     shouldShowTransitionPage: true,
+    // Mihon draws pages under the status bar, the home indicator and the cutout; the mobile overlay's bars pad themselves
     safeAreaInset: {
-        top: true,
-        right: true,
-        bottom: true,
-        left: true,
+        top: false,
+        right: false,
+        bottom: false,
+        left: false,
     },
     shouldEnterFullscreen: false,
 };

@@ -10,7 +10,7 @@ import Stack from '@mui/material/Stack';
 import { ListSubheader } from '@/base/components/lists/ListSubheader.tsx';
 import type { ComponentProps } from 'react';
 import { useMemo } from 'react';
-import Typography from '@mui/material/Typography';
+import { HeadingItem } from '@/base/components/settings/SheetRows.tsx';
 import { ReaderLayoutSettings } from '@/features/reader/settings/layout/ReaderLayoutSettings.tsx';
 import { useDefaultReaderSettingsWithDefaultFlag } from '@/features/reader/settings/ReaderSettingsMetadata.ts';
 import type { ReadingMode } from '@/features/reader/Reader.types.ts';
@@ -39,21 +39,20 @@ export const ReaderSettingProfileSettings = ({
     );
 
     return (
-        <Stack sx={{ gap: 2 }}>
+        <Stack>
             {!isSeriesMode ? (
-                <ListSubheader component="div" id={`${profile}-settings`}>
+                // indented like the setting rows below it (Mihon's sheet rows: 24 px)
+                <ListSubheader component="div" id={`${profile}-settings`} sx={{ px: 3 }}>
                     {title}
                 </ListSubheader>
             ) : (
-                <Typography>{title}</Typography>
+                <HeadingItem>{title}</HeadingItem>
             )}
-            <Stack sx={{ px: Number(!isSeriesMode) * 2 }}>
-                <ReaderLayoutSettings
-                    {...props}
-                    settings={adjustedSettings}
-                    updateSetting={(setting, value, commit) => updateSetting(setting, value, commit, true, profile)}
-                />
-            </Stack>
+            <ReaderLayoutSettings
+                {...props}
+                settings={adjustedSettings}
+                updateSetting={(setting, value, commit) => updateSetting(setting, value, commit, true, profile)}
+            />
         </Stack>
     );
 };

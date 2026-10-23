@@ -78,10 +78,10 @@ export const getImagePlaceholderStyling = (
 
     const setReaderWidth = getSetReaderWidth(readerWidth, pageScaleMode);
     const fullWidth = getMaxWidth(`${Math.min(100, setReaderWidth ?? OVER_9000)}vw`);
-    const fullHeight = `calc(100vh - ${joinOffsetsForCssCalc(heightOffset)})`;
+    const fullHeight = `calc(100dvh - ${joinOffsetsForCssCalc(heightOffset)})`;
 
     const DEFAULT_SINGLE_PAGE_WIDTH = isTabletWidth ? fullWidth : getDesktopWidth(40, setReaderWidth);
-    const DEFAULT_SINGLE_PAGE_HEIGHT = isTabletWidth ? fullHeight : '85vh';
+    const DEFAULT_SINGLE_PAGE_HEIGHT = isTabletWidth ? fullHeight : '85dvh';
 
     const READING_MODE_TO_PLACEHOLDER_SIZE: Record<ReadingMode, { minWidth: string; minHeight: string }> = {
         [ReadingMode.SINGLE_PAGE]: { minWidth: DEFAULT_SINGLE_PAGE_WIDTH, minHeight: DEFAULT_SINGLE_PAGE_HEIGHT },
@@ -91,7 +91,7 @@ export const getImagePlaceholderStyling = (
         },
         [ReadingMode.CONTINUOUS_VERTICAL]: {
             minWidth: DEFAULT_SINGLE_PAGE_WIDTH,
-            minHeight: '100vh',
+            minHeight: '100dvh',
         },
         [ReadingMode.CONTINUOUS_HORIZONTAL]: {
             minWidth: DEFAULT_SINGLE_PAGE_WIDTH,
@@ -99,7 +99,7 @@ export const getImagePlaceholderStyling = (
         },
         [ReadingMode.WEBTOON]: {
             minWidth: DEFAULT_SINGLE_PAGE_WIDTH,
-            minHeight: '100vh',
+            minHeight: '100dvh',
         },
     };
     const defaultStyling = {
@@ -123,7 +123,7 @@ export const getImagePlaceholderStyling = (
                 ...applyStyles(shouldStretchPage, {
                     minHeight: fullHeight,
                     ...applyStyles(isContinuousVerticalReadingMode(readingMode), {
-                        minHeight: '100vh',
+                        minHeight: '100dvh',
                     }),
                 }),
             };
@@ -134,7 +134,7 @@ export const getImagePlaceholderStyling = (
                     minWidth: minWidthForStretch,
                     minHeight: fullHeight,
                     ...applyStyles(isContinuousVerticalReadingMode(readingMode), {
-                        minHeight: '100vh',
+                        minHeight: '100dvh',
                     }),
                 }),
             };
@@ -159,7 +159,7 @@ const getReaderDimensionStyling = (
     heightOffset: (number | string)[],
 ): CSSObject => {
     const fullWidth = `calc((100vw - ${joinOffsetsForCssCalc(widthOffset)}) * ${widthPercentage})`;
-    const fullHeight = `calc(100vh - ${joinOffsetsForCssCalc(heightOffset)})`;
+    const fullHeight = `calc(100dvh - ${joinOffsetsForCssCalc(heightOffset)})`;
 
     switch (pageScaleMode) {
         case ReaderPageScaleMode.WIDTH:

@@ -11,7 +11,7 @@ import { msg } from '@lingui/core/macro';
 import type { IReaderSettings } from '@/features/reader/Reader.types.ts';
 import { ReaderExitMode } from '@/features/reader/Reader.types.ts';
 import type { ValueToDisplayData } from '@/base/Base.types.ts';
-import { ButtonSelectInput } from '@/base/components/inputs/ButtonSelectInput.tsx';
+import { ReaderSettingChipSelect } from '@/features/reader/settings/components/ReaderSettingChipSelect.tsx';
 
 const VALUE_TO_DISPLAY_DATA: ValueToDisplayData<ReaderExitMode> = {
     [ReaderExitMode.PREVIOUS]: {
@@ -35,7 +35,7 @@ export const ReaderSettingExitMode = ({
     const { t } = useLingui();
 
     return (
-        <ButtonSelectInput
+        <ReaderSettingChipSelect
             label={t`Open page on exit`}
             value={exitMode}
             values={READER_EXIT_MODE_VALUES}

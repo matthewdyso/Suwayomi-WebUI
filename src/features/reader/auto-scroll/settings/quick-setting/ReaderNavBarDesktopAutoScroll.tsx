@@ -7,8 +7,8 @@
  */
 
 import Button from '@mui/material/Button';
-import PauseCircleFilledIcon from '@mui/icons-material/PauseCircleFilled';
-import PlayCircleFilledIcon from '@mui/icons-material/PlayCircleFilled';
+import PauseCircleFilledRoundedIcon from '@mui/icons-material/PauseCircleFilledRounded';
+import PlayCircleFilledRoundedIcon from '@mui/icons-material/PlayCircleFilledRounded';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -38,9 +38,9 @@ export const ReaderNavBarDesktopAutoScroll = ({
                 sx={{ justifyContent: 'start', textTransform: 'unset', flexGrow: 1 }}
                 size="large"
                 onClick={() => getReaderAutoScrollStore().toggleActive()}
-                color={isActive ? 'secondary' : 'primary'}
-                variant="contained"
-                startIcon={isActive ? <PauseCircleFilledIcon /> : <PlayCircleFilledIcon />}
+                variant={isActive ? 'contained' : 'tonal'}
+                aria-pressed={isActive}
+                startIcon={isActive ? <PauseCircleFilledRoundedIcon /> : <PlayCircleFilledRoundedIcon />}
             >
                 {t`Auto scroll`}
             </Button>

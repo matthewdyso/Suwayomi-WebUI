@@ -8,13 +8,13 @@
 
 import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
+import Toolbar from '@mui/material/Toolbar';
+import MoreVertRoundedIcon from '@mui/icons-material/MoreVertRounded';
 import { bindMenu, bindTrigger, usePopupState } from 'material-ui-popup-state/hooks';
 import MenuItem from '@mui/material/MenuItem';
 import Menu from '@mui/material/Menu';
 import Link from '@mui/material/Link';
 import { Link as RouterLink } from 'react-router-dom';
-import Slide from '@mui/material/Slide';
 import type { Ref } from 'react';
 import { memo } from 'react';
 import { useLingui } from '@lingui/react/macro';
@@ -36,9 +36,13 @@ import {
 } from '@/features/reader/stores/ReaderStore.ts';
 import { defaultPromiseErrorHandler } from '@/lib/DefaultPromiseErrorHandler.ts';
 import { ShareGuard } from '@/base/components/guard/ShareGuard.tsx';
+import { getReaderBarVisibilitySx } from '@/features/reader/overlay/ReaderOverlay.utils.ts';
 
 const DEFAULT_MANGA = { ...FALLBACK_MANGA, title: '' };
 
+/**
+ * Mihon's "ReaderTopBar": back, manga title and chapter name, the actions and an overflow menu for the rest.
+ */
 const BaseReaderOverlayHeaderMobile = ({ isVisible, ref }: MobileHeaderProps & { ref?: Ref<HTMLDivElement> }) => {
     const { t } = useLingui();
     const popupState = usePopupState({ popupId: 'reader-overlay-more-menu', variant: 'popover' });
@@ -51,28 +55,30 @@ const BaseReaderOverlayHeaderMobile = ({ isVisible, ref }: MobileHeaderProps & {
     const { id: chapterId, name, realUrl, isBookmarked } = currentChapter ?? FALLBACK_CHAPTER;
 
     return (
-        <Slide direction="down" in={isVisible} ref={ref}>
-            <Stack
-                sx={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: `${scrollbar.ySize}px`,
-                    p: 2,
-                    pt: (theme) => `max(env(safe-area-inset-top), ${theme.spacing(2)})`,
-                    backgroundColor: (theme) => theme.alpha(theme.palette.background.paper, 0.95),
-                    pointerEvents: 'all',
-                    boxShadow: 2,
-                }}
-            >
+        <Stack
+            ref={ref}
+            component="header"
+            sx={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: `${scrollbar.ySize}px`,
+                pt: 'env(safe-area-inset-top)',
+                pl: 'env(safe-area-inset-left)',
+                pr: 'env(safe-area-inset-right)',
+                bgcolor: 'm3.readerBar',
+                color: 'm3.onSurface',
+                pointerEvents: 'all',
+                ...getReaderBarVisibilitySx(isVisible, 'top'),
+            }}
+        >
+            <Toolbar sx={{ gap: 0.5 }}>
                 <ReaderExitButton />
-                <Stack sx={{ flexGrow: 1 }}>
+                <Stack sx={{ flexGrow: 1, minWidth: 0 }}>
                     {manga && currentChapter ? (
                         <>
                             <CustomTooltip title={title}>
-                                <TypographyMaxLines lines={1} component="h1" variant="h5">
+                                <TypographyMaxLines lines={1} component="h1" variant="titleLarge">
                                     <Link
                                         component={RouterLink}
                                         to={AppRoutes.manga.path(mangaId)}
@@ -83,7 +89,9 @@ const BaseReaderOverlayHeaderMobile = ({ isVisible, ref }: MobileHeaderProps & {
                                 </TypographyMaxLines>
                             </CustomTooltip>
                             <CustomTooltip title={name}>
-                                <TypographyMaxLines lines={1}>{name}</TypographyMaxLines>
+                                <TypographyMaxLines lines={1} variant="bodyMedium" sx={{ color: 'text.secondary' }}>
+                                    {name}
+                                </TypographyMaxLines>
                             </CustomTooltip>
                         </>
                     ) : (
@@ -92,63 +100,52 @@ const BaseReaderOverlayHeaderMobile = ({ isVisible, ref }: MobileHeaderProps & {
                 </Stack>
                 <ReaderLibraryButton />
                 <ReaderBookmarkButton id={chapterId} isBookmarked={isBookmarked} />
-                <IconButton {...bindTrigger(popupState)} color="inherit">
-                    <MoreVertIcon />
-                </IconButton>
-                <Menu {...bindMenu(popupState)}>
+                <CustomTooltip title={t`More`}>
+                    <IconButton {...bindTrigger(popupState)} color="inherit">
+                        <MoreVertRoundedIcon />
+                    </IconButton>
+                </CustomTooltip>
+            </Toolbar>
+            <Menu {...bindMenu(popupState)}>
+                <MenuItem
+                    component={Link}
+                    disabled={!realUrl}
+                    href={realUrl ?? ''}
+                    rel="noreferrer"
+                    target="_blank"
+                    onClick={popupState.close}
+                >
+                    {t`Open in browser`}
+                </MenuItem>
+                <MenuItem
+                    component={Link}
+                    disabled={!realUrl}
+                    href={realUrl ? requestManager.getWebviewUrl(realUrl) : ''}
+                    rel="noreferrer"
+                    target="_blank"
+                    onClick={popupState.close}
+                >
+                    {t`Open in WebView`}
+                </MenuItem>
+                <ShareGuard>
                     <MenuItem
-                        component={Link}
                         disabled={!realUrl}
-                        href={realUrl ?? ''}
-                        rel="noreferrer"
-                        target="_blank"
+                        onClick={() => {
+                            popupState.close();
+                            navigator
+                                .share({
+                                    title: `${title} — ${name}`,
+                                    text: name,
+                                    url: realUrl ?? undefined,
+                                })
+                                .catch(defaultPromiseErrorHandler('ReaderOverlayHeaderMobile::share'));
+                        }}
                     >
-                        {t`Open in browser`}
+                        {t`Share`}
                     </MenuItem>
-                    <MenuItem
-                        component={Link}
-                        disabled={!realUrl}
-                        href={realUrl ? requestManager.getWebviewUrl(realUrl) : ''}
-                        rel="noreferrer"
-                        target="_blank"
-                    >
-                        {t`Open in WebView`}
-                    </MenuItem>
-                    <ShareGuard>
-                        <MenuItem
-                            disabled={!realUrl}
-                            onClick={() => {
-                                navigator
-                                    .share({
-                                        title: `${title} — ${name}`,
-                                        text: name,
-                                        url: realUrl ?? undefined,
-                                    })
-                                    .catch(defaultPromiseErrorHandler('ReaderOverlayHeaderMobile::share'));
-                            }}
-                        >
-                            {t`Share`}
-                        </MenuItem>
-                    </ShareGuard>
-                    <ShareGuard>
-                        <MenuItem
-                            disabled={!realUrl}
-                            onClick={() => {
-                                navigator
-                                    .share({
-                                        title: `${title} — ${name}`,
-                                        text: name,
-                                        url: realUrl ?? undefined,
-                                    })
-                                    .catch(defaultPromiseErrorHandler('ReaderOverlayHeaderMobile::share'));
-                            }}
-                        >
-                            {t`Share`}
-                        </MenuItem>
-                    </ShareGuard>
-                </Menu>
-            </Stack>
-        </Slide>
+                </ShareGuard>
+            </Menu>
+        </Stack>
     );
 };
 

@@ -9,9 +9,8 @@
 import Stack from '@mui/material/Stack';
 import { useLingui } from '@lingui/react/macro';
 import type { IReaderSettings } from '@/features/reader/Reader.types.ts';
-import { CheckboxInput } from '@/base/components/inputs/CheckboxInput.tsx';
-import { SliderInput } from '@/base/components/inputs/SliderInput.tsx';
 import { CUSTOM_FILTER, DEFAULT_READER_SETTINGS } from '@/features/reader/settings/ReaderSettings.constants.tsx';
+import { CheckboxItem, SliderItem } from '@/base/components/settings/SheetRows.tsx';
 
 export const ReaderSettingBrightness = ({
     brightness,
@@ -27,13 +26,13 @@ export const ReaderSettingBrightness = ({
 
     return (
         <Stack>
-            <CheckboxInput
+            <CheckboxItem
                 label={t`Custom brightness`}
                 checked={brightness.enabled}
                 onChange={(_, checked) => updateSetting('brightness', { ...brightness, enabled: checked }, true)}
             />
             {brightness.enabled && (
-                <SliderInput
+                <SliderItem
                     label={t`Custom brightness`}
                     value={brightness.value}
                     onDefault={() =>

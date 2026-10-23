@@ -7,6 +7,7 @@
  */
 
 import Box from '@mui/material/Box';
+import GlobalStyles from '@mui/material/GlobalStyles';
 import { memo, useCallback, useRef, useState } from 'react';
 import { ReaderSettings } from '@/features/reader/settings/screens/ReaderSettings.tsx';
 import { ReaderPageNumber } from '@/features/reader/overlay/components/ReaderPageNumber.tsx';
@@ -17,13 +18,20 @@ import { ReaderBottomBarMobile } from '@/features/reader/overlay/navigation/mobi
 import { ReaderService } from '@/features/reader/services/ReaderService.ts';
 import { withPropsFrom } from '@/base/hoc/withPropsFrom.tsx';
 import { useResizeObserver } from '@/base/hooks/useResizeObserver.tsx';
-import { useReaderOverlayStore } from '@/features/reader/stores/ReaderStore.ts';
+import { useReaderOverlayStore, useReaderSettingsStore } from '@/features/reader/stores/ReaderStore.ts';
+import { M3_CSS_VARIABLE } from '@/features/theme/m3/M3Layout.constants.ts';
+
+const HIDDEN_STATUS_BAR_SCRIM_STYLES = { ':root': { [M3_CSS_VARIABLE.statusBarScrimOpacity]: 0 } };
 
 const BaseReaderOverlay = ({
     isDesktop,
     isMobile,
 }: Pick<ReturnType<typeof ReaderService.useOverlayMode>, 'isDesktop' | 'isMobile'>) => {
     const isVisible = useReaderOverlayStore('isVisible');
+    const isStaticNav = useReaderSettingsStore('isStaticNav');
+    // immersive like Mihon: the pages fill the screen under the status bar; the scrim returns with the bars (a static
+    // desktop navigation drawer stays open, so it keeps the scrim)
+    const isImmersive = !isVisible && !(isDesktop && isStaticNav);
 
     const [areSettingsOpen, setAreSettingsOpen] = useState(false);
 
@@ -36,6 +44,7 @@ const BaseReaderOverlay = ({
 
     return (
         <Box sx={{ position: 'absolute', width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
+            {isImmersive && <GlobalStyles styles={HIDDEN_STATUS_BAR_SCRIM_STYLES} />}
             {isDesktop && (
                 <>
                     <StandardReaderProgressBar />

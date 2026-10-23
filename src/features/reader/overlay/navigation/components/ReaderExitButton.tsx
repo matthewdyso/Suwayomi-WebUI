@@ -7,8 +7,8 @@
  */
 
 import IconButton from '@mui/material/IconButton';
-import ArrowBack from '@mui/icons-material/ArrowBack';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
+import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded';
 import { memo } from 'react';
 import { useLingui } from '@lingui/react/macro';
 import { CustomTooltip } from '@/base/components/CustomTooltip.tsx';
@@ -22,8 +22,8 @@ const BaseReaderExitButton = ({ exit }: { exit: ReturnType<typeof ReaderService.
 
     return (
         <CustomTooltip title={t`Exit reader`}>
-            <IconButton sx={{ marginRight: 2 }} onClick={exit} color="inherit">
-                {getOptionForDirection(<ArrowBack />, <ArrowForwardIcon />)}
+            <IconButton onClick={exit} color="inherit">
+                {getOptionForDirection(<ArrowBackRoundedIcon />, <ArrowForwardRoundedIcon />)}
             </IconButton>
         </CustomTooltip>
     );

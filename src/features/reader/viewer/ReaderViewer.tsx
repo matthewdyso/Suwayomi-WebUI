@@ -255,6 +255,8 @@ const BaseReaderViewer = ({
                 width: '100%',
                 height: '100%',
                 overflow: 'auto',
+                // no rubber band or pull-to-refresh while paging through the chapter (iOS Safari)
+                overscrollBehavior: 'none',
                 flexWrap: 'nowrap',
                 ...applyStyles(isContinuousReadingModeActive && !shouldShowTransitionPage, {
                     gap: `${getPageGap(pageGap, readingMode)}px`,

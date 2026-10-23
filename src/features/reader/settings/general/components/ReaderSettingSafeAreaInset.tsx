@@ -9,7 +9,7 @@
 import { useLingui } from '@lingui/react/macro';
 import { msg } from '@lingui/core/macro';
 import type { ValueToDisplayData } from '@/base/Base.types.ts';
-import { ButtonSelectInput } from '@/base/components/inputs/ButtonSelectInput.tsx';
+import { ReaderSettingChipSelect } from '@/features/reader/settings/components/ReaderSettingChipSelect.tsx';
 import type { IReaderSettingsWithDefaultFlag, SafeAreaInset } from '@/features/reader/Reader.types.ts';
 import { DEFAULT_READER_SETTINGS } from '@/features/reader/settings/ReaderSettings.constants.tsx';
 
@@ -43,7 +43,7 @@ export const ReaderSettingSafeAreaInset = ({
     const { t } = useLingui();
 
     return (
-        <ButtonSelectInput
+        <ReaderSettingChipSelect
             label={t`Apply safe area padding`}
             description={t`Prevents content from overlapping device cutouts and screen edges`}
             value={Object.entries(safeAreaInset)

@@ -11,9 +11,9 @@ import { msg } from '@lingui/core/macro';
 import type { IReaderSettings } from '@/features/reader/Reader.types.ts';
 import { ReaderScrollAmount } from '@/features/reader/Reader.types.ts';
 import type { ValueToDisplayData } from '@/base/Base.types.ts';
-import { ButtonSelectInput } from '@/base/components/inputs/ButtonSelectInput.tsx';
-import { SliderInput } from '@/base/components/inputs/SliderInput.tsx';
+import { ReaderSettingChipSelect } from '@/features/reader/settings/components/ReaderSettingChipSelect.tsx';
 import { DEFAULT_READER_SETTINGS, SCROLL_AMOUNT } from '@/features/reader/settings/ReaderSettings.constants.tsx';
+import { SliderItem } from '@/base/components/settings/SheetRows.tsx';
 
 const VALUE_TO_DISPLAY_DATA: ValueToDisplayData<ReaderScrollAmount> = {
     [ReaderScrollAmount.TINY]: {
@@ -46,14 +46,14 @@ export const ReaderSettingScrollAmount = ({
 
     return (
         <>
-            <ButtonSelectInput
+            <ReaderSettingChipSelect
                 label={t`Scroll amount`}
                 value={scrollAmount}
                 values={READER_SCROLL_AMOUNT_VALUES}
                 setValue={(value) => setScrollAmount(value as number, true)}
                 valueToDisplayData={VALUE_TO_DISPLAY_DATA}
             />
-            <SliderInput
+            <SliderItem
                 label={t`Custom scroll amount`}
                 value={`${scrollAmount}%`}
                 onDefault={() => setScrollAmount(DEFAULT_READER_SETTINGS.scrollAmount, true)}

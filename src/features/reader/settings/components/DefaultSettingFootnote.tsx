@@ -6,7 +6,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { useLingui } from '@lingui/react/macro';
 import { MediaQuery } from '@/base/utils/MediaQuery.tsx';
@@ -20,8 +19,8 @@ export const DefaultSettingFootnote = ({ areDefaultSettings }: { areDefaultSetti
     }
 
     return (
-        <Stack sx={{ alignItems: 'end' }}>
-            <Typography variant="caption">{t`*: Active setting`}</Typography>
-        </Stack>
+        <Typography variant="bodySmall" sx={{ px: 3, pt: 1, textAlign: 'end', color: 'text.secondary' }}>
+            {t`*: Active setting`}
+        </Typography>
     );
 };

@@ -7,7 +7,7 @@
  */
 
 import Stack from '@mui/material/Stack';
-import FitScreenIcon from '@mui/icons-material/FitScreen';
+import FitScreenRoundedIcon from '@mui/icons-material/FitScreenRounded';
 import { useLingui } from '@lingui/react/macro';
 import { CustomTooltip } from '@/base/components/CustomTooltip.tsx';
 import type {
@@ -56,10 +56,10 @@ export const ReaderNavBarDesktopPageScale = ({
                     <CustomIconButton
                         onClick={() => updateSetting('shouldStretchPage', !shouldStretchPage.value)}
                         sx={{ px: undefined }}
-                        variant="contained"
-                        color={shouldStretchPage.value ? 'secondary' : 'primary'}
+                        variant={shouldStretchPage.value ? 'contained' : 'tonal'}
+                        aria-pressed={shouldStretchPage.value}
                     >
-                        <FitScreenIcon />
+                        <FitScreenRoundedIcon />
                     </CustomIconButton>
                 </CustomTooltip>
             )}

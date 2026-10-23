@@ -104,12 +104,19 @@ export class ReaderService {
         const destinationPath = UrlUtil.asUrl(e?.destination.url ?? window.location.href)?.pathname;
 
         if (force || !destinationPath?.match(READER_REGEX)) {
-            document.exitFullscreen().catch(defaultPromiseErrorHandler('ReaderService::exitFullscreen'));
+            if (document.fullscreenElement) {
+                document.exitFullscreen().catch(defaultPromiseErrorHandler('ReaderService::exitFullscreen'));
+            }
             navigation.removeEventListener('navigate', ReaderService.exitFullscreen);
         }
     }
 
     static enterFullscreen(): void {
+        // e.g. iPhone Safari has no element fullscreen ("requestFullscreen" is undefined)
+        if (!document.fullscreenEnabled) {
+            return;
+        }
+
         document.documentElement
             .requestFullscreen()
             .catch(defaultPromiseErrorHandler('ReaderService::enterFullscreen'));

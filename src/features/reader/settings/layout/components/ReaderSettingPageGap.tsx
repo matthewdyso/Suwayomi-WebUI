@@ -9,11 +9,11 @@
 import { useLingui } from '@lingui/react/macro';
 import type { IReaderSettings, IReaderSettingsWithDefaultFlag } from '@/features/reader/Reader.types.ts';
 import { ReadingMode } from '@/features/reader/Reader.types.ts';
-import { SliderInput } from '@/base/components/inputs/SliderInput.tsx';
 import { DEFAULT_READER_SETTINGS, PAGE_GAP } from '@/features/reader/settings/ReaderSettings.constants.tsx';
 import { isContinuousReadingMode } from '@/features/reader/settings/ReaderSettings.utils.tsx';
 
 import type { SelectButtonDefaultableProps } from '@/base/components/buttons/SelectButton.tsx';
+import { SliderItem } from '@/base/components/settings/SheetRows.tsx';
 
 export const ReaderSettingPageGap = ({
     pageGap,
@@ -33,7 +33,7 @@ export const ReaderSettingPageGap = ({
     }
 
     return (
-        <SliderInput
+        <SliderItem
             label={t`Page gap`}
             value={`${pageGap.value}${t`px`}`}
             onDefault={isDefaultable ? onDefault : undefined}

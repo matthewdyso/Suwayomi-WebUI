@@ -7,6 +7,7 @@
  */
 
 import Box from '@mui/material/Box';
+import GlobalStyles from '@mui/material/GlobalStyles';
 import { memo, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useLingui } from '@lingui/react/macro';
@@ -49,6 +50,7 @@ import { getPage } from '@/features/reader/overlay/progress-bar/ReaderProgressBa
 import { getOptionForDirection } from '@/features/theme/services/ThemeCreator.ts';
 import { READING_DIRECTION_TO_THEME_DIRECTION } from '@/features/reader/settings/ReaderSettings.constants.tsx';
 import { useTheme } from '@mui/material/styles';
+import { useThemeColorOverride } from '@/features/theme/AppThemeContext.tsx';
 
 const BaseReader = ({
     setOverride,
@@ -161,6 +163,8 @@ const BaseReader = ({
 
     useReaderResetStates();
     useWakeLock(shouldWakeLockScreen && !isLoading);
+    // Safari's status bar continues the reader's background
+    useThemeColorOverride(primaryPageBackground);
     useReaderSetSettingsState(
         mangaResponse,
         defaultSettingsResponse,
@@ -204,7 +208,7 @@ const BaseReader = ({
                                 top: 0,
                                 left: 0,
                                 width: '100vw',
-                                height: '100vh',
+                                height: '100dvh',
                                 background: 'transparent',
                             }}
                         />
@@ -244,7 +248,7 @@ const BaseReader = ({
         return (
             <Box
                 sx={{
-                    height: '100vh',
+                    height: '100dvh',
                     width: '100vw',
                     display: 'grid',
                     placeItems: 'center',
@@ -272,7 +276,7 @@ const BaseReader = ({
                 minWidth: `calc(100vw - ${readerNavBarWidth}px)`,
                 maxWidth: `calc(100vw - ${readerNavBarWidth}px)`,
                 width: `calc(100vw - ${readerNavBarWidth}px)`,
-                height: `100vh`,
+                height: `100dvh`,
                 pt: safeAreaInset.top ? 'env(safe-area-inset-top)' : undefined,
                 pb: safeAreaInset.bottom ? 'env(safe-area-inset-bottom)' : undefined,
                 pr: safeAreaInset.right ? 'env(safe-area-inset-right)' : undefined,
@@ -285,6 +289,8 @@ const BaseReader = ({
                     : `linear-gradient(to right, ${getOptionForDirection(primaryPageBackground, secondaryPageBackground, direction)} 0 50%, ${getOptionForDirection(secondaryPageBackground, primaryPageBackground, direction)} 50% 100%)`,
             }}
         >
+            {/* the page behind the reader mustn't bounce or reload when the reader is scrolled past its ends */}
+            <GlobalStyles styles={{ 'html, body': { overscrollBehavior: 'none' } }} />
             <ReaderViewer ref={scrollElementRef} />
             <TapZoneLayout />
             <ReaderRGBAFilter />

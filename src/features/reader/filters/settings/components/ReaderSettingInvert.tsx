@@ -9,7 +9,7 @@
 import Stack from '@mui/material/Stack';
 import { useLingui } from '@lingui/react/macro';
 import type { IReaderSettings } from '@/features/reader/Reader.types.ts';
-import { CheckboxInput } from '@/base/components/inputs/CheckboxInput.tsx';
+import { CheckboxItem } from '@/base/components/settings/SheetRows.tsx';
 
 export const ReaderSettingInvert = ({
     invert,
@@ -21,7 +21,7 @@ export const ReaderSettingInvert = ({
 
     return (
         <Stack>
-            <CheckboxInput label={t`Invert`} checked={invert} onChange={(_, checked) => updateSetting(checked)} />
+            <CheckboxItem label={t`Invert`} checked={invert} onChange={(_, checked) => updateSetting(checked)} />
         </Stack>
     );
 };

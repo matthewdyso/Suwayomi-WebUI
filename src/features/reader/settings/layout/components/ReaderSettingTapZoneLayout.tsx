@@ -11,7 +11,7 @@ import { msg } from '@lingui/core/macro';
 import { TapZoneLayouts } from '@/features/reader/tap-zones/TapZoneLayout.types.ts';
 import type { ValueToDisplayData } from '@/base/Base.types.ts';
 import type { IReaderSettingsWithDefaultFlag, ReadingDirection } from '@/features/reader/Reader.types.ts';
-import { ButtonSelectInput } from '@/base/components/inputs/ButtonSelectInput.tsx';
+import { ReaderSettingChipSelect } from '@/features/reader/settings/components/ReaderSettingChipSelect.tsx';
 import type { SelectButtonDefaultableProps } from '@/base/components/buttons/SelectButton.tsx';
 
 const VALUE_TO_DISPLAY_DATA: ValueToDisplayData<TapZoneLayouts> = {
@@ -50,7 +50,7 @@ export const ReaderSettingTapZoneLayout = ({
     const { t } = useLingui();
 
     return (
-        <ButtonSelectInput
+        <ReaderSettingChipSelect
             {...buttonSelectInputProps}
             label={t`Tap zones`}
             value={tapZoneLayout.isDefault ? undefined : tapZoneLayout.value}

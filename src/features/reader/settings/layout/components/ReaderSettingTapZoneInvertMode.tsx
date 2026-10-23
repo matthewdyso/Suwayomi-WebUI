@@ -15,7 +15,7 @@ import type {
     ReadingDirection,
 } from '@/features/reader/Reader.types.ts';
 import type { TapZoneInvertMode } from '@/features/reader/tap-zones/TapZoneLayout.types.ts';
-import { ButtonSelectInput } from '@/base/components/inputs/ButtonSelectInput.tsx';
+import { ReaderSettingChipSelect } from '@/features/reader/settings/components/ReaderSettingChipSelect.tsx';
 import type { SelectButtonDefaultableProps } from '@/base/components/buttons/SelectButton.tsx';
 
 enum TapZonesInvertOption {
@@ -94,7 +94,7 @@ export const ReaderSettingTapZoneInvertMode = ({
     const tapZonesInvertOption = convertTapZoneInvertModeToOption(tapZoneInvertMode.value);
 
     return (
-        <ButtonSelectInput<TapZonesInvertOption>
+        <ReaderSettingChipSelect<TapZonesInvertOption>
             {...buttonSelectInputProps}
             label={t`Invert tap zones`}
             value={tapZoneInvertMode.isDefault ? undefined : tapZonesInvertOption}

@@ -9,12 +9,10 @@
 import { useMemo } from 'react';
 import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
-import Box from '@mui/material/Box';
 import { ReaderService } from '@/features/reader/services/ReaderService.ts';
-import { ProgressBarType, ReadingDirection } from '@/features/reader/Reader.types.ts';
+import { ProgressBarType } from '@/features/reader/Reader.types.ts';
 import { getPage } from '@/features/reader/overlay/progress-bar/ReaderProgressBar.utils.tsx';
 import { useNavBarContext } from '@/features/navigation-bar/NavbarContext.tsx';
-import { reverseString } from '@/base/utils/Strings.ts';
 import type { NavbarContextType } from '@/features/navigation-bar/NavigationBar.types.ts';
 import { withPropsFrom } from '@/base/hoc/withPropsFrom.tsx';
 import {
@@ -24,6 +22,30 @@ import {
     useReaderSettingsStore,
 } from '@/features/reader/stores/ReaderStore.ts';
 
+/**
+ * Mihon's "ReaderPageIndicator" colors: light text with a dark outline, readable on any page, independent of the theme.
+ */
+const PAGE_INDICATOR_COLOR = {
+    text: '#EBEBEB',
+    outline: '#2D2D2D',
+} as const;
+
+/**
+ * 1 px text shadows in all eight directions draw the outline (Mihon strokes the text).
+ */
+const PAGE_INDICATOR_OUTLINE = [
+    [-1, -1],
+    [0, -1],
+    [1, -1],
+    [-1, 0],
+    [1, 0],
+    [-1, 1],
+    [0, 1],
+    [1, 1],
+]
+    .map(([x, y]) => `${x}px ${y}px 0 ${PAGE_INDICATOR_COLOR.outline}`)
+    .join(', ');
+
 const BaseReaderPageNumber = ({
     isDesktop,
     readerNavBarWidth,
@@ -31,25 +53,19 @@ const BaseReaderPageNumber = ({
     Pick<NavbarContextType, 'readerNavBarWidth'>) => {
     const scrollbar = useReaderScrollbarStore((state) => state);
     const { currentPageIndex, pages, totalPages } = useReaderPagesStore('currentPageIndex', 'pages', 'totalPages');
-    const { readingDirection, shouldShowPageNumber, progressBarType, progressBarSize } = useReaderSettingsStore(
-        (state) => ({
-            readingDirection: state.readingDirection.value,
-            shouldShowPageNumber: state.shouldShowPageNumber,
-            progressBarType: state.progressBarType,
-            progressBarSize: state.progressBarSize,
-        }),
-    );
+    const { shouldShowPageNumber, progressBarType, progressBarSize } = useReaderSettingsStore((state) => ({
+        shouldShowPageNumber: state.shouldShowPageNumber,
+        progressBarType: state.progressBarType,
+        progressBarSize: state.progressBarSize,
+    }));
     const progressBarSizeInset = isDesktop && progressBarType === ProgressBarType.STANDARD ? progressBarSize : 0;
-    const safeAreaInset = useReaderSettingsStore((state) => state.safeAreaInset);
     const isMaximized = useReaderProgressBarStore('isMaximized');
 
-    const pageName = useMemo(() => {
-        const currentPageName = getPage(currentPageIndex, pages).name;
-        const SEPARATOR = '/';
-        const tmpPageName = `${currentPageName}${SEPARATOR}${totalPages}`;
-
-        return readingDirection === ReadingDirection.LTR ? tmpPageName : reverseString(tmpPageName, SEPARATOR);
-    }, [currentPageIndex, pages, totalPages, readingDirection]);
+    // Mihon's "ReaderPageIndicator" reads "current / total" in every reading direction
+    const pageName = useMemo(
+        () => `${getPage(currentPageIndex, pages).name} / ${totalPages}`,
+        [currentPageIndex, pages, totalPages],
+    );
 
     if (!shouldShowPageNumber) {
         return null;
@@ -65,21 +81,25 @@ const BaseReaderPageNumber = ({
                 position: 'fixed',
                 left: readerNavBarWidth,
                 right: 0,
+                // overlay chrome stays clear of the home indicator, whether the pages are inset or not
                 bottom: (theme) =>
-                    `calc(${theme.spacing(1)} + ${progressBarSizeInset}px + max(${scrollbar.xSize}px, ${safeAreaInset.bottom ? 'env(safe-area-inset-bottom)' : '0px'}))`,
+                    `calc(${theme.spacing(0.5)} + ${progressBarSizeInset}px + max(${scrollbar.xSize}px, env(safe-area-inset-bottom)))`,
                 alignItems: 'center',
                 transition: (theme) => `left 0.${theme.transitions.duration.shortest}s`,
             }}
         >
-            <Box
+            <Typography
+                variant="bodySmall"
                 sx={{
-                    p: 0.5,
-                    borderRadius: 1,
-                    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                    fontWeight: 'bold',
+                    letterSpacing: '1px',
+                    color: PAGE_INDICATOR_COLOR.text,
+                    textShadow: PAGE_INDICATOR_OUTLINE,
+                    fontVariantNumeric: 'tabular-nums',
                 }}
             >
-                <Typography sx={{ color: 'white' }}>{pageName}</Typography>
-            </Box>
+                {pageName}
+            </Typography>
         </Stack>
     );
 };

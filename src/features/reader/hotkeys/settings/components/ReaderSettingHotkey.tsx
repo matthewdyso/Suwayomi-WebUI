@@ -20,6 +20,7 @@ import { DEFAULT_READER_SETTINGS } from '@/features/reader/settings/ReaderSettin
 import { RecordHotkey } from '@/features/reader/hotkeys/settings/components/RecordHotkey.tsx';
 import { Hotkey } from '@/features/reader/hotkeys/settings/components/Hotkey.tsx';
 import { ResetButton } from '@/base/components/buttons/ResetButton.tsx';
+import { ReaderSettingRow } from '@/features/reader/settings/components/ReaderSettingRow.tsx';
 
 const READER_HOTKEY_TO_TITLE: Record<ReaderHotkey, MessageDescriptor> = {
     [ReaderHotkey.PREVIOUS_PAGE]: msg`Previous page`,
@@ -56,8 +57,8 @@ export const ReaderSettingHotkey = ({
 
     return (
         <>
-            <Stack sx={{ flexDirection: 'row', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                <Typography>{t(READER_HOTKEY_TO_TITLE[hotkey])}</Typography>
+            <ReaderSettingRow sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                <Typography variant="bodyMedium">{t(READER_HOTKEY_TO_TITLE[hotkey])}</Typography>
                 <Stack
                     sx={{
                         flexDirection: 'row',
@@ -84,7 +85,7 @@ export const ReaderSettingHotkey = ({
                         />
                     </Stack>
                 </Stack>
-            </Stack>
+            </ReaderSettingRow>
             {popupState.isOpen && (
                 <RecordHotkey
                     onClose={popupState.close}

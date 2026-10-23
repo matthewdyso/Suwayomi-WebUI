@@ -6,11 +6,10 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import Button from '@mui/material/Button';
-import Box from '@mui/material/Box';
 import { useLingui } from '@lingui/react/macro';
 import type { IReaderSettings } from '@/features/reader/Reader.types.ts';
 import { READER_PAGE_SCALE_MODE_TO_SCALING_ALLOWED } from '@/features/reader/settings/ReaderSettings.constants.tsx';
+import { CheckboxItem } from '@/base/components/settings/SheetRows.tsx';
 
 export const ReaderSettingStretchPage = ({
     pageScaleMode,
@@ -26,13 +25,10 @@ export const ReaderSettingStretchPage = ({
     }
 
     return (
-        <Box>
-            <Button
-                onClick={() => setShouldStretchPage(!shouldStretchPage)}
-                variant={shouldStretchPage ? 'contained' : 'outlined'}
-            >
-                {t`Stretch small pages`}
-            </Button>
-        </Box>
+        <CheckboxItem
+            label={t`Stretch small pages`}
+            checked={shouldStretchPage}
+            onChange={(_, checked) => setShouldStretchPage(checked)}
+        />
     );
 };

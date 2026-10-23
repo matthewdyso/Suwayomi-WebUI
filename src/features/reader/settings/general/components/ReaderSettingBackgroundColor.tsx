@@ -9,11 +9,11 @@
 import { useLingui } from '@lingui/react/macro';
 import { msg } from '@lingui/core/macro';
 import type { ValueToDisplayData } from '@/base/Base.types.ts';
-import { ButtonSelectInput } from '@/base/components/inputs/ButtonSelectInput.tsx';
+import { ReaderSettingChipSelect } from '@/features/reader/settings/components/ReaderSettingChipSelect.tsx';
 import type { IReaderSettingsWithDefaultFlag } from '@/features/reader/Reader.types.ts';
 import { ReaderBackgroundColor } from '@/features/reader/Reader.types.ts';
 import type { ReaderService } from '@/features/reader/services/ReaderService.ts';
-import { CheckboxInput } from '@/base/components/inputs/CheckboxInput';
+import { CheckboxItem } from '@/base/components/settings/SheetRows.tsx';
 
 const VALUE_TO_DISPLAY_DATA: ValueToDisplayData<ReaderBackgroundColor> = {
     [ReaderBackgroundColor.THEME]: {
@@ -53,7 +53,7 @@ export const ReaderSettingBackgroundColor = ({
 
     return (
         <>
-            <ButtonSelectInput
+            <ReaderSettingChipSelect
                 label={t`Background color`}
                 value={backgroundColor}
                 values={READER_BACKGROUND_COLOR_VALUES}
@@ -61,7 +61,7 @@ export const ReaderSettingBackgroundColor = ({
                 valueToDisplayData={VALUE_TO_DISPLAY_DATA}
             />
             {backgroundColor === ReaderBackgroundColor.AUTO && (
-                <CheckboxInput
+                <CheckboxItem
                     label={t`Enable auto background color in continuous reading mode`}
                     checked={useAutoBackgroundColorContinuousMode}
                     onChange={(_, checked) => updateSetting('useAutoBackgroundColorContinuousMode', checked)}

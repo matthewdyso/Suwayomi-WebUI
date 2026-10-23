@@ -6,48 +6,38 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import ArrowCircleLeftIcon from '@mui/icons-material/ArrowCircleLeft';
-import ArrowCircleRightIcon from '@mui/icons-material/ArrowCircleRight';
 import { useLingui } from '@lingui/react/macro';
-import { msg } from '@lingui/core/macro';
-import type { IReaderSettingsWithDefaultFlag } from '@/features/reader/Reader.types.ts';
-import { ReadingDirection } from '@/features/reader/Reader.types.ts';
-import type { ValueToDisplayData } from '@/base/Base.types.ts';
-import { ButtonSelectInput } from '@/base/components/inputs/ButtonSelectInput.tsx';
+import type { IReaderSettingsWithDefaultFlag, ReadingDirection } from '@/features/reader/Reader.types.ts';
 import type { SelectButtonDefaultableProps } from '@/base/components/buttons/SelectButton.tsx';
-
-const VALUE_TO_DISPLAY_DATA: ValueToDisplayData<ReadingDirection> = {
-    [ReadingDirection.LTR]: {
-        title: msg`Left to right`,
-        icon: <ArrowCircleRightIcon />,
-    },
-    [ReadingDirection.RTL]: {
-        title: msg`Right to left`,
-        icon: <ArrowCircleLeftIcon />,
-    },
-};
-
-const READING_DIRECTION_VALUES = Object.values(ReadingDirection).filter((value) => typeof value === 'number');
+import {
+    READING_DIRECTION_VALUE_TO_DISPLAY_DATA,
+    READING_DIRECTION_VALUES,
+} from '@/features/reader/settings/ReaderSettings.constants.tsx';
+import { ReaderSettingChipSelect } from '@/features/reader/settings/components/ReaderSettingChipSelect.tsx';
+import { ReaderSettingIconGrid } from '@/features/reader/settings/components/ReaderSettingIconGrid.tsx';
 
 export const ReaderSettingReadingDirection = ({
     readingDirection,
     setReadingDirection,
+    asIconGrid = false,
     ...buttonSelectInputProps
 }: Pick<IReaderSettingsWithDefaultFlag, 'readingDirection'> &
     Pick<SelectButtonDefaultableProps<ReadingDirection>, 'isDefaultable' | 'onDefault'> & {
         setReadingDirection: (readingDirection: ReadingDirection) => void;
+        asIconGrid?: boolean;
     }) => {
     const { t } = useLingui();
+    const Select = asIconGrid ? ReaderSettingIconGrid : ReaderSettingChipSelect;
 
     return (
-        <ButtonSelectInput
+        <Select
             {...buttonSelectInputProps}
             label={t`Reading direction`}
             value={readingDirection.isDefault ? undefined : readingDirection.value}
             defaultValue={readingDirection.isDefault ? readingDirection.value : undefined}
             values={READING_DIRECTION_VALUES}
             setValue={setReadingDirection}
-            valueToDisplayData={VALUE_TO_DISPLAY_DATA}
+            valueToDisplayData={READING_DIRECTION_VALUE_TO_DISPLAY_DATA}
         />
     );
 };

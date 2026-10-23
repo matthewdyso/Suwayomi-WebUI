@@ -17,6 +17,7 @@ import { ReaderSettingGrayscale } from '@/features/reader/filters/settings/compo
 import { ReaderSettingInvert } from '@/features/reader/filters/settings/components/ReaderSettingInvert.tsx';
 import type { ReaderSettingsTypeProps } from '@/features/reader/Reader.types.ts';
 import { ResetButton } from '@/base/components/buttons/ResetButton.tsx';
+import { ReaderSettingRow } from '@/features/reader/settings/components/ReaderSettingRow.tsx';
 
 export const ReaderFilterSettings = ({
     settings: { customFilter },
@@ -30,7 +31,7 @@ export const ReaderFilterSettings = ({
     };
 
     return (
-        <Stack sx={{ gap: 2 }}>
+        <Stack>
             <ReaderSettingBrightness
                 brightness={customFilter.brightness}
                 updateSetting={(key, value, commit) =>
@@ -118,9 +119,9 @@ export const ReaderFilterSettings = ({
                     })
                 }
             />
-            <Stack sx={{ alignItems: 'end' }}>
+            <ReaderSettingRow sx={{ display: 'flex', justifyContent: 'flex-end' }}>
                 <ResetButton onClick={() => onDefault?.('customFilter')} variant="outlined" />
-            </Stack>
+            </ReaderSettingRow>
         </Stack>
     );
 };

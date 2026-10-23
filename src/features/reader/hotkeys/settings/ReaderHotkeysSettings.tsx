@@ -13,15 +13,18 @@ import type { ReaderSettingsTypeProps } from '@/features/reader/Reader.types.ts'
 import { ReaderSettingHotkey } from '@/features/reader/hotkeys/settings/components/ReaderSettingHotkey.tsx';
 import { READER_HOTKEYS } from '@/features/reader/settings/ReaderSettings.constants.tsx';
 import { ResetButton } from '@/base/components/buttons/ResetButton.tsx';
+import { ReaderSettingRow } from '@/features/reader/settings/components/ReaderSettingRow.tsx';
 
 export const ReaderHotkeysSettings = ({ settings, updateSetting, onDefault }: ReaderSettingsTypeProps) => {
     const { t } = useLingui();
 
     return (
-        <Stack sx={{ gap: 2 }}>
-            <Stack sx={{ alignItems: 'end' }}>
-                <Typography variant="caption">{t`Click key to remove binding`}</Typography>
-            </Stack>
+        <Stack>
+            <ReaderSettingRow sx={{ textAlign: 'end' }}>
+                <Typography variant="bodySmall" sx={{ color: 'text.secondary' }}>
+                    {t`Click key to remove binding`}
+                </Typography>
+            </ReaderSettingRow>
             {READER_HOTKEYS.map((hotkey) => (
                 <ReaderSettingHotkey
                     key={hotkey}
@@ -31,9 +34,9 @@ export const ReaderHotkeysSettings = ({ settings, updateSetting, onDefault }: Re
                     updateSetting={(keys) => updateSetting('hotkeys', { ...settings.hotkeys, [hotkey]: keys })}
                 />
             ))}
-            <Stack sx={{ alignItems: 'end' }}>
+            <ReaderSettingRow sx={{ display: 'flex', justifyContent: 'flex-end' }}>
                 <ResetButton onClick={() => onDefault?.('hotkeys')} variant="outlined" />
-            </Stack>
+            </ReaderSettingRow>
         </Stack>
     );
 };

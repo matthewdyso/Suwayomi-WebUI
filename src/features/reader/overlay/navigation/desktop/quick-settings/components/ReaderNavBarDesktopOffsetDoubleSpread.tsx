@@ -30,8 +30,8 @@ export const ReaderNavBarDesktopOffsetDoubleSpread = ({
             sx={{ justifyContent: 'start', textTransform: 'unset' }}
             size="large"
             onClick={() => setShouldOffsetDoubleSpreads(!shouldOffsetDoubleSpreads)}
-            color={shouldOffsetDoubleSpreads ? 'secondary' : 'primary'}
-            variant="contained"
+            variant={shouldOffsetDoubleSpreads ? 'contained' : 'tonal'}
+            aria-pressed={shouldOffsetDoubleSpreads}
             startIcon={<OffsetDoubleSpreadIcon />}
         >
             {t`Offset double spreads`}

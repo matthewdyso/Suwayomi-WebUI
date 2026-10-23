@@ -13,10 +13,10 @@ import { ReaderSettingProgressBarSize } from '@/features/reader/overlay/progress
 import { ReaderSettingProgressBarPosition } from '@/features/reader/overlay/progress-bar/settings/components/ReaderSettingProgressBarPosition.tsx';
 import type { IReaderSettings, ReaderSettingsTypeProps } from '@/features/reader/Reader.types.ts';
 import { ReaderSettingOverlayMode } from '@/features/reader/overlay/settings/ReaderSettingOverlayMode.tsx';
-import { CheckboxInput } from '@/base/components/inputs/CheckboxInput.tsx';
 import { ReaderSettingBackgroundColor } from '@/features/reader/settings/general/components/ReaderSettingBackgroundColor.tsx';
 import { ReaderSettingSafeAreaInset } from '@/features/reader/settings/general/components/ReaderSettingSafeAreaInset.tsx';
 import { ReaderService } from '@/features/reader/services/ReaderService.ts';
+import { CheckboxItem } from '@/base/components/settings/SheetRows.tsx';
 
 export const ReaderGeneralSettings = ({
     overlayMode,
@@ -27,7 +27,7 @@ export const ReaderGeneralSettings = ({
     const { t } = useLingui();
 
     return (
-        <Stack sx={{ gap: 2 }}>
+        <Stack>
             <ReaderSettingOverlayMode
                 overlayMode={settings.overlayMode}
                 setOverlayMode={(value) => updateSetting('overlayMode', value)}
@@ -54,12 +54,12 @@ export const ReaderGeneralSettings = ({
                 progressBarPositionAutoVertical={settings.progressBarPositionAutoVertical}
                 updateSetting={updateSetting}
             />
-            <CheckboxInput
+            <CheckboxItem
                 label={t`Show page number`}
                 checked={settings.shouldShowPageNumber}
                 onChange={(_, checked) => updateSetting('shouldShowPageNumber', checked)}
             />
-            <CheckboxInput
+            <CheckboxItem
                 label={t`Fullscreen`}
                 checked={settings.shouldEnterFullscreen}
                 onChange={(_, checked) => {
