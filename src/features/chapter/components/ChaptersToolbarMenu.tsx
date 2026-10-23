@@ -6,98 +6,50 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import FilterList from '@mui/icons-material/FilterList';
 import IconButton from '@mui/material/IconButton';
-import * as React from 'react';
-import PopupState, { bindMenu, bindTrigger } from 'material-ui-popup-state';
-import Menu from '@mui/material/Menu';
-import DownloadIcon from '@mui/icons-material/Download';
-import DoneAllIcon from '@mui/icons-material/DoneAll';
+import DoneAllRoundedIcon from '@mui/icons-material/DoneAllRounded';
+import type { ComponentProps } from 'react';
 import { useMemo } from 'react';
 import { useLingui } from '@lingui/react/macro';
 import { CustomTooltip } from '@/base/components/CustomTooltip.tsx';
-import { ChapterOptions } from '@/features/chapter/components/ChapterOptions.tsx';
-import type { updateChapterListOptions } from '@/features/chapter/utils/ChapterList.util.tsx';
-import { isFilterActive } from '@/features/chapter/utils/ChapterList.util.tsx';
 import type {
     ChapterBookmarkInfo,
     ChapterDownloadInfo,
     ChapterIdInfo,
-    ChapterListOptions,
     ChapterReadInfo,
 } from '@/features/chapter/Chapter.types.ts';
-import { ChaptersDownloadActionMenuItems } from '@/features/chapter/components/actions/ChaptersDownloadActionMenuItems.tsx';
 import { Chapters } from '@/features/chapter/services/Chapters.ts';
+import { ChaptersDownloadMenuButton } from '@/features/chapter/components/buttons/ChaptersDownloadMenuButton.tsx';
+import { ChapterOptionsButton } from '@/features/chapter/components/buttons/ChapterOptionsButton.tsx';
 
 interface IProps {
-    mangaId: number;
-    options: ChapterListOptions;
-    updateOption: ReturnType<typeof updateChapterListOptions>;
+    manga: ComponentProps<typeof ChaptersDownloadMenuButton>['manga'];
     chapters: (ChapterIdInfo & ChapterReadInfo & ChapterDownloadInfo & ChapterBookmarkInfo)[];
-    scanlators: string[];
-    excludeScanlators: string[];
+    isFiltered: boolean;
+    onOpenOptions: () => void;
 }
 
-export const ChaptersToolbarMenu = ({
-    mangaId,
-    options,
-    updateOption,
-    chapters,
-    scanlators,
-    excludeScanlators,
-}: IProps) => {
+/**
+ * The chapter list's own actions in the two column layout; on phones they are in the app bar.
+ */
+export const ChaptersToolbarMenu = ({ manga, chapters, isFiltered, onOpenOptions }: IProps) => {
     const { t } = useLingui();
 
-    const [open, setOpen] = React.useState(false);
-    const isFiltered = isFilterActive(options);
-
     const areAllChaptersRead = useMemo(() => chapters.every(Chapters.isRead), [chapters]);
-    const areAllChaptersDownloaded = useMemo(() => chapters.every(Chapters.isDownloaded), [chapters]);
 
     return (
         <>
             <CustomTooltip title={t`Mark all as read`} disabled={areAllChaptersRead}>
                 <IconButton
                     disabled={areAllChaptersRead}
-                    onClick={() => Chapters.markAsRead(Chapters.getNonRead(chapters), true, mangaId)}
+                    onClick={() => Chapters.markAsRead(Chapters.getNonRead(chapters), true, manga.id)}
                     color="inherit"
                 >
-                    <DoneAllIcon />
+                    <DoneAllRoundedIcon />
                 </IconButton>
             </CustomTooltip>
-            <PopupState variant="popover" popupId="chapterlist-download-button">
-                {(popupState) => (
-                    <>
-                        <CustomTooltip title={t`Download`} disabled={areAllChaptersRead}>
-                            <IconButton
-                                disabled={areAllChaptersDownloaded}
-                                {...bindTrigger(popupState)}
-                                color="inherit"
-                            >
-                                <DownloadIcon />
-                            </IconButton>
-                        </CustomTooltip>
-                        {popupState.isOpen && (
-                            <Menu {...bindMenu(popupState)}>
-                                <ChaptersDownloadActionMenuItems mangaIds={[mangaId]} closeMenu={popupState.close} />
-                            </Menu>
-                        )}
-                    </>
-                )}
-            </PopupState>
-            <CustomTooltip title={t`Filter and sort`}>
-                <IconButton onClick={() => setOpen(true)} color="inherit">
-                    <FilterList color={isFiltered ? 'warning' : undefined} />
-                </IconButton>
-            </CustomTooltip>
-            <ChapterOptions
-                open={open}
-                onClose={() => setOpen(false)}
-                options={options}
-                updateOption={updateOption}
-                scanlators={scanlators}
-                excludedScanlators={excludeScanlators}
-            />
+            <ChaptersDownloadMenuButton manga={manga} />
+            <ChapterOptionsButton isFiltered={isFiltered} onClick={onOpenOptions} />
         </>
     );
 };

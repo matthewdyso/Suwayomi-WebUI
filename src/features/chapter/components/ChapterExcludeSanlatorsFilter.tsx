@@ -12,7 +12,7 @@ import DisabledByDefaultRounded from '@mui/icons-material/DisabledByDefaultRound
 import { useLingui } from '@lingui/react/macro';
 import { CheckboxListSetting } from '@/base/components/settings/CheckboxListSetting.tsx';
 import type { updateChapterListOptions } from '@/features/chapter/utils/ChapterList.util.tsx';
-import { CheckboxInput } from '@/base/components/inputs/CheckboxInput.tsx';
+import { CheckboxItem } from '@/base/components/settings/SheetRows.tsx';
 
 export const ChapterExcludeSanlatorsFilter = ({
     updateOption,
@@ -32,11 +32,11 @@ export const ChapterExcludeSanlatorsFilter = ({
 
     return (
         <>
-            <CheckboxInput
+            <CheckboxItem
                 {...bindTrigger(popupState)}
                 label={t`Scanlator`}
                 icon={<PeopleAltOutlinedIcon />}
-                checkedIcon={<PeopleAltOutlinedIcon color="warning" />}
+                checkedIcon={<PeopleAltOutlinedIcon sx={{ color: 'm3.active' }} />}
                 checked={!!excludedScanlators.length}
             />
             <CheckboxListSetting

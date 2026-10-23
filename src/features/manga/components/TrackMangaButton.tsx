@@ -7,28 +7,27 @@
  */
 
 import { useNavigate } from 'react-router-dom';
-import SyncIcon from '@mui/icons-material/Sync';
-import PopupState, { bindDialog, bindTrigger } from 'material-ui-popup-state';
-import Dialog from '@mui/material/Dialog';
-import CheckIcon from '@mui/icons-material/Check';
+import SyncRoundedIcon from '@mui/icons-material/SyncRounded';
+import DoneRoundedIcon from '@mui/icons-material/DoneRounded';
+import { usePopupState } from 'material-ui-popup-state/hooks';
 import { useLingui } from '@lingui/react/macro';
 import { plural } from '@lingui/core/macro';
 import { requestManager } from '@/lib/requests/RequestManager.ts';
 import { makeToast } from '@/base/utils/Toast.ts';
 import { TrackManga } from '@/features/tracker/components/TrackManga.tsx';
 import { Trackers } from '@/features/tracker/services/Trackers.ts';
-import { FlexWrapButton } from '@/base/components/buttons/FlexWrapButton.tsx';
 import type { GetTrackersSettingsQuery } from '@/lib/graphql/generated/graphql.ts';
 import { GET_TRACKERS_SETTINGS } from '@/lib/graphql/tracker/TrackerQuery.ts';
 import type { MangaTitleInfo, MangaTrackRecordInfo } from '@/features/manga/Manga.types.ts';
 import { AppRoutes } from '@/base/AppRoute.constants.ts';
-import { MediaQuery } from '@/base/utils/MediaQuery.tsx';
 import { STABLE_EMPTY_ARRAY } from '@/base/Base.constants.ts';
+import { AdaptiveSheet } from '@/base/components/modals/AdaptiveSheet.tsx';
+import { MangaActionButton } from '@/features/manga/components/details/MangaActionButton.tsx';
 
 export const TrackMangaButton = ({ manga }: { manga: MangaTrackRecordInfo & MangaTitleInfo }) => {
     const { t } = useLingui();
     const navigate = useNavigate();
-    const isMobileWidth = MediaQuery.useIsMobileWidth();
+    const popupState = usePopupState({ variant: 'dialog', popupId: 'manga-track-modal' });
 
     const trackerList = requestManager.useGetTrackerList<GetTrackersSettingsQuery>(GET_TRACKERS_SETTINGS);
     const trackers = trackerList.data?.trackers.nodes ?? STABLE_EMPTY_ARRAY;
@@ -36,8 +35,9 @@ export const TrackMangaButton = ({ manga }: { manga: MangaTrackRecordInfo & Mang
 
     const loggedInTrackers = Trackers.getLoggedIn(trackers);
     const trackersInUse = Trackers.getLoggedIn(Trackers.getTrackers(mangaTrackers, trackers));
+    const isTracked = !!trackersInUse.length;
 
-    const handleClick = (openPopup: () => void) => {
+    const handleClick = () => {
         if (trackerList.error) {
             makeToast(t`Could not load track info`, 'error', trackerList.error?.toString());
             return;
@@ -48,35 +48,28 @@ export const TrackMangaButton = ({ manga }: { manga: MangaTrackRecordInfo & Mang
             return;
         }
 
-        openPopup();
+        popupState.open();
     };
 
     return (
-        <PopupState variant="dialog" popupId="manga-track-modal">
-            {(popupState) => (
-                <>
-                    <FlexWrapButton
-                        {...bindTrigger(popupState)}
-                        size={isMobileWidth ? 'small' : 'medium'}
-                        disabled={trackerList.loading || !!trackerList.error}
-                        onClick={() => handleClick(popupState.open)}
-                        variant={trackersInUse.length ? 'contained' : 'outlined'}
-                    >
-                        {trackersInUse.length ? <CheckIcon /> : <SyncIcon />}
-                        {trackersInUse.length
-                            ? plural(trackersInUse.length, {
-                                  one: '# Tracker',
-                                  other: '# Tracker',
-                              })
-                            : t`Tracking`}
-                    </FlexWrapButton>
-                    {popupState.isOpen && (
-                        <Dialog {...bindDialog(popupState)} maxWidth="md" fullWidth scroll="paper">
-                            <TrackManga manga={manga} />
-                        </Dialog>
-                    )}
-                </>
-            )}
-        </PopupState>
+        <>
+            <MangaActionButton
+                active={isTracked}
+                icon={isTracked ? <DoneRoundedIcon /> : <SyncRoundedIcon />}
+                label={
+                    isTracked
+                        ? plural(trackersInUse.length, {
+                              one: '# Tracker',
+                              other: '# Tracker',
+                          })
+                        : t`Tracking`
+                }
+                disabled={trackerList.loading || !!trackerList.error}
+                onClick={handleClick}
+            />
+            <AdaptiveSheet open={popupState.isOpen} onClose={popupState.close}>
+                <TrackManga manga={manga} />
+            </AdaptiveSheet>
+        </>
     );
 };

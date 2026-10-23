@@ -443,6 +443,7 @@ export type ChapterListFieldsFragment = {
     __typename: 'ChapterType';
     fetchedAt: string;
     uploadDate: string;
+    lastPageRead: number;
     lastReadAt: string;
     id: number;
     name: string;
@@ -460,6 +461,7 @@ export type ChapterUpdateListFieldsFragment = {
     __typename: 'ChapterType';
     fetchedAt: string;
     uploadDate: string;
+    lastPageRead: number;
     lastReadAt: string;
     id: number;
     name: string;
@@ -492,6 +494,7 @@ export type ChapterHistoryListFieldsFragment = {
     __typename: 'ChapterType';
     fetchedAt: string;
     uploadDate: string;
+    lastPageRead: number;
     lastReadAt: string;
     id: number;
     name: string;
@@ -758,6 +761,7 @@ export type GetChaptersMangaQuery = {
             __typename: 'ChapterType';
             fetchedAt: string;
             uploadDate: string;
+            lastPageRead: number;
             lastReadAt: string;
             id: number;
             name: string;
@@ -801,6 +805,7 @@ export type GetChaptersUpdatesQuery = {
             __typename: 'ChapterType';
             fetchedAt: string;
             uploadDate: string;
+            lastPageRead: number;
             lastReadAt: string;
             id: number;
             name: string;
@@ -858,6 +863,7 @@ export type GetChaptersHistoryQuery = {
             __typename: 'ChapterType';
             fetchedAt: string;
             uploadDate: string;
+            lastPageRead: number;
             lastReadAt: string;
             id: number;
             name: string;
@@ -2269,6 +2275,7 @@ export type RefreshMangaMutation = {
             __typename: 'ChapterType';
             fetchedAt: string;
             uploadDate: string;
+            lastPageRead: number;
             lastReadAt: string;
             id: number;
             name: string;

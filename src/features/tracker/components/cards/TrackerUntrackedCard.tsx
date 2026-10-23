@@ -6,17 +6,15 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
 import { useLingui } from '@lingui/react/macro';
-import { requestManager } from '@/lib/requests/RequestManager.ts';
-import { CARD_STYLING } from '@/features/tracker/Tracker.constants.ts';
 import type { TTrackerBase } from '@/features/tracker/Tracker.types.ts';
+import { TrackerLogo } from '@/features/tracker/components/TrackerLogo.tsx';
 
-import { AvatarSpinner } from '@/base/components/AvatarSpinner.tsx';
-
+/**
+ * Mihon's "TrackInfoItemEmpty": the tracker's logo and an "Add tracking" button.
+ */
 export const TrackerUntrackedCard = ({
     tracker,
     onClick,
@@ -27,32 +25,11 @@ export const TrackerUntrackedCard = ({
     const { t } = useLingui();
 
     return (
-        <Card sx={CARD_STYLING}>
-            <CardContent sx={{ padding: '0' }}>
-                <Stack
-                    direction="row"
-                    sx={{
-                        gap: 3,
-                    }}
-                >
-                    <AvatarSpinner
-                        alt={`${tracker.name}`}
-                        iconUrl={requestManager.getValidImgUrlFor(tracker.icon)}
-                        slots={{
-                            avatarProps: {
-                                variant: 'rounded',
-                                sx: { width: 64, height: 64 },
-                            },
-                            spinnerImageProps: {
-                                ignoreQueue: true,
-                            },
-                        }}
-                    />
-                    <Button sx={{ flexGrow: '1' }} onClick={onClick}>
-                        {t`Add tracking`}
-                    </Button>
-                </Stack>
-            </CardContent>
-        </Card>
+        <Stack direction="row" sx={{ alignItems: 'center', gap: 2 }}>
+            <TrackerLogo name={tracker.name} icon={tracker.icon} />
+            <Button variant="text" sx={{ flexGrow: 1 }} onClick={onClick}>
+                {t`Add tracking`}
+            </Button>
+        </Stack>
     );
 };

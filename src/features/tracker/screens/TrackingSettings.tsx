@@ -28,6 +28,7 @@ import type { MetadataTrackingSettings } from '@/features/tracker/Tracker.types.
 import { getErrorMessage } from '@/lib/HelperFunctions.ts';
 import { useAppTitle } from '@/features/navigation-bar/hooks/useAppTitle.ts';
 import { STABLE_EMPTY_ARRAY } from '@/base/Base.constants.ts';
+import { PreferenceList } from '@/features/settings/components/PreferenceList.tsx';
 
 export const TrackingSettings = () => {
     const { t } = useLingui();
@@ -81,28 +82,26 @@ export const TrackingSettings = () => {
     }
 
     return (
-        <>
-            <List sx={{ pt: 0 }}>
-                <ListItem>
-                    <ListItemText primary={t`Update progress after reading`} />
-                    <Switch
-                        edge="end"
-                        checked={updateProgressAfterReading}
-                        onChange={(e) => updateTrackingSettings('updateProgressAfterReading', e.target.checked)}
-                    />
-                </ListItem>
-                <ListItem>
-                    <ListItemText
-                        primary={t`Update progress after manually marking as read`}
-                        secondary={t`Does not work when marking multiple manga as read at once`}
-                    />
-                    <Switch
-                        edge="end"
-                        checked={updateProgressManualMarkRead}
-                        onChange={(e) => updateTrackingSettings('updateProgressManualMarkRead', e.target.checked)}
-                    />
-                </ListItem>
-            </List>
+        <PreferenceList sx={{ pt: 0 }}>
+            <ListItem>
+                <ListItemText primary={t`Update progress after reading`} />
+                <Switch
+                    edge="end"
+                    checked={updateProgressAfterReading}
+                    onChange={(e) => updateTrackingSettings('updateProgressAfterReading', e.target.checked)}
+                />
+            </ListItem>
+            <ListItem>
+                <ListItemText
+                    primary={t`Update progress after manually marking as read`}
+                    secondary={t`Does not work when marking multiple manga as read at once`}
+                />
+                <Switch
+                    edge="end"
+                    checked={updateProgressManualMarkRead}
+                    onChange={(e) => updateTrackingSettings('updateProgressManualMarkRead', e.target.checked)}
+                />
+            </ListItem>
             <List
                 subheader={
                     <ListSubheader component="div" id="tracking-trackers">
@@ -114,6 +113,6 @@ export const TrackingSettings = () => {
                     <SettingsTrackerCard key={tracker.id} tracker={tracker} />
                 ))}
             </List>
-        </>
+        </PreferenceList>
     );
 };

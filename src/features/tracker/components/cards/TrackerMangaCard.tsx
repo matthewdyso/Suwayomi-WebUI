@@ -6,106 +6,100 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
-import CardActionArea from '@mui/material/CardActionArea';
-import CardMedia from '@mui/material/CardMedia';
-import Collapse from '@mui/material/Collapse';
-import Link from '@mui/material/Link';
-import Stack from '@mui/material/Stack';
+import ButtonBase from '@mui/material/ButtonBase';
+import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
+import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
+import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded';
 import { useLayoutEffect, useRef, useState } from 'react';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { useLingui } from '@lingui/react/macro';
 import { CustomTooltip } from '@/base/components/CustomTooltip.tsx';
-import { SpinnerImage } from '@/base/components/SpinnerImage.tsx';
+import { ListRow } from '@/base/components/lists/ListRow.tsx';
+import { CoverImage } from '@/base/components/images/CoverImage.tsx';
 import { TypographyMaxLines } from '@/base/components/texts/TypographyMaxLines.tsx';
-import { Metadata } from '@/base/components/texts/Metadata.tsx';
-import { MediaQuery } from '@/base/utils/MediaQuery.tsx';
 import { Trackers } from '@/features/tracker/services/Trackers.ts';
-import { MANGA_COVER_ASPECT_RATIO } from '@/features/manga/Manga.constants.ts';
-import { MUIUtil } from '@/lib/mui/MUI.util.ts';
 import {
     PUBLISHING_STATUS_TO_TRANSLATION,
     PUBLISHING_TYPE_TO_TRANSLATION,
 } from '@/features/tracker/Tracker.constants.ts';
 import type { TTrackerManga } from '@/features/tracker/Tracker.types.ts';
+import { m3StateLayerSx } from '@/features/theme/m3/M3StateLayer.ts';
 
-const TrackerMangaCardTitle = ({ title, selected }: { title: string; selected: boolean }) => (
-    <Stack
-        direction="row"
-        sx={{
-            gap: '5px',
-            justifyContent: 'space-between',
-        }}
-    >
-        <CustomTooltip title={title}>
-            <TypographyMaxLines variant="h5" component="h1">
-                {title}
-            </TypographyMaxLines>
-        </CustomTooltip>
-        <CheckCircleIcon sx={{ visibility: selected ? 'visible' : 'hidden' }} color="primary" />
-    </Stack>
-);
+const COVER_WIDTH = 56;
+const INFO_MAX_LINES = 2;
+/**
+ * Mihon's "SearchResultItem" description.
+ */
+const SUMMARY_MAX_LINES = 4;
 
-const SUMMARY_COLLAPSED_SIZE = 50;
+const SUMMARY_TEXT_SX = { color: 'text.secondary', whiteSpace: 'pre-line' } as const;
+
+/**
+ * The summary below the result, cut off after four lines (Mihon). A cut-off summary expands in place on tap, so the
+ * right match can be picked by its synopsis.
+ */
 const TrackerMangaCardSummary = ({ summary }: { summary: string }) => {
     const { t } = useLingui();
 
-    const summaryRef = useRef<HTMLParagraphElement>(null);
-
-    const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
-    const [showSummaryExpandButton, setShowSummaryExpandButton] = useState(false);
-
-    const summaryCollapsedSize = showSummaryExpandButton ? SUMMARY_COLLAPSED_SIZE : 0;
+    const collapsedSummaryRef = useRef<HTMLSpanElement>(null);
+    const [isExpandable, setIsExpandable] = useState(false);
+    const [isExpanded, setIsExpanded] = useState(false);
 
     useLayoutEffect(() => {
-        const shouldCollapseSummary = (summaryRef.current?.clientHeight ?? 0) > SUMMARY_COLLAPSED_SIZE;
+        const summaryElement = collapsedSummaryRef.current;
+        setIsExpandable(!!summaryElement && summaryElement.scrollHeight > summaryElement.clientHeight);
+    }, [summary]);
 
-        setShowSummaryExpandButton(shouldCollapseSummary);
-        setIsSummaryExpanded(!shouldCollapseSummary);
-    }, []);
+    const summaryText = isExpanded ? (
+        <Typography variant="bodySmall" component="span" sx={SUMMARY_TEXT_SX}>
+            {summary}
+        </Typography>
+    ) : (
+        <TypographyMaxLines
+            ref={collapsedSummaryRef}
+            variant="bodySmall"
+            component="span"
+            lines={SUMMARY_MAX_LINES}
+            sx={SUMMARY_TEXT_SX}
+        >
+            {summary}
+        </TypographyMaxLines>
+    );
+
+    if (!isExpandable) {
+        return <Box sx={{ px: 2, pb: 1.5 }}>{summaryText}</Box>;
+    }
+
     return (
-        <>
-            {summary.length && (
-                <Collapse collapsedSize={summaryCollapsedSize} in={isSummaryExpanded}>
-                    <Typography ref={summaryRef} variant="body1" component="p" sx={{ whiteSpace: 'pre-line' }}>
-                        {summary}
-                    </Typography>
-                </Collapse>
-            )}
-            {summary.length && showSummaryExpandButton && (
-                <Button
-                    component="div"
-                    {...MUIUtil.preventRippleProp()}
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        setIsSummaryExpanded(!isSummaryExpanded);
-                    }}
-                >
-                    {isSummaryExpanded ? t`Show less` : t`Show more`}
-                </Button>
-            )}
-        </>
+        <ButtonBase
+            aria-expanded={isExpanded}
+            onClick={() => setIsExpanded(!isExpanded)}
+            sx={{
+                position: 'relative',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-start',
+                gap: 0.5,
+                width: '100%',
+                px: 2,
+                pb: 1.5,
+                textAlign: 'start',
+                ...m3StateLayerSx(),
+            }}
+        >
+            {summaryText}
+            <Typography variant="labelLarge" component="span" sx={{ color: 'm3.primary' }}>
+                {isExpanded ? t`Show less` : t`Show more`}
+            </Typography>
+        </ButtonBase>
     );
 };
 
-const TrackerMangaCardLink = ({ children, url }: { children: React.ReactNode; url: string }) => (
-    <Link
-        {...MUIUtil.preventRippleProp()}
-        href={url}
-        rel="noreferrer"
-        target="_blank"
-        underline="none"
-        color="inherit"
-        onClick={(e) => e.stopPropagation()}
-    >
-        {children}
-    </Link>
-);
-
+/**
+ * A tracker search result: cover, title and publishing info, with the summary below. Selecting it shows the track
+ * button of the search.
+ */
 export const TrackerMangaCard = ({
     manga,
     selected,
@@ -116,84 +110,58 @@ export const TrackerMangaCard = ({
     onSelect: () => void;
 }) => {
     const { t } = useLingui();
-    const isMobileWidth = MediaQuery.useIsMobileWidth();
+
+    const info = [
+        manga.publishingType && t(PUBLISHING_TYPE_TO_TRANSLATION[Trackers.getPublishingType(manga)]),
+        manga.publishingStatus && t(PUBLISHING_STATUS_TO_TRANSLATION[Trackers.getPublishingStatus(manga)]),
+        manga.startDate && t`Started: ${manga.startDate}`,
+        manga.score > 0 && t`Score: ${manga.score}`,
+        manga.totalChapters > 0 && t`Chapters: ${manga.totalChapters}`,
+    ]
+        .filter(Boolean)
+        .join(' • ');
+    const summary = manga.summary.trim();
 
     return (
-        <Card
-            sx={{
-                backgroundColor: 'background.default',
-                marginBottom: 2,
-                '&:last-child': { marginBottom: 8 },
-            }}
-        >
-            <CardActionArea onClick={onSelect}>
-                <CardContent sx={{ padding: '0', borderRadius: 'inherit' }}>
-                    <Box
-                        sx={{
-                            padding: 1,
-                            border: '3px solid',
-                            borderRadius: 'inherit',
-                            borderColor: selected ? 'primary.main' : 'transparent',
-                        }}
-                    >
-                        <Stack
-                            direction="row"
-                            sx={{
-                                gap: 2,
-                                marginBottom: 2,
-                            }}
-                        >
-                            <CardMedia
-                                sx={{
-                                    aspectRatio: MANGA_COVER_ASPECT_RATIO,
-                                    minWidth: '100px',
-                                    width: '150px',
-                                    borderRadius: 1,
-                                    overflow: 'hidden',
-                                }}
+        // the selection color also covers the summary below the row
+        <Box sx={{ bgcolor: selected ? 'm3.selected' : undefined }}>
+            <ListRow
+                minHeight={96}
+                onClick={onSelect}
+                leading={
+                    <CoverImage
+                        src={manga.coverUrl}
+                        alt={manga.title}
+                        useFetchApi={false}
+                        disableCors
+                        ignoreQueue
+                        small
+                        sx={{ width: COVER_WIDTH }}
+                    />
+                }
+                headline={manga.title}
+                headlineVariant="titleMedium"
+                headlineMaxLines={2}
+                supporting={info}
+                supportingMaxLines={INFO_MAX_LINES}
+                trailing={
+                    <>
+                        {selected && <CheckCircleRoundedIcon aria-label={t`Selected`} sx={{ color: 'm3.primary' }} />}
+                        <CustomTooltip title={t`Open in browser`}>
+                            <IconButton
+                                href={manga.trackingUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                aria-label={t`Open in browser`}
                             >
-                                <TrackerMangaCardLink url={manga.trackingUrl}>
-                                    <SpinnerImage
-                                        useFetchApi={false}
-                                        disableCors
-                                        ignoreQueue
-                                        alt={manga.title}
-                                        src={manga.coverUrl}
-                                        spinnerStyle={{ width: '100%', height: '100%' }}
-                                        imgStyle={{
-                                            width: '100%',
-                                            height: isMobileWidth ? undefined : '100%',
-                                            maxHeight: '100%',
-                                            objectFit: 'cover',
-                                        }}
-                                    />
-                                </TrackerMangaCardLink>
-                            </CardMedia>
-                            <Stack direction="column" sx={{ width: '100%' }}>
-                                <TrackerMangaCardLink url={manga.trackingUrl}>
-                                    <TrackerMangaCardTitle title={manga.title} selected={selected} />
-                                </TrackerMangaCardLink>
-                                {manga.publishingType && (
-                                    <Metadata
-                                        title={t`Type`}
-                                        value={t(PUBLISHING_TYPE_TO_TRANSLATION[Trackers.getPublishingType(manga)])}
-                                    />
-                                )}
-                                {manga.startDate && <Metadata title={t`Started`} value={manga.startDate} />}
-                                {manga.publishingStatus && (
-                                    <Metadata
-                                        title={t`Status`}
-                                        value={t(PUBLISHING_STATUS_TO_TRANSLATION[Trackers.getPublishingStatus(manga)])}
-                                    />
-                                )}
-                                {manga.score > 0 && <Metadata title={t`Score`} value={manga.score} />}
-                                {manga.totalChapters > 0 && <Metadata title={t`Chapter`} value={manga.totalChapters} />}
-                            </Stack>
-                        </Stack>
-                        <TrackerMangaCardSummary summary={manga.summary} />
-                    </Box>
-                </CardContent>
-            </CardActionArea>
-        </Card>
+                                <OpenInNewRoundedIcon />
+                            </IconButton>
+                        </CustomTooltip>
+                    </>
+                }
+                sx={{ alignItems: 'flex-start', py: 1.5 }}
+            />
+            {!!summary && <TrackerMangaCardSummary summary={summary} />}
+        </Box>
     );
 };

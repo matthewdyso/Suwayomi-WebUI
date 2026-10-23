@@ -6,29 +6,23 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import BookmarkIcon from '@mui/icons-material/Bookmark';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import CardActionArea from '@mui/material/CardActionArea';
+import MoreVertRoundedIcon from '@mui/icons-material/MoreVertRounded';
+import Box from '@mui/material/Box';
 import Checkbox from '@mui/material/Checkbox';
-import Stack from '@mui/material/Stack';
-import Card from '@mui/material/Card';
 import IconButton from '@mui/material/IconButton';
-import { useTheme } from '@mui/material/styles';
-import type { MouseEvent, TouchEvent } from 'react';
-import React, { memo, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import type { MouseEvent, ReactNode, TouchEvent } from 'react';
+import { Fragment, memo, useRef } from 'react';
 import PopupState, { bindMenu, bindTrigger } from 'material-ui-popup-state';
 import { useLingui } from '@lingui/react/macro';
 import { CustomTooltip } from '@/base/components/CustomTooltip.tsx';
 import { getDateString } from '@/base/utils/DateHelper.ts';
-import { DownloadStateIndicatorCircular } from '@/base/components/downloads/DownloadStateIndicatorCircular.tsx';
 import { ChapterActionMenuItems } from '@/features/chapter/components/actions/ChapterActionMenuItems.tsx';
+import { ChapterDownloadActions } from '@/features/chapter/components/ChapterDownloadActions.tsx';
+import { ChapterStatusIcons } from '@/features/chapter/components/ChapterStatusIcons.tsx';
+import { MediaQuery } from '@/base/utils/MediaQuery.tsx';
 import { Menu } from '@/base/components/menu/Menu.tsx';
 import { Chapters } from '@/features/chapter/services/Chapters.ts';
-import { applyStyles } from '@/base/utils/ApplyStyles.ts';
-import { ChapterCardMetadata } from '@/features/chapter/components/cards/ChapterCardMetadata.tsx';
-import { MUIUtil } from '@/lib/mui/MUI.util.ts';
-import { ListCardContent } from '@/base/components/lists/cards/ListCardContent.tsx';
+import { ListRow } from '@/base/components/lists/ListRow.tsx';
 import type {
     ChapterBookmarkInfo,
     ChapterDownloadInfo,
@@ -40,9 +34,7 @@ import type {
     ChapterScanlatorInfo,
     ChapterSourceOrderInfo,
 } from '@/features/chapter/Chapter.types.ts';
-import { MediaQuery } from '@/base/utils/MediaQuery.tsx';
 import type { ChapterType } from '@/lib/graphql/generated/graphql-base.types.ts';
-import { usePress } from '@/base/hooks/usePress.ts';
 import { AppRoutes } from '@/base/AppRoute.constants.ts';
 import { ReaderService } from '@/features/reader/services/ReaderService.ts';
 
@@ -55,7 +47,7 @@ type TChapter = ChapterIdInfo &
     ChapterScanlatorInfo &
     ChapterNameInfo &
     ChapterSourceOrderInfo &
-    Pick<ChapterType, 'uploadDate'>;
+    Pick<ChapterType, 'uploadDate' | 'lastPageRead'>;
 
 interface IProps {
     mode?: 'manga.page' | 'reader';
@@ -67,21 +59,40 @@ interface IProps {
     isActiveChapter?: boolean; // reader
 }
 
-const handleClickOpenMenu = (
-    event: React.MouseEvent | React.TouchEvent,
-    openMenu?: (e: React.SyntheticEvent) => void,
-) => {
-    event.stopPropagation();
-    event.preventDefault();
-    openMenu?.(event);
-};
+/**
+ * Mihon's chapter subtitle: date, read progress and scanlator, separated by dots.
+ *
+ * Plain inline text, so the row's single line clamp cuts off its end; flex parts inside the clamp are painted cut off
+ * in WebKit even when they fit.
+ */
+const ChapterSupportingText = ({ parts }: { parts: { key: string; text: string; isReadProgress?: boolean }[] }) => (
+    // Mihon's 6 dp between title and subtitle
+    <Box component="span" sx={{ display: 'block', pt: '6px' }}>
+        {parts.map(({ key, text, isReadProgress }, index) => (
+            <Fragment key={key}>
+                {index > 0 && ' • '}
+                {isReadProgress ? (
+                    // Mihon shows the read progress at the disabled alpha
+                    <Box component="span" sx={{ color: 'text.disabled' }}>
+                        {text}
+                    </Box>
+                ) : (
+                    text
+                )}
+            </Fragment>
+        ))}
+    </Box>
+);
 
+/**
+ * Mihon's "MangaChapterListItem": a flat row with the unread dot, bookmark and title, the date, read progress and
+ * scanlator below, and the download indicator. Long press selects, the menu has the actions for this chapter.
+ */
 export const ChapterCard = memo((props: IProps) => {
     const { t } = useLingui();
-    const theme = useTheme();
-    const preventMobileContextMenu = MediaQuery.usePreventMobileContextMenu();
 
-    const menuButtonRef = useRef<HTMLButtonElement>(null);
+    const rowRef = useRef<HTMLDivElement>(null);
+    const isTouchDevice = MediaQuery.useIsTouchDevice();
 
     const {
         mode = 'manga.page',
@@ -94,127 +105,87 @@ export const ChapterCard = memo((props: IProps) => {
     } = props;
     const isSelecting = selected !== null;
 
-    const { isDownloaded } = chapter;
-
     const handleClick = (event: MouseEvent | TouchEvent) => {
+        event.preventDefault();
+
         if (!isSelecting) {
-            event.preventDefault();
-            event.stopPropagation();
             ReaderService.openReader(chapter, true);
             return;
         }
 
-        event.preventDefault();
-        event.stopPropagation();
         onSelect(chapter.id, !selected, event.shiftKey);
     };
 
-    const longPressBind = usePress({
-        onLongPress: (event, { context: openMenu }) => {
-            if (!isSelecting && !!menuButtonRef.current) {
-                handleClickOpenMenu(event, () => (openMenu as (event: Element) => void)?.(menuButtonRef.current!));
-                return;
-            }
+    const title = showChapterNumber ? `${t`Chapter`} ${chapter.chapterNumber}` : chapter.name;
+    const uploadDate = Number(chapter.uploadDate ?? 0);
+    const supportingParts = [
+        uploadDate > 0 && { key: 'date', text: getDateString(uploadDate) },
+        !chapter.isRead &&
+            !!chapter.lastPageRead && {
+                key: 'progress',
+                text: t`Page ${chapter.lastPageRead + 1}`,
+                isReadProgress: true,
+            },
+        !!chapter.scanlator && { key: 'scanlator', text: chapter.scanlator },
+    ].filter((part) => !!part);
 
-            // oxlint-disable-next-line no-param-reassign
-            event.shiftKey = true;
-            handleClick(event);
-        },
-        onPress: handleClick,
-    });
+    const headline: ReactNode = (
+        <>
+            <ChapterStatusIcons chapter={chapter} bookmarkSize={18} />
+            {title}
+        </>
+    );
 
     return (
         <PopupState variant="popover" popupId="chapter-card-action-menu">
             {(popupState) => (
-                <Stack sx={{ pt: 1, px: 1 }}>
-                    <Card
-                        sx={applyStyles(mode === 'reader' && isActiveChapter, {
-                            backgroundColor: 'primary.main',
-                        })}
-                    >
-                        <CardActionArea
-                            component={Link}
-                            to={AppRoutes.reader.path(chapter.mangaId, chapter.sourceOrder)}
-                            state={Chapters.getReaderOpenChapterLocationState(chapter, true)}
-                            onContextMenu={preventMobileContextMenu}
-                            sx={MediaQuery.preventMobileContextMenuSx()}
-                            style={{
-                                color: theme.palette.text[chapter.isRead ? 'disabled' : 'primary'],
-                            }}
-                            replace={mode === 'reader'}
-                            {...longPressBind(popupState.open)}
-                        >
-                            <ListCardContent>
-                                <ChapterCardMetadata
-                                    title={showChapterNumber ? `${t`Chapter`} ${chapter.chapterNumber}` : chapter.name}
-                                    secondaryText={chapter.scanlator}
-                                    ternaryText={`${getDateString(Number(chapter.uploadDate ?? 0), true)}${
-                                        isDownloaded ? ` — ${t`Downloaded`}` : ''
-                                    }`}
-                                    infoIcons={
-                                        chapter.isBookmarked && (
-                                            <BookmarkIcon
-                                                color={mode === 'reader' && isActiveChapter ? 'secondary' : 'primary'}
-                                            />
-                                        )
-                                    }
-                                    slotProps={{
-                                        title: {
-                                            variant: 'subtitle1',
-                                            sx: applyStyles(mode === 'reader' && isActiveChapter, {
-                                                color: theme.palette.primary.contrastText,
-                                            }),
-                                        },
-                                        secondaryText: {
-                                            sx: applyStyles(mode === 'reader' && isActiveChapter, {
-                                                color: theme.palette.primary.contrastText,
-                                            }),
-                                        },
-                                        ternaryText: {
-                                            sx: applyStyles(mode === 'reader' && isActiveChapter, {
-                                                color: theme.palette.primary.contrastText,
-                                            }),
-                                        },
-                                    }}
-                                />
+                <>
+                    <ListRow
+                        ref={rowRef}
+                        to={AppRoutes.reader.path(chapter.mangaId, chapter.sourceOrder)}
+                        onClick={handleClick}
+                        onLongPress={(event) => {
+                            if (!selectable) {
+                                if (rowRef.current) {
+                                    popupState.open(rowRef.current);
+                                }
+                                return;
+                            }
 
-                                <DownloadStateIndicatorCircular
-                                    chapterId={chapter.id}
-                                    color={
-                                        mode === 'reader' && isActiveChapter
-                                            ? theme.palette.primary.contrastText
-                                            : undefined
-                                    }
-                                />
-
-                                <Stack>
-                                    {selected === null ? (
-                                        <CustomTooltip title={t`Options`}>
-                                            <IconButton
-                                                ref={menuButtonRef}
-                                                {...MUIUtil.preventRippleProp(bindTrigger(popupState), {
-                                                    onClick: (e: MouseEvent) => handleClickOpenMenu(e),
-                                                })}
-                                                aria-label="more"
-                                                sx={{
-                                                    color: 'inherit',
-                                                    ...applyStyles(mode === 'reader' && isActiveChapter, {
-                                                        color: 'primary.contrastText',
-                                                    }),
-                                                }}
-                                            >
-                                                <MoreVertIcon />
-                                            </IconButton>
-                                        </CustomTooltip>
-                                    ) : (
-                                        <CustomTooltip title={selected ? t`Deselect` : t`Select`}>
-                                            <Checkbox checked={selected} />
-                                        </CustomTooltip>
-                                    )}
-                                </Stack>
-                            </ListCardContent>
-                        </CardActionArea>
-                    </Card>
+                            // like Mihon, a long press while selecting selects the range up to this chapter
+                            onSelect(chapter.id, !selected, isSelecting || event.shiftKey);
+                        }}
+                        selected={!!selected || (mode === 'reader' && isActiveChapter)}
+                        dimmed={chapter.isRead}
+                        headline={headline}
+                        headlineVariant="bodyMedium"
+                        supporting={!!supportingParts.length && <ChapterSupportingText parts={supportingParts} />}
+                        supportingVariant="bodySmall"
+                        supportingMaxLines={1}
+                        trailing={
+                            // the 48 px hit boxes reach into the row padding, so the row keeps Mihon's height
+                            <Box sx={{ display: 'flex', alignItems: 'center', my: -0.5 }}>
+                                <ChapterDownloadActions chapter={chapter} showDownloaded />
+                                {/* touch screens select with a long press and act through the bottom action menu (Mihon) */}
+                                {isSelecting && !isTouchDevice && (
+                                    <CustomTooltip title={selected ? t`Deselect` : t`Select`}>
+                                        <Checkbox
+                                            checked={selected}
+                                            onClick={(event) => onSelect(chapter.id, !selected, event.shiftKey)}
+                                        />
+                                    </CustomTooltip>
+                                )}
+                                {!isSelecting && !isTouchDevice && (
+                                    <CustomTooltip title={t`Options`}>
+                                        <IconButton {...bindTrigger(popupState)} aria-label={t`Options`}>
+                                            <MoreVertRoundedIcon />
+                                        </IconButton>
+                                    </CustomTooltip>
+                                )}
+                            </Box>
+                        }
+                        sx={{ py: 1.5, pl: 2, pr: 1, gap: 0.5 }}
+                    />
                     {!isSelecting && popupState.isOpen && (
                         <Menu {...bindMenu(popupState)}>
                             {(onClose) => (
@@ -228,7 +199,7 @@ export const ChapterCard = memo((props: IProps) => {
                             )}
                         </Menu>
                     )}
-                </Stack>
+                </>
             )}
         </PopupState>
     );

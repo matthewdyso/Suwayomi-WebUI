@@ -7,9 +7,8 @@
  */
 
 import { useNavigate } from 'react-router-dom';
-import Box from '@mui/material/Box';
+import Stack from '@mui/material/Stack';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import DialogContent from '@mui/material/DialogContent';
 import { useLingui } from '@lingui/react/macro';
 import { requestManager } from '@/lib/requests/RequestManager.ts';
 import { LoadingPlaceholder } from '@/base/components/feedback/LoadingPlaceholder.tsx';
@@ -58,7 +57,6 @@ export const TrackManga = ({ manga }: { manga: MangaIdInfo & MangaTitleInfo }) =
     const trackersInUseIds = Trackers.getIds(trackersInUse);
 
     const isSearchActive = searchModeForTracker !== undefined;
-    const OptionalDialogContent = useMemo(() => (isSearchActive ? Box : DialogContent), [isSearchActive]);
 
     const loading = trackerList.loading || mangaTrackRecordsList.loading;
     const error = trackerList.error ?? mangaTrackRecordsList.error;
@@ -133,18 +131,8 @@ export const TrackManga = ({ manga }: { manga: MangaIdInfo & MangaTitleInfo }) =
     }
 
     if (!isSearchActive) {
-        return (
-            <OptionalDialogContent
-                sx={{
-                    padding: 0,
-                    // MUI adds a bottom padding to the last child of type CardContent which can only be removed via actual css styling
-                    // do it here, so it is done in one place for all track related CardContent components
-                    '.MuiPaper-root .MuiCardContent-root': { paddingBottom: '0' },
-                }}
-            >
-                {trackerComponents}
-            </OptionalDialogContent>
-        );
+        // Mihon's "TrackInfoDialogHome"
+        return <Stack sx={{ p: 2, gap: 3 }}>{trackerComponents}</Stack>;
     }
 
     return trackerComponents;

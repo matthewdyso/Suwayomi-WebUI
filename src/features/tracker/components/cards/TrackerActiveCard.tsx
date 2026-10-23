@@ -6,8 +6,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
@@ -18,15 +16,16 @@ import Divider from '@mui/material/Divider';
 import FormGroup from '@mui/material/FormGroup';
 import IconButton from '@mui/material/IconButton';
 import Link from '@mui/material/Link';
-import ListItemButton from '@mui/material/ListItemButton';
+import ButtonBase from '@mui/material/ButtonBase';
+import { listItemButtonClasses } from '@mui/material/ListItemButton';
 import MenuItem from '@mui/material/MenuItem';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
+import MoreVertRoundedIcon from '@mui/icons-material/MoreVertRounded';
 import PopupState, { bindDialog, bindMenu, bindTrigger } from 'material-ui-popup-state';
 import { useMemo, useState } from 'react';
 import Badge from '@mui/material/Badge';
-import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import VisibilityOffRoundedIcon from '@mui/icons-material/VisibilityOffRounded';
 import { useLingui } from '@lingui/react/macro';
 import { CustomTooltip } from '@/base/components/CustomTooltip.tsx';
 import { requestManager } from '@/lib/requests/RequestManager.ts';
@@ -36,15 +35,15 @@ import { NumberSetting } from '@/base/components/settings/NumberSetting.tsx';
 import { DateSetting } from '@/base/components/settings/DateSetting.tsx';
 import { makeToast } from '@/base/utils/Toast.ts';
 import { Menu } from '@/base/components/menu/Menu.tsx';
-import { CARD_STYLING, UNSET_DATE } from '@/features/tracker/Tracker.constants.ts';
-import { TypographyMaxLines } from '@/base/components/texts/TypographyMaxLines.tsx';
+import { UNSET_DATE } from '@/features/tracker/Tracker.constants.ts';
 import type { SelectSettingValue } from '@/base/components/settings/SelectSetting.tsx';
 import { SelectSetting } from '@/base/components/settings/SelectSetting.tsx';
 import { CheckboxInput } from '@/base/components/inputs/CheckboxInput.tsx';
 import type { TrackRecordType } from '@/lib/graphql/generated/graphql-base.types.ts';
 import { getErrorMessage } from '@/lib/HelperFunctions.ts';
 import type { TTrackerBind, TTrackRecordBind } from '@/features/tracker/Tracker.types.ts';
-import { AvatarSpinner } from '@/base/components/AvatarSpinner.tsx';
+import { TrackerLogo } from '@/features/tracker/components/TrackerLogo.tsx';
+import { M3_SHAPE } from '@/features/theme/m3/M3Shape.constants.ts';
 
 const TrackerActiveLink = ({ children, url }: { children: React.ReactNode; url: string }) => (
     <Link href={url} rel="noreferrer" target="_blank" underline="none" color="inherit">
@@ -181,45 +180,30 @@ const TrackerActiveHeader = ({
     const { t } = useLingui();
 
     return (
-        <Stack
-            direction="row"
-            sx={{
-                alignItems: 'stretch',
-                paddingBottom: 2,
-            }}
-        >
+        <Stack direction="row" sx={{ alignItems: 'center' }}>
             <Badge
                 badgeContent={
                     trackRecord.private ? (
-                        <Stack sx={{ p: '2px 6px', backgroundColor: 'primary.main', borderRadius: 100 }}>
-                            <VisibilityOffIcon fontSize="small" sx={{ color: 'primary.contrastText' }} />
-                        </Stack>
+                        <VisibilityOffRoundedIcon aria-label={t`Track privately`} sx={{ fontSize: 14 }} />
                     ) : null
                 }
+                slotProps={{ badge: { sx: { bgcolor: 'm3.primary', color: 'm3.onPrimary' } } }}
             >
                 <TrackerActiveLink url={trackRecord.remoteUrl}>
-                    <AvatarSpinner
-                        alt={`${tracker.name}`}
-                        iconUrl={requestManager.getValidImgUrlFor(tracker.icon)}
-                        slots={{
-                            avatarProps: {
-                                variant: 'rounded',
-                                sx: { width: 64, height: 64 },
-                            },
-                            spinnerImageProps: {
-                                ignoreQueue: true,
-                            },
-                        }}
-                    />
+                    <TrackerLogo name={tracker.name} icon={tracker.icon} />
                 </TrackerActiveLink>
             </Badge>
-            <ListItemButton sx={{ flexGrow: 1 }} onClick={openSearch}>
+            <ButtonBase
+                onClick={openSearch}
+                sx={{ flex: '1 1 0', minWidth: 0, height: 48, justifyContent: 'flex-start', pl: 2, pr: 1 }}
+            >
                 <CustomTooltip title={trackRecord.title}>
-                    <TypographyMaxLines sx={{ flexGrow: 1 }} lines={1}>
+                    <Typography variant="titleMedium" noWrap sx={{ color: 'm3.onSurface' }}>
                         {trackRecord.title}
-                    </TypographyMaxLines>
+                    </Typography>
                 </CustomTooltip>
-            </ListItemButton>
+            </ButtonBase>
+            <Divider orientation="vertical" flexItem />
             <Stack
                 sx={{
                     justifyContent: 'center',
@@ -228,8 +212,8 @@ const TrackerActiveHeader = ({
                 <PopupState variant="popover" popupId={`tracker-active-menu-popup-${tracker.id}`}>
                     {(popupState) => (
                         <>
-                            <IconButton {...bindTrigger(popupState)}>
-                                <MoreVertIcon />
+                            <IconButton {...bindTrigger(popupState)} aria-label={t`More`}>
+                                <MoreVertRoundedIcon />
                             </IconButton>
                             <Menu {...bindMenu(popupState)} id={`tracker-active-menu-${tracker.id}`}>
                                 {(onClose, setHideMenu) => [
@@ -263,8 +247,25 @@ const TrackerActiveHeader = ({
     );
 };
 
+/**
+ * Mihon clips the track details inside the card's padding to 6 dp, which rounds the outer buttons' state layers.
+ */
+const TRACK_DETAILS_RADIUS = '6px';
+
+/**
+ * A row of Mihon's track details: equally wide, centered text buttons between dividers.
+ */
 const TrackerActiveCardInfoRow = ({ children }: { children: React.ReactNode }) => (
-    <Stack direction="row" sx={{ textAlignLast: 'center' }}>
+    <Stack
+        direction="row"
+        sx={{
+            [`& > .${listItemButtonClasses.root}`]: {
+                flex: '1 1 0',
+                minWidth: 0,
+                textAlign: 'center',
+            },
+        }}
+    >
         {children}
     </Stack>
 );
@@ -303,67 +304,60 @@ export const TrackerActiveCard = ({
     };
 
     return (
-        <Card sx={CARD_STYLING}>
-            <CardContent sx={{ padding: 0 }}>
-                <TrackerActiveHeader trackRecord={trackRecord} tracker={tracker} openSearch={onClick} />
-                <Card sx={{ backgroundColor: 'background.default' }}>
-                    <CardContent sx={{ padding: '0' }}>
-                        <Box sx={{ padding: 1 }}>
-                            <TrackerActiveCardInfoRow>
-                                <ListPreference
-                                    ListPreferenceTitle={t`Status`}
-                                    entries={tracker.statuses.map((status) => status.name)}
-                                    key="status"
-                                    type="ListPreference"
-                                    entryValues={tracker.statuses.map((status) => `${status.value}`)}
-                                    ListPreferenceCurrentValue={`${trackRecord.status}`}
-                                    ListPreferenceDefault={null}
-                                    updateValue={(_, status) => updateTrackerBind({ status: Number(status) })}
-                                    summary="%s"
-                                />
-                                <Divider orientation="vertical" flexItem />
-                                <NumberSetting
-                                    settingTitle={t`Chapter`}
-                                    dialogTitle={t`Chapter`}
-                                    settingValue={`${trackRecord.lastChapterRead}/${trackRecord.totalChapters}`}
-                                    value={trackRecord.lastChapterRead}
-                                    minValue={0}
-                                    maxValue={Number.MAX_SAFE_INTEGER}
-                                    valueUnit=""
-                                    handleUpdate={(lastChapterRead) => updateTrackerBind({ lastChapterRead })}
-                                />
-                                <Divider orientation="vertical" flexItem />
-                                <SelectSetting<string>
-                                    settingName={t`Score`}
-                                    value={currentScore}
-                                    values={selectSettingValues}
-                                    handleChange={(score) => updateTrackerBind({ scoreString: score })}
-                                />
-                            </TrackerActiveCardInfoRow>
-                            <Divider />
-                            <TrackerActiveCardInfoRow>
-                                <DateSetting
-                                    settingName={t`Start date`}
-                                    value={Trackers.getDateString(trackRecord.startDate)}
-                                    remove
-                                    handleChange={(startDate) =>
-                                        updateTrackerBind({ startDate: startDate ?? UNSET_DATE })
-                                    }
-                                />
-                                <Divider orientation="vertical" flexItem />
-                                <DateSetting
-                                    settingName={t`Finish date`}
-                                    value={Trackers.getDateString(trackRecord.finishDate)}
-                                    remove
-                                    handleChange={(finishDate) =>
-                                        updateTrackerBind({ finishDate: finishDate ?? UNSET_DATE })
-                                    }
-                                />
-                            </TrackerActiveCardInfoRow>
-                        </Box>
-                    </CardContent>
-                </Card>
-            </CardContent>
-        </Card>
+        <Box>
+            <TrackerActiveHeader trackRecord={trackRecord} tracker={tracker} openSearch={onClick} />
+            {/* Mihon's track details card; one step above the sheet's surfaceContainerHigh */}
+            <Box sx={{ mt: 1.5, p: 1, borderRadius: M3_SHAPE.medium, bgcolor: 'm3.surfaceContainerHighest' }}>
+                <Box sx={{ borderRadius: TRACK_DETAILS_RADIUS, overflow: 'hidden' }}>
+                    <TrackerActiveCardInfoRow>
+                        <ListPreference
+                            ListPreferenceTitle={t`Status`}
+                            entries={tracker.statuses.map((status) => status.name)}
+                            key="status"
+                            type="ListPreference"
+                            entryValues={tracker.statuses.map((status) => `${status.value}`)}
+                            ListPreferenceCurrentValue={`${trackRecord.status}`}
+                            ListPreferenceDefault={null}
+                            updateValue={(_, status) => updateTrackerBind({ status: Number(status) })}
+                            summary="%s"
+                        />
+                        <Divider orientation="vertical" flexItem />
+                        <NumberSetting
+                            settingTitle={t`Chapter`}
+                            dialogTitle={t`Chapter`}
+                            settingValue={`${trackRecord.lastChapterRead}/${trackRecord.totalChapters}`}
+                            value={trackRecord.lastChapterRead}
+                            minValue={0}
+                            maxValue={Number.MAX_SAFE_INTEGER}
+                            valueUnit=""
+                            handleUpdate={(lastChapterRead) => updateTrackerBind({ lastChapterRead })}
+                        />
+                        <Divider orientation="vertical" flexItem />
+                        <SelectSetting<string>
+                            settingName={t`Score`}
+                            value={currentScore}
+                            values={selectSettingValues}
+                            handleChange={(score) => updateTrackerBind({ scoreString: score })}
+                        />
+                    </TrackerActiveCardInfoRow>
+                    <Divider />
+                    <TrackerActiveCardInfoRow>
+                        <DateSetting
+                            settingName={t`Start date`}
+                            value={Trackers.getDateString(trackRecord.startDate)}
+                            remove
+                            handleChange={(startDate) => updateTrackerBind({ startDate: startDate ?? UNSET_DATE })}
+                        />
+                        <Divider orientation="vertical" flexItem />
+                        <DateSetting
+                            settingName={t`Finish date`}
+                            value={Trackers.getDateString(trackRecord.finishDate)}
+                            remove
+                            handleChange={(finishDate) => updateTrackerBind({ finishDate: finishDate ?? UNSET_DATE })}
+                        />
+                    </TrackerActiveCardInfoRow>
+                </Box>
+            </Box>
+        </Box>
     );
 };

@@ -7,9 +7,7 @@
  */
 
 import ListItemButton from '@mui/material/ListItemButton';
-import Chip from '@mui/material/Chip';
-import ListItemAvatar from '@mui/material/ListItemAvatar';
-import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction';
+import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import ListItemText from '@mui/material/ListItemText';
 import { useLingui } from '@lingui/react/macro';
 import { makeToast } from '@/base/utils/Toast.ts';
@@ -17,7 +15,8 @@ import { requestManager } from '@/lib/requests/RequestManager.ts';
 import { Trackers } from '@/features/tracker/services/Trackers.ts';
 import { getErrorMessage, noOp } from '@/lib/HelperFunctions.ts';
 import type { TTrackerSearch } from '@/features/tracker/Tracker.types.ts';
-import { AvatarSpinner } from '@/base/components/AvatarSpinner.tsx';
+import { CustomTooltip } from '@/base/components/CustomTooltip.tsx';
+import { TrackerLogo } from '@/features/tracker/components/TrackerLogo.tsx';
 import { CredentialsLogin } from '@/base/components/modals/LoginDialog.tsx';
 
 export const SettingsTrackerCard = ({ tracker }: { tracker: TTrackerSearch }) => {
@@ -113,27 +112,13 @@ export const SettingsTrackerCard = ({ tracker }: { tracker: TTrackerSearch }) =>
     };
 
     return (
-        <ListItemButton onClick={() => login()}>
-            <ListItemAvatar sx={{ paddingRight: '20px' }}>
-                <AvatarSpinner
-                    alt={`${tracker.name}`}
-                    iconUrl={requestManager.getValidImgUrlFor(tracker.icon)}
-                    slots={{
-                        avatarProps: {
-                            variant: 'rounded',
-                            sx: { width: 64, height: 64 },
-                        },
-                        spinnerImageProps: {
-                            ignoreQueue: true,
-                        },
-                    }}
-                />
-            </ListItemAvatar>
-            <ListItemText primary={tracker.name} />
+        <ListItemButton onClick={() => login()} sx={{ gap: 2 }}>
+            <TrackerLogo name={tracker.name} icon={tracker.icon} />
+            <ListItemText primary={tracker.name} slotProps={{ primary: { variant: 'titleMedium' } }} />
             {Trackers.isLoggedIn(tracker) && (
-                <ListItemSecondaryAction>
-                    <Chip label={t`Logged in`} color="success" />
-                </ListItemSecondaryAction>
+                <CustomTooltip title={t`Logged in`}>
+                    <CheckRoundedIcon aria-label={t`Logged in`} sx={{ fontSize: 32, color: 'm3.primary' }} />
+                </CustomTooltip>
             )}
         </ListItemButton>
     );

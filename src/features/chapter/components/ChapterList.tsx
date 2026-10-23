@@ -7,6 +7,7 @@
  */
 
 import Box from '@mui/material/Box';
+import ButtonBase from '@mui/material/ButtonBase';
 import Stack from '@mui/material/Stack';
 import { styled } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
@@ -18,9 +19,13 @@ import { requestManager } from '@/lib/requests/RequestManager.ts';
 import { ResumeFab } from '@/features/manga/components/ResumeFAB.tsx';
 import {
     filterAndSortChapters,
+    isFilterActive,
     updateChapterListOptions,
     useChapterListOptions,
 } from '@/features/chapter/utils/ChapterList.util.tsx';
+import { ChapterOptions } from '@/features/chapter/components/ChapterOptions.tsx';
+import { SECONDARY_ALPHA } from '@/features/theme/m3/M3Color.constants.ts';
+import { m3StateLayerSx } from '@/features/theme/m3/M3StateLayer.ts';
 import { EmptyViewAbsoluteCentered } from '@/base/components/feedback/EmptyViewAbsoluteCentered.tsx';
 import { ChaptersToolbarMenu } from '@/features/chapter/components/ChaptersToolbarMenu.tsx';
 import { SelectionFAB } from '@/base/collection/components/SelectionFAB.tsx';
@@ -48,18 +53,24 @@ import { VirtuosoPersisted } from '@/lib/virtuoso/Component/VirtuosoPersisted.ts
 import { STABLE_EMPTY_ARRAY } from '@/base/Base.constants.ts';
 import { useElementSize } from '@mantine/hooks';
 import { VirtuosoUtil } from '@/lib/virtuoso/Virtuoso.util.tsx';
+import { useAppBarActionMode } from '@/features/navigation-bar/hooks/useAppBarActionMode.ts';
+import { useAppBottomActionMenu } from '@/features/navigation-bar/hooks/useAppBottomActionMenu.ts';
+import { ChapterBottomActionMenu } from '@/features/chapter/components/ChapterBottomActionMenu.tsx';
 
 type ChapterListHeaderProps = {
     scrollbarWidth: number;
 };
+// Mihon's "ChapterHeader"; its icon buttons line up with the trailing buttons of the chapter rows
 const ChapterListHeader = styled(Stack, {
     shouldForwardProp: shouldForwardProp<ChapterListHeaderProps>(['scrollbarWidth']),
 })<ChapterListHeaderProps>(({ theme, scrollbarWidth }) => ({
-    padding: theme.spacing(1),
-    paddingRight: `calc(${scrollbarWidth}px + ${theme.spacing(1)})`,
-    paddingBottom: 0,
-    [theme.breakpoints.down('md')]: {
-        paddingRight: theme.spacing(1),
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: theme.spacing(1),
+    padding: theme.spacing(0.5, 1, 0.5, 2),
+    [theme.breakpoints.up('md')]: {
+        paddingRight: `calc(${scrollbarWidth}px + ${theme.spacing(1)})`,
     },
 }));
 
@@ -79,12 +90,23 @@ const ChapterListFAB = ({
     selectedChapters,
     firstUnreadChapter,
     onFABMenuClose,
+    scrollElement,
+    hasBottomActionMenu,
 }: {
     selectedChapters: ChapterListFieldsFragment[];
     firstUnreadChapter: ComponentProps<typeof ResumeFab>['chapter'] | null | undefined;
     onFABMenuClose?: () => void;
+    scrollElement: ComponentProps<typeof ResumeFab>['scrollElement'];
+    /**
+     * Phones show the selection's actions in the bottom action menu instead.
+     */
+    hasBottomActionMenu: boolean;
 }) => {
     if (selectedChapters.length) {
+        if (hasBottomActionMenu) {
+            return null;
+        }
+
         return (
             <SelectionFAB title={plural(selectedChapters.length, { one: '# chapter', other: '# chapters' })}>
                 {(handleClose) => (
@@ -101,7 +123,7 @@ const ChapterListFAB = ({
     }
 
     if (firstUnreadChapter) {
-        return <ResumeFab chapter={firstUnreadChapter} />;
+        return <ResumeFab chapter={firstUnreadChapter} scrollElement={scrollElement} />;
     }
 
     return null;
@@ -110,15 +132,25 @@ const ChapterListFAB = ({
 export const ChapterList = ({
     manga,
     isRefreshing,
+    isSingleColumn,
+    areOptionsOpen,
+    onOptionsOpenChange,
 }: {
     manga: Pick<MangaScreenFieldsFragment, 'id' | 'firstUnreadChapter' | 'chapters' | 'unreadCount' | 'downloadCount'>;
     isRefreshing: boolean;
+    /**
+     * Phones: the list scrolls with the window below the details, and its actions are in the app bar.
+     */
+    isSingleColumn: boolean;
+    /**
+     * The options sheet also opens from the app bar on phones.
+     */
+    areOptionsOpen: boolean;
+    onOptionsOpenChange: (open: boolean) => void;
 }) => {
     const { t } = useLingui();
     const { appBarHeight } = useNavBarContext();
     const [virtuosoScrollElement, setVirtuosoScrollElement] = useState<HTMLElement | null | Window>(null);
-
-    const isMobileWidth = MediaQuery.useIsBelowWidth('md');
 
     const { ref: chapterListHeaderRef, height: chapterListHeaderHeight } = useElementSize();
 
@@ -160,47 +192,115 @@ export const ChapterList = ({
         [handleSelection],
     );
 
+    const selectedChapters = useMemo(
+        () => selectedItemIds.map((id) => chapters.find((chapter) => chapter.id === id)).filter((chapter) => !!chapter),
+        [selectedItemIds, chapters],
+    );
+
+    // phones: Mihon's action-mode toolbar and bottom action menu while chapters are selected
+    const isMobileWidth = MediaQuery.useIsMobileWidth();
+    useAppBarActionMode(
+        isSingleColumn && !areNoItemsSelected
+            ? {
+                  title: selectedItemIds.length,
+                  actions: (
+                      <SelectableCollectionSelectAll
+                          areAllItemsSelected={areAllItemsSelected}
+                          onChange={(checked) => handleSelectAll(checked, checked ? visibleChapterIds : [])}
+                      />
+                  ),
+                  onCancel: clearSelection,
+              }
+            : null,
+        [isSingleColumn, areNoItemsSelected, selectedItemIds.length, areAllItemsSelected, visibleChapterIds],
+    );
+    useAppBottomActionMenu(
+        isMobileWidth && selectedChapters.length ? (
+            <ChapterBottomActionMenu
+                selectedChapters={selectedChapters}
+                allChapters={chapters}
+                onDone={clearSelection}
+            />
+        ) : null,
+        [isMobileWidth, selectedChapters, chapters],
+    );
+
+    // the sheet also opens from the app bar while the chapters load or failed to load
+    const chapterOptions = (
+        <ChapterOptions
+            open={areOptionsOpen}
+            onClose={() => onOptionsOpenChange(false)}
+            options={options}
+            updateOption={updateOption}
+            scanlators={Chapters.getScanlators(chapters)}
+            excludedScanlators={options.excludedScanlators}
+        />
+    );
+
     if (isLoading || (noChaptersFound && isRefreshing)) {
         return (
-            <Stack sx={{ justifyContent: 'center', alignItems: 'center', position: 'relative', flexGrow: 1 }}>
-                <LoadingPlaceholder />
-            </Stack>
+            <>
+                <Stack sx={{ justifyContent: 'center', alignItems: 'center', position: 'relative', flexGrow: 1 }}>
+                    <LoadingPlaceholder />
+                </Stack>
+                {chapterOptions}
+            </>
         );
     }
 
     if (error) {
         return (
-            <Stack sx={{ justifyContent: 'center', position: 'relative', flexGrow: 1 }}>
-                <EmptyViewAbsoluteCentered
-                    message={t`Unable to load data`}
-                    messageExtra={getErrorMessage(error)}
-                    retry={() => refetch().catch(defaultPromiseErrorHandler('ChapterList::refetch'))}
-                />
-            </Stack>
+            <>
+                <Stack sx={{ justifyContent: 'center', position: 'relative', flexGrow: 1 }}>
+                    <EmptyViewAbsoluteCentered
+                        message={t`Unable to load data`}
+                        messageExtra={getErrorMessage(error)}
+                        retry={() => refetch().catch(defaultPromiseErrorHandler('ChapterList::refetch'))}
+                    />
+                </Stack>
+                {chapterOptions}
+            </>
         );
     }
 
     return (
         <>
             <Stack direction="column" sx={{ position: 'relative', flexBasis: '60%' }}>
-                <ChapterListHeader
-                    ref={chapterListHeaderRef}
-                    sx={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                    }}
-                    scrollbarWidth={scrollbarYSize}
-                >
-                    <Stack>
-                        <Typography variant="h5" component="h3">
+                <ChapterListHeader ref={chapterListHeaderRef} scrollbarWidth={scrollbarYSize}>
+                    {/* on phones the header opens the chapter options (Mihon) */}
+                    <Stack
+                        {...(isSingleColumn && {
+                            component: ButtonBase,
+                            onClick: () => onOptionsOpenChange(true),
+                            'aria-haspopup': 'dialog',
+                        })}
+                        sx={{
+                            alignItems: 'flex-start',
+                            flexGrow: 1,
+                            gap: 0.5,
+                            minWidth: 0,
+                            textAlign: 'start',
+                            ...(isSingleColumn && {
+                                // the button reaches into the header's padding, so all of it is the touch target
+                                alignSelf: 'stretch',
+                                justifyContent: 'center',
+                                ml: -2,
+                                my: -0.5,
+                                pl: 2,
+                                py: 0.5,
+                                ...m3StateLayerSx(),
+                            }),
+                        }}
+                    >
+                        {/* a heading can't sit inside a button */}
+                        <Typography variant="titleMedium" component={isSingleColumn ? 'span' : 'h3'}>
                             {plural(visibleChapters.length, {
                                 one: '# chapter',
                                 other: '# chapters',
                             })}
                         </Typography>
                         {!!missingChapterCount && (
-                            <Typography variant="body2" color="warning">
+                            <Typography variant="bodySmall" noWrap sx={{ color: 'm3.error', opacity: SECONDARY_ALPHA }}>
                                 {plural(missingChapterCount, {
                                     one: 'Missing # chapter',
                                     other: 'Missing # chapters',
@@ -209,24 +309,25 @@ export const ChapterList = ({
                         )}
                     </Stack>
 
-                    <Stack direction="row">
-                        {areNoItemsSelected && (
-                            <ChaptersToolbarMenu
-                                mangaId={manga.id}
-                                options={options}
-                                updateOption={updateOption}
-                                chapters={visibleChapters}
-                                scanlators={Chapters.getScanlators(chapters)}
-                                excludeScanlators={options.excludedScanlators}
-                            />
-                        )}
-                        {!!visibleChapterIds.length && (
-                            <SelectableCollectionSelectAll
-                                areAllItemsSelected={areAllItemsSelected}
-                                onChange={(checked) => handleSelectAll(checked, checked ? visibleChapterIds : [])}
-                            />
-                        )}
-                    </Stack>
+                    {/* on phones the actions are in the app bar, and select all in the selection's action-mode bar */}
+                    {!isSingleColumn && (
+                        <Stack direction="row">
+                            {areNoItemsSelected && (
+                                <ChaptersToolbarMenu
+                                    manga={manga}
+                                    chapters={visibleChapters}
+                                    isFiltered={isFilterActive(options)}
+                                    onOpenOptions={() => onOptionsOpenChange(true)}
+                                />
+                            )}
+                            {!!visibleChapterIds.length && (
+                                <SelectableCollectionSelectAll
+                                    areAllItemsSelected={areAllItemsSelected}
+                                    onChange={(checked) => handleSelectAll(checked, checked ? visibleChapterIds : [])}
+                                />
+                            )}
+                        </Stack>
+                    )}
                 </ChapterListHeader>
 
                 {noChaptersFound && <EmptyViewAbsoluteCentered message={t`No chapters found`} />}
@@ -253,16 +354,17 @@ export const ChapterList = ({
                             onSelect={onSelect}
                         />
                     )}
-                    useWindowScroll={isMobileWidth}
+                    useWindowScroll={isSingleColumn}
                     overscan={window.innerHeight * 0.5}
                 />
             </Stack>
+            {chapterOptions}
             <ChapterListFAB
-                selectedChapters={selectedItemIds
-                    .map((id) => chapters.find((chapter) => chapter.id === id))
-                    .filter((chapter) => chapter != null)}
+                selectedChapters={selectedChapters}
                 firstUnreadChapter={manga.firstUnreadChapter}
                 onFABMenuClose={clearSelection}
+                scrollElement={virtuosoScrollElement}
+                hasBottomActionMenu={isMobileWidth}
             />
         </>
     );

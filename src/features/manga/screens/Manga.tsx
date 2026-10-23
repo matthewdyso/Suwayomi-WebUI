@@ -6,12 +6,12 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import Warning from '@mui/icons-material/Warning';
+import WarningRoundedIcon from '@mui/icons-material/WarningRounded';
 import CircularProgress from '@mui/material/CircularProgress';
 import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
 import Box from '@mui/material/Box';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
 import { isNetworkRequestInFlight } from '@apollo/client/utilities';
 import { useLingui } from '@lingui/react/macro';
@@ -29,6 +29,8 @@ import { getErrorMessage } from '@/lib/HelperFunctions.ts';
 import { STABLE_EMPTY_OBJECT } from '@/base/Base.constants.ts';
 import { useAppTitleAndAction } from '@/features/navigation-bar/hooks/useAppTitleAndAction.ts';
 import type { MangaLocationState } from '@/features/manga/Manga.types.ts';
+import { ChaptersAppBarActions } from '@/features/chapter/components/ChaptersAppBarActions.tsx';
+import { MediaQuery } from '@/base/utils/MediaQuery.tsx';
 
 export const Manga: React.FC = () => {
     const { t } = useLingui();
@@ -36,6 +38,9 @@ export const Manga: React.FC = () => {
     const { mode } = useLocation<MangaLocationState>().state ?? STABLE_EMPTY_OBJECT;
 
     const autofetchedRef = useRef(false);
+    // phones: details and chapters in one column scrolling with the window, the chapter actions in the app bar
+    const isSingleColumn = MediaQuery.useIsBelowWidth('md');
+    const [areChapterOptionsOpen, setAreChapterOptionsOpen] = useState(false);
 
     const {
         data,
@@ -82,7 +87,7 @@ export const Manga: React.FC = () => {
                     }
                 >
                     <IconButton onClick={() => refetch()}>
-                        <Warning color="error" />
+                        <WarningRoundedIcon color="error" />
                     </IconButton>
                 </CustomTooltip>
             )}
@@ -91,9 +96,12 @@ export const Manga: React.FC = () => {
                     <CircularProgress size={16} />
                 </IconButton>
             )}
+            {manga && isSingleColumn && (
+                <ChaptersAppBarActions manga={manga} onOpenOptions={() => setAreChapterOptionsOpen(true)} />
+            )}
             {manga && <MangaToolbarMenu manga={manga} onRefresh={refresh} refreshing={refreshing} />}
         </Stack>,
-        [t, error, isValidating, refreshing, manga, refresh],
+        [t, error, isValidating, refreshing, manga, refresh, isSingleColumn],
     );
 
     if (error && !manga) {
@@ -103,8 +111,16 @@ export const Manga: React.FC = () => {
         <Box sx={{ display: { md: 'flex' }, overflow: 'hidden' }}>
             {isLoading && <LoadingPlaceholder />}
 
-            {manga && <MangaDetails manga={manga} mode={mode} />}
-            {manga && <ChapterList manga={manga} isRefreshing={refreshing} />}
+            {manga && <MangaDetails manga={manga} mode={mode} isSingleColumn={isSingleColumn} />}
+            {manga && (
+                <ChapterList
+                    manga={manga}
+                    isRefreshing={refreshing}
+                    isSingleColumn={isSingleColumn}
+                    areOptionsOpen={areChapterOptionsOpen}
+                    onOptionsOpenChange={setAreChapterOptionsOpen}
+                />
+            )}
         </Box>
     );
 };

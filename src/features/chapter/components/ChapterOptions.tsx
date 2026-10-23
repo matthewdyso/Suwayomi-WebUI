@@ -11,9 +11,7 @@ import RadioGroup from '@mui/material/RadioGroup';
 import React from 'react';
 import { useLingui } from '@lingui/react/macro';
 import { msg } from '@lingui/core/macro';
-import { RadioInput } from '@/base/components/inputs/RadioInput.tsx';
-import { SortRadioInput } from '@/base/components/inputs/SortRadioInput.tsx';
-import { ThreeStateCheckboxInput } from '@/base/components/inputs/ThreeStateCheckboxInput.tsx';
+import { RadioItem, SortItem, TriStateItem } from '@/base/components/settings/SheetRows.tsx';
 import { OptionsTabs } from '@/base/components/modals/OptionsTabs.tsx';
 import { CHAPTER_SORT_OPTIONS_TO_TRANSLATION } from '@/features/chapter/Chapter.constants.ts';
 import type { ChapterListOptions } from '@/features/chapter/Chapter.types.ts';
@@ -56,17 +54,17 @@ export const ChapterOptions: React.FC<IProps> = ({
                 if (key === 'filter') {
                     return (
                         <>
-                            <ThreeStateCheckboxInput
+                            <TriStateItem
                                 label={t`Unread`}
                                 checked={options.unread}
                                 onChange={(c) => updateOption('unread', c)}
                             />
-                            <ThreeStateCheckboxInput
+                            <TriStateItem
                                 label={t`Downloaded`}
                                 checked={options.downloaded}
                                 onChange={(c) => updateOption('downloaded', c)}
                             />
-                            <ThreeStateCheckboxInput
+                            <TriStateItem
                                 label={t`Bookmarked`}
                                 checked={options.bookmarked}
                                 onChange={(c) => updateOption('bookmarked', c)}
@@ -80,19 +78,26 @@ export const ChapterOptions: React.FC<IProps> = ({
                     );
                 }
                 if (key === 'sort') {
-                    return Object.entries(CHAPTER_SORT_OPTIONS_TO_TRANSLATION).map(([mode, label]) => (
-                        <SortRadioInput
-                            key={mode}
-                            label={t(label)}
-                            checked={options.sortBy === mode}
-                            sortDescending={options.reverse}
-                            onClick={() =>
-                                mode !== options.sortBy
-                                    ? updateOption('sortBy', mode as keyof typeof CHAPTER_SORT_OPTIONS_TO_TRANSLATION)
-                                    : updateOption('reverse', !options.reverse)
-                            }
-                        />
-                    ));
+                    return (
+                        <RadioGroup value={options.sortBy}>
+                            {Object.entries(CHAPTER_SORT_OPTIONS_TO_TRANSLATION).map(([mode, label]) => (
+                                <SortItem
+                                    key={mode}
+                                    label={t(label)}
+                                    value={mode}
+                                    sortDescending={options.reverse}
+                                    onClick={() =>
+                                        mode !== options.sortBy
+                                            ? updateOption(
+                                                  'sortBy',
+                                                  mode as keyof typeof CHAPTER_SORT_OPTIONS_TO_TRANSLATION,
+                                              )
+                                            : updateOption('reverse', !options.reverse)
+                                    }
+                                />
+                            ))}
+                        </RadioGroup>
+                    );
                 }
                 if (key === 'display') {
                     return (
@@ -100,8 +105,8 @@ export const ChapterOptions: React.FC<IProps> = ({
                             onChange={() => updateOption('showChapterNumber', !options.showChapterNumber)}
                             value={options.showChapterNumber}
                         >
-                            <RadioInput label={t`Source title`} value={false} />
-                            <RadioInput label={t`Chapter number`} value />
+                            <RadioItem label={t`Source title`} value={false} />
+                            <RadioItem label={t`Chapter number`} value />
                         </RadioGroup>
                     );
                 }

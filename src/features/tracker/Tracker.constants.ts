@@ -8,21 +8,7 @@
 
 import type { MessageDescriptor } from '@lingui/core';
 import { msg } from '@lingui/core/macro';
-import type { SxProps, Theme } from '@mui/material/styles';
 import { PublishingStatus, PublishingType } from '@/features/tracker/Tracker.types.ts';
-
-export const DIALOG_PADDING: number = 2;
-
-export const CARD_BACKGROUND: SxProps<Theme> = {
-    backgroundColor: 'transparent',
-    boxShadow: 'unset',
-    backgroundImage: 'unset',
-};
-
-export const CARD_STYLING: SxProps<Theme> = {
-    padding: DIALOG_PADDING,
-    ...CARD_BACKGROUND,
-};
 
 export const PUBLISHING_TYPE_TO_TRANSLATION: Record<PublishingType, MessageDescriptor> = {
     [PublishingType.UNKNOWN]: msg`Unknown`,

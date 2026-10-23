@@ -7,20 +7,18 @@
  */
 
 import Button from '@mui/material/Button';
-import List from '@mui/material/List';
 import Stack from '@mui/material/Stack';
 import { useEffect, useMemo, useState } from 'react';
 import IconButton from '@mui/material/IconButton';
-import ArrowBack from '@mui/icons-material/ArrowBack';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import DialogContent from '@mui/material/DialogContent';
-import DialogTitle from '@mui/material/DialogTitle';
+import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
+import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded';
+import Box from '@mui/material/Box';
 import InputAdornment from '@mui/material/InputAdornment';
-import InfoIcon from '@mui/icons-material/Info';
+import InfoRoundedIcon from '@mui/icons-material/InfoRounded';
 import PopupState, { bindPopover, bindTrigger } from 'material-ui-popup-state';
 import Popover from '@mui/material/Popover';
 import Typography from '@mui/material/Typography';
-import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import VisibilityOffRoundedIcon from '@mui/icons-material/VisibilityOffRounded';
 import { useLingui } from '@lingui/react/macro';
 import { requestManager } from '@/lib/requests/RequestManager.ts';
 import { EmptyViewAbsoluteCentered } from '@/base/components/feedback/EmptyViewAbsoluteCentered.tsx';
@@ -28,13 +26,11 @@ import { LoadingPlaceholder } from '@/base/components/feedback/LoadingPlaceholde
 import { SearchTextField } from '@/base/components/inputs/SearchTextField.tsx';
 import { makeToast } from '@/base/utils/Toast.ts';
 import { TrackerMangaCard } from '@/features/tracker/components/cards/TrackerMangaCard.tsx';
-import { DIALOG_PADDING } from '@/features/tracker/Tracker.constants.ts';
 import { useGetOptionForDirection } from '@/features/theme/services/ThemeCreator.ts';
 import { defaultPromiseErrorHandler } from '@/lib/DefaultPromiseErrorHandler.ts';
 import type { MangaIdInfo, MangaTitleInfo } from '@/features/manga/Manga.types.ts';
 
 import { getErrorMessage } from '@/lib/HelperFunctions.ts';
-import { applyStyles } from '@/base/utils/ApplyStyles.ts';
 import type { TrackerIdInfo, TTrackerBind } from '@/features/tracker/Tracker.types.ts';
 import { Tracker } from '@/features/tracker/Tracker.types.ts';
 import { CustomIconButton } from '@/base/components/buttons/CustomIconButton.tsx';
@@ -77,13 +73,11 @@ const TrackButton = ({
             direction="row"
             sx={{
                 justifyContent: 'center',
-                position: 'absolute',
-                left: 0,
-                right: 0,
+                position: 'sticky',
                 bottom: 0,
-                paddingBottom: DIALOG_PADDING,
                 gap: 2,
-                px: DIALOG_PADDING,
+                p: 2,
+                bgcolor: 'm3.surfaceContainerHigh',
             }}
         >
             <Button
@@ -103,7 +97,7 @@ const TrackButton = ({
                         variant="contained"
                         onClick={() => trackManga(true)}
                     >
-                        <VisibilityOffIcon />
+                        <VisibilityOffRoundedIcon />
                     </CustomIconButton>
                 </CustomTooltip>
             )}
@@ -155,68 +149,66 @@ export const TrackerSearch = ({
         ) && !hasError;
 
     return (
-        <>
-            <DialogTitle sx={{ padding: DIALOG_PADDING }}>
-                <Stack
-                    direction="row"
-                    sx={{
-                        gap: '10px',
-                        alignItems: 'center',
-                    }}
-                >
-                    <IconButton onClick={closeSearchMode}>
-                        {getOptionForDirection(<ArrowBack />, <ArrowForwardIcon />)}
-                    </IconButton>
-                    <SearchTextField
-                        sx={{ width: '100%' }}
-                        variant="standard"
-                        value={tmpSearchString}
-                        onChange={(e) => setTmpSearchString(e.target.value)}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                                setSearchString(tmpSearchString);
-                            }
-                        }}
-                        onCancel={() => setTmpSearchString('')}
-                        slotProps={{
-                            input: {
-                                startAdornment: tracker.id === Tracker.MYANIMELIST && (
-                                    <InputAdornment position="start">
-                                        <PopupState variant="popover" popupId="tracker-search-info">
-                                            {(popupState) => (
-                                                <>
-                                                    <IconButton {...bindTrigger(popupState)} color="inherit">
-                                                        <InfoIcon />
-                                                    </IconButton>
-                                                    <Popover
-                                                        {...bindPopover(popupState)}
-                                                        anchorOrigin={{
-                                                            vertical: 'bottom',
-                                                            horizontal: 'left',
-                                                        }}
-                                                    >
-                                                        <Typography sx={{ padding: 1, whiteSpace: 'pre-line' }}>
-                                                            {t`Search for a ID via "id:<ID>" (e.g. "id:13")\nLimit search to your lists via "my:<Title>" (e.g. "my:One Piece")`}
-                                                        </Typography>
-                                                    </Popover>
-                                                </>
-                                            )}
-                                        </PopupState>
-                                    </InputAdornment>
-                                ),
-                            },
-                        }}
-                    />
-                </Stack>
-            </DialogTitle>
-            <DialogContent
-                dividers
+        <Stack sx={{ minHeight: '100%' }}>
+            {/* stays on top of the results that scroll in the sheet */}
+            <Stack
+                direction="row"
                 sx={{
-                    padding: DIALOG_PADDING,
-                    height: '100vh',
-                    ...applyStyles(hasNoResults || hasError, { position: 'relative' }),
+                    position: 'sticky',
+                    top: 0,
+                    zIndex: 1,
+                    gap: 1,
+                    alignItems: 'center',
+                    p: 1,
+                    pr: 2,
+                    bgcolor: 'm3.surfaceContainerHigh',
                 }}
             >
+                <IconButton onClick={closeSearchMode} aria-label={t`Exit to previous page`}>
+                    {getOptionForDirection(<ArrowBackRoundedIcon />, <ArrowForwardRoundedIcon />)}
+                </IconButton>
+                <SearchTextField
+                    sx={{ width: '100%' }}
+                    variant="standard"
+                    value={tmpSearchString}
+                    onChange={(e) => setTmpSearchString(e.target.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                            setSearchString(tmpSearchString);
+                        }
+                    }}
+                    onCancel={() => setTmpSearchString('')}
+                    slotProps={{
+                        input: {
+                            startAdornment: tracker.id === Tracker.MYANIMELIST && (
+                                <InputAdornment position="start">
+                                    <PopupState variant="popover" popupId="tracker-search-info">
+                                        {(popupState) => (
+                                            <>
+                                                <IconButton {...bindTrigger(popupState)} color="inherit">
+                                                    <InfoRoundedIcon />
+                                                </IconButton>
+                                                <Popover
+                                                    {...bindPopover(popupState)}
+                                                    anchorOrigin={{
+                                                        vertical: 'bottom',
+                                                        horizontal: 'left',
+                                                    }}
+                                                >
+                                                    <Typography sx={{ padding: 1, whiteSpace: 'pre-line' }}>
+                                                        {t`Search for a ID via "id:<ID>" (e.g. "id:13")\nLimit search to your lists via "my:<Title>" (e.g. "my:One Piece")`}
+                                                    </Typography>
+                                                </Popover>
+                                            </>
+                                        )}
+                                    </PopupState>
+                                </InputAdornment>
+                            ),
+                        },
+                    }}
+                />
+            </Stack>
+            <Box sx={{ position: 'relative', flexGrow: 1, minHeight: '50vh' }}>
                 {hasNoResults && <EmptyViewAbsoluteCentered message={t`No manga found`} />}
                 {trackerSearch.loading && <LoadingPlaceholder />}
                 {hasError && (
@@ -228,27 +220,25 @@ export const TrackerSearch = ({
                         }
                     />
                 )}
-                <List sx={{ padding: 0 }}>
-                    {hasResults &&
-                        searchResults.map((trackerManga) => (
-                            <TrackerMangaCard
-                                key={trackerManga.id}
-                                manga={trackerManga}
-                                selected={trackerManga.remoteId === selectedTrackerRemoteId}
-                                onSelect={() => setSelectedTrackerRemoteId(trackerManga.remoteId)}
-                            />
-                        ))}
-                </List>
-                {showTrackButton && (
-                    <TrackButton
-                        mangaId={manga.id}
-                        trackerId={tracker.id}
-                        closeSearchMode={closeSearchMode}
-                        selectedTrackerRemoteId={selectedTrackerRemoteId}
-                        supportsPrivateTracking={tracker.supportsPrivateTracking}
-                    />
-                )}
-            </DialogContent>
-        </>
+                {hasResults &&
+                    searchResults.map((trackerManga) => (
+                        <TrackerMangaCard
+                            key={trackerManga.id}
+                            manga={trackerManga}
+                            selected={trackerManga.remoteId === selectedTrackerRemoteId}
+                            onSelect={() => setSelectedTrackerRemoteId(trackerManga.remoteId)}
+                        />
+                    ))}
+            </Box>
+            {showTrackButton && (
+                <TrackButton
+                    mangaId={manga.id}
+                    trackerId={tracker.id}
+                    closeSearchMode={closeSearchMode}
+                    selectedTrackerRemoteId={selectedTrackerRemoteId}
+                    supportsPrivateTracking={tracker.supportsPrivateTracking}
+                />
+            )}
+        </Stack>
     );
 };
